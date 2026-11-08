@@ -83,12 +83,29 @@ Implementation requirements:
 - Changing an email address must require confirmation through the approved secure process.
 - Do not expose verification tokens or private contact details to other members.
 - If phone verification is later enabled, verification status must come from a trusted provider/server-side record, never a client-submitted flag.
-- Verification status must come from trusted Supabase Auth state or a trusted server-side verification record.
-- A browser must not be able to set its own verified flag.
-- Resend actions must be rate-limited.
-- Verification links must not allow arbitrary external redirects.
-- Changing an email address must require confirmation through the approved secure process.
-- Do not expose verification tokens or private contact details to other members.
+### 4. Password policy and launch login methods
+
+**Recommended launch approach — awaiting product approval:** Start with email address and password as the only sign-in method. Keep passwordless email links and social sign-in out of the first release until their account-linking, recovery, privacy, and abuse implications have been reviewed.
+
+Recommended password rules:
+
+- Require at least 12 characters; allow long passphrases and support at least 64 characters, subject to the configured provider limit.
+- Allow spaces and common password-manager-generated passwords.
+- Do not require arbitrary mixtures of uppercase, lowercase, numbers, and symbols when length and compromised-password checks provide stronger usability/security balance.
+- Reject commonly used or known-compromised passwords where the selected Supabase plan and configuration support this protection; verify the exact availability before enabling it.
+- Never truncate passwords silently.
+- Permit paste and password managers; provide a show/hide password control.
+- Do not force periodic password changes without evidence of compromise or another security reason.
+- Apply login rate limits and abuse monitoring; never reveal whether an email address is registered.
+- Password changes and recovery must use Supabase Auth's supported flows. JoyHeart must not store password values or hashes.
+
+Login method scope:
+
+- Initial release: email + password, with mandatory email confirmation.
+- Later review: passkeys/passwordless and social providers only after account linking, recovery, verified identity, and support behavior are specified and tested.
+- Never make a third-party social account's profile data or provider verification a substitute for JoyHeart's own age eligibility and policy checks.
+
+These are recommended settings, not yet an approved final policy. Confirm provider limits and available compromised-password protection in the existing Supabase project before implementation.
 
 ### 4. Password recovery
 
@@ -229,7 +246,7 @@ The following are deliberately not decided by this specification:
 
 1. Country-by-country legal confirmation of the proposed 18-year minimum age and any stricter eligibility rules.
 2. Conditions and safeguards for any future risk-based phone verification; email verification is mandatory at launch.
-3. Password policy and whether passwordless or social login is offered at launch.
+3. Approval of the recommended 12-character minimum and email/password-only launch; whether passwordless or social login is deferred.
 4. Session lifetime and device/session management behavior.
 5. Recovery and account-compromise support process.
 6. Account deletion retention periods and treatment of messages/reports.
@@ -245,7 +262,7 @@ When approved, implementation should proceed in small reviewed steps:
 
 1. Review Supabase Auth settings, mandatory email confirmation, email templates, and production redirect configuration.
 2. Implement server-side session handling and safe public auth routes.
-3. Implement signup, verification, login, and logout.
+3. Configure and test the approved password length/strength controls, then implement signup, verification, login, and logout.
 4. Implement recovery and session revocation behavior.
 5. Implement age eligibility and policy acceptance gates.
 6. Add account deletion and security notifications.
