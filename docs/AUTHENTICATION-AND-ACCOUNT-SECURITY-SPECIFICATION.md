@@ -269,6 +269,22 @@ Tests must demonstrate that:
 - Secrets and credentials never appear in client code or logs.
 - RLS policies and server-side authorization are tested with multiple distinct users.
 
+## Production email delivery and sender security
+
+**Approved product policy:** JoyHeart will use a dedicated email delivery provider for account verification, password recovery, and security notifications. Emails will use a JoyHeart-branded sender identity and an authenticated sending domain.
+
+Implementation requirements:
+
+- Select a provider after reviewing deliverability, security, pricing, regional/privacy considerations, and compatibility with Supabase Auth.
+- Use a JoyHeart-controlled sender address and domain; do not invent or configure a sender address before the domain is owned and verified.
+- Configure and validate SPF, DKIM, and DMARC for the sending domain.
+- Monitor delivery, bounces, complaints, and provider errors; define a process to respond to delivery failures.
+- Keep provider API keys and SMTP credentials in approved server-side secrets only. Never expose them in browser code or commit them to Git.
+- Use approved, allowlisted links for verification and recovery. Links must be time-limited and single-use where supported.
+- Never include passwords, raw authentication tokens, or unnecessary sensitive personal information in email content or logs.
+- Test email templates, sender authentication, delivery, bounce handling, and recovery/verification links before enabling public registration.
+- Do not send marketing messages as part of transactional authentication email without separate consent and legal review.
+
 ## Decisions required before implementation
 
 The following are deliberately not decided by this specification:
@@ -280,7 +296,7 @@ The following are deliberately not decided by this specification:
 5. Recovery policy is approved: verified-email recovery link, plus a documented and carefully verified support route if the member loses access to that email. Support must never retrieve or set passwords or bypass safeguards.
 6. Account deletion behavior is approved: secure member-initiated permanent deletion, immediate removal from discovery, clear explanation of effects on matches/messages, and retention only for legitimate safety, fraud-prevention, or legal reasons. Exact retention periods and treatment of messages/reports must still be defined before launch.
 7. MFA policy is approved: optional for members at launch and mandatory for staff/administrators before admin access; secure lost-device recovery and server-side enforcement must be implemented and tested.
-8. Production email delivery provider, sender identity, and domain configuration.
+8. Email delivery policy is approved: dedicated provider, JoyHeart-branded sender, authenticated sending domain (SPF/DKIM/DMARC), and delivery/bounce monitoring. The provider and sender domain still need to be selected and verified before implementation.
 9. Exact legal notices, consent wording, and launch-country approvals.
 
 These decisions must be reviewed before the live authentication implementation begins.
