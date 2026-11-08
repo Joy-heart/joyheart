@@ -22,35 +22,6 @@ const values = [
 export default function HomePage() {
   return (
     <main className="site-shell">
-      <header className="site-header">
-        <a className="brand" href="/" aria-label="JoyHeart home">
-          <img
-            className="brand-logo"
-            src="/joyheart-mark.svg"
-            alt=""
-            width="42"
-            height="42"
-            aria-hidden="true"
-          />
-          <span>JoyHeart</span>
-        </a>
-
-        <nav className="nav-links" aria-label="Main navigation">
-          <a href="#our-approach">Our approach</a>
-          <a href="#values">Why JoyHeart</a>
-          <a href="#safety">Safety</a>
-        </nav>
-
-        <div className="nav-actions">
-          <a className="button button-quiet" href="/login">
-            Log in
-          </a>
-          <a className="button button-primary" href="/signup">
-            Join JoyHeart
-          </a>
-        </div>
-      </header>
-
       <section className="hero" id="our-approach">
         <div className="hero-copy">
           <p className="eyebrow">A more meaningful way to meet</p>
@@ -115,10 +86,6 @@ export default function HomePage() {
           ))}
         </div>
       </section>
-
-      <footer className="site-footer">
-        <strong>JoyHeart</strong> · Where Hearts Find Happiness.
-      </footer>
     </main>
   );
 }
