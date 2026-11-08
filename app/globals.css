@@ -1232,3 +1232,23 @@ a:focus-visible {
 }
 .nav-logout:hover, .nav-logout:focus-visible { text-decoration: underline; }
 .mobile-nav-panel .nav-logout { text-align: left; padding: 10px 0; }
+
+.account-summary {
+  display: grid;
+  gap: 12px;
+  margin: 22px 0;
+}
+.account-summary div {
+  padding: 13px 15px;
+  border: 1px solid rgba(80, 55, 65, .14);
+  border-radius: 12px;
+}
+.account-summary dt {
+  color: var(--joy-burgundy);
+  font-size: .78rem;
+  font-weight: 700;
+}
+.account-summary dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
