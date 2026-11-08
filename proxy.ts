@@ -1,51 +1,68 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const PRIVATE_HEADERS = {
+  "Cache-Control": "private, no-store, max-age=0",
+  Pragma: "no-cache",
+  Expires: "0",
+};
+
 export async function proxy(request: NextRequest) {
+  const isAccountRoute = request.nextUrl.pathname.startsWith("/account");
+  let response = NextResponse.next({ request });
+  Object.entries(PRIVATE_HEADERS).forEach(([name, value]) => response.headers.set(name, value));
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!url || !key) {
-    if (request.nextUrl.pathname.startsWith("/account")) {
-      return NextResponse.redirect(new URL("/login?next=%2Faccount", request.url));
+    if (isAccountRoute) {
+      const destination = new URL("/login", request.url);
+      destination.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
+      const redirect = NextResponse.redirect(destination);
+      Object.entries(PRIVATE_HEADERS).forEach(([name, value]) => redirect.headers.set(name, value));
+      return redirect;
     }
-    return NextResponse.next({ request });
+    return response;
   }
 
-  let response = NextResponse.next({ request });
-  const supabase = createServerClient(url, key, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
+  let claims: { sub?: string } | null = null;
+  let verificationFailed = false;
+
+  try {
+    const supabase = createServerClient(url, key, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet, headers) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({ request });
+          Object.entries(PRIVATE_HEADERS).forEach(([name, value]) => response.headers.set(name, value));
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
+          Object.entries(headers ?? {}).forEach(([name, value]) => response.headers.set(name, value));
+        },
       },
-      setAll(cookiesToSet, headers) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
-        });
-        Object.entries(headers).forEach(([name, value]) => response.headers.set(name, value));
-      },
-    },
-  });
+    });
 
-  // Verify claims instead of trusting values decoded from a client cookie.
-  const { data: { claims }, error } = await supabase.auth.getClaims();
-  const isAccountRoute = request.nextUrl.pathname.startsWith("/account");
+    // Verify claims with Supabase rather than trusting decoded cookie contents.
+    const result = await supabase.auth.getClaims();
+    claims = result.data?.claims ?? null;
+    verificationFailed = Boolean(result.error);
+  } catch {
+    // Network, configuration, and token-verification exceptions must not
+    // turn into an unhandled proxy failure or accidentally grant member access.
+    verificationFailed = true;
+  }
 
-  response.headers.set("Cache-Control", "private, no-store, max-age=0");
-  response.headers.set("Pragma", "no-cache");
-  response.headers.set("Expires", "0");
-
-  if (isAccountRoute && (error || !claims?.sub)) {
+  if (isAccountRoute && (verificationFailed || !claims?.sub)) {
     const destination = new URL("/login", request.url);
     destination.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
     const redirect = NextResponse.redirect(destination);
     response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
-    for (const name of ["Cache-Control", "Pragma", "Expires"]) {
-      const value = response.headers.get(name);
-      if (value) redirect.headers.set(name, value);
-    }
+    Object.entries(PRIVATE_HEADERS).forEach(([name, value]) => redirect.headers.set(name, value));
     return redirect;
   }
 
