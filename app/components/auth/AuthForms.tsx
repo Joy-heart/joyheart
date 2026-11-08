@@ -97,6 +97,13 @@ export function LoginForm() {
   const [error, setError] = useState(false);
   const [canResend, setCanResend] = useState(false);
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("reason") === "verify") {
+      setCanResend(true);
+      setMessage("Your email address must be verified before member access. Enter your email below to resend the verification link.");
+    }
+  }, []);
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
@@ -127,7 +134,8 @@ export function LoginForm() {
   }
 
   async function resendVerification() {
-    if (!supabase || !email.trim()) return;
+    if (!email.trim()) { setError(true); setMessage("Enter your email address first so we can send the verification link."); return; }
+    if (!supabase) { setError(true); setMessage("Verification email is temporarily unavailable."); return; }
     setBusy(true);
     setError(false);
     setCanResend(false);
@@ -230,8 +238,10 @@ export function ResetPasswordForm({ recoveryVerified = false }: { recoveryVerifi
       setPassword("");
       setConfirm("");
       setReady(false);
-      setMessage("Your password has been updated. Please log in with your new password.");
-      await supabase.auth.signOut();
+      const { error: signOutError } = await supabase.auth.signOut({ scope: "local" });
+      setMessage(signOutError
+        ? "Your password was updated. Please sign out and log in again with your new password."
+        : "Your password has been updated. Please log in with your new password.");
     } catch (caught) {
       setError(true);
       setMessage(friendlyAuthError(caught instanceof Error ? caught.message : ""));
