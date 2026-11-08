@@ -393,6 +393,23 @@ Implementation requirements:
 - Avoid sending duplicate or excessive alerts; monitor delivery failures and define safe retry behavior.
 - Test notification delivery, event coverage, privacy, and failure handling before launch.
 
+## Member access to a personal data export
+
+**Approved product policy:** Members will be able to request and download a copy of their personal data and profile information.
+
+Implementation requirements:
+
+- Provide an authenticated, member-initiated export process with recent-authentication or step-up verification before release.
+- Generate the export server-side and restrict it to the requesting member's own data; never trust a client-supplied user ID or authorization claim.
+- Define and document the export contents before launch, including profile information and other personal data the member is entitled to receive.
+- Exclude passwords, authentication secrets, raw session tokens, internal security controls, and other members' private information.
+- Carefully assess shared content such as messages, reports, and moderation records so the export does not improperly disclose another person's personal information or compromise safety investigations.
+- Use a secure, time-limited download link or equivalent authenticated delivery method; do not send the export as an ordinary email attachment.
+- Protect generated files with access controls and encryption, avoid logging their contents, and automatically expire and delete temporary export files after a defined short retention period.
+- Apply rate limits, prevent duplicate or abusive export requests, and provide clear status and failure handling.
+- Define processing times, file format, supported data categories, retention, and applicable legal exceptions before launch, consistent with the laws of each launch country.
+- Test authorization, cross-account isolation, completeness, secure delivery, expiry, and deletion of temporary files before public launch.
+
 ## Decisions required before implementation
 
 The following are deliberately not decided by this specification:
