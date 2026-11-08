@@ -107,7 +107,7 @@ Login method scope:
 
 These are recommended settings, not yet an approved final policy. Confirm provider limits and available compromised-password protection in the existing Supabase project before implementation.
 
-### 4. Password recovery
+### 5. Password recovery
 
 **Approved product policy:** Members recover access through a time-limited recovery link sent to their verified email address. If a member has also lost access to that email account, they may contact JoyHeart support for a carefully verified account-recovery review. Support must never retrieve, view, or set a member's existing password, and must not bypass identity checks or account restrictions.
 
@@ -134,7 +134,7 @@ Requirements:
 - Recovery support must not bypass identity checks, age/eligibility restrictions, account suspensions, or moderation decisions.
 - Verify the selected Supabase Auth recovery and session-revocation capabilities before implementation.
 
-### 5. Session management and logout
+### 6. Session management and logout
 
 **Approved product policy:** Keep members signed in on their own trusted devices, with an inactivity expiry after 30 days. Members must be able to log out of the current device and request logout from all devices. Revoke sessions after password recovery, suspected account compromise, and account deletion. Require the member to authenticate again before sensitive account actions.
 
@@ -152,7 +152,7 @@ Implementation requirements:
 - Handle session expiry without exposing private data or creating redirect loops.
 - Do not claim device-level session lists or per-device revocation until implemented and tested.
 
-### 6. Account deletion and deactivation
+### 7. Account deletion and deactivation
 
 **Approved product policy:**
 
@@ -535,36 +535,56 @@ Implementation requirements:
 
 ## Decisions required before implementation
 
-The following are deliberately not decided by this specification:
+The following items remain open and must be resolved before the relevant feature is implemented:
 
-1. Country-by-country legal confirmation of the proposed 18-year minimum age and any stricter eligibility rules.
-2. Conditions and safeguards for any future risk-based phone verification; email verification is mandatory at launch.
-3. Approval of the recommended 12-character minimum and email/password-only launch; whether passwordless or social login is deferred.
-4. Session policy is approved: 30-day inactivity expiry, current-device logout, logout from all devices, session revocation after password recovery/ suspected compromise/account deletion, and re-authentication for sensitive actions. Provider capabilities must be verified before implementation.
-5. Recovery policy is approved: verified-email recovery link, plus a documented and carefully verified support route if the member loses access to that email. Support must never retrieve or set passwords or bypass safeguards.
-6. Account deletion behavior is approved: secure member-initiated permanent deletion, immediate removal from discovery, clear explanation of effects on matches/messages, and retention only for legitimate safety, fraud-prevention, or legal reasons. Exact retention periods and treatment of messages/reports must still be defined before launch.
-7. MFA policy is approved: optional for members at launch and mandatory for staff/administrators before admin access; secure lost-device recovery and server-side enforcement must be implemented and tested.
-8. Email delivery policy is approved: dedicated provider, JoyHeart-branded sender, authenticated sending domain (SPF/DKIM/DMARC), and delivery/bounce monitoring. The provider and sender domain still need to be selected and verified before implementation.
-9. Account security notifications are approved for password changes, email-address changes, and account security-setting changes. Notification templates, delivery-failure handling, and event coverage must be tested before launch.
-10. Exact legal notices, consent wording, and launch-country approvals.
+1. Country-by-country legal confirmation of the proposed 18-year minimum age, any higher local minimum, and any additional age-assurance requirements.
+2. Conditions and safeguards for any future risk-based phone verification; email verification remains mandatory at launch.
+3. Approval of the recommended 12-character minimum password and email/password-only launch; confirm whether passwordless or social login remains deferred.
+4. Provider verification for session expiry, current-device logout, all-device logout, and session revocation after recovery, suspected compromise, and deletion.
+5. The support identity-verification process for members who have lost access to their verified email.
+6. Exact retention periods and treatment of messages, matches, reports, and safety records after account deletion.
+7. Staff/admin MFA enforcement and secure lost-device recovery.
+8. Selection and verification of the transactional email provider and JoyHeart-controlled sender domain, including SPF, DKIM, and DMARC.
+9. Security-notification templates, delivery-failure handling, and event coverage.
+10. Country-specific terms, privacy notices, consent wording, and launch approvals.
+11. Definition of the sensitive-profile-field list, required step-up assurance, and audit-log retention.
+12. Exact export contents, format, processing time, download expiry, temporary-file deletion, and legal exceptions.
+13. Deactivation behavior for existing matches, conversations, messages, subscriptions, and pending interactions.
+14. Presence privacy defaults and how blocking, deactivation, staff access, and safety investigations interact with presence visibility.
+15. Whether changing messaging preferences affects existing conversations, including whether members can still read or reply.
+16. Selected-person photo access grant, review, revocation, and protected delivery behavior.
+17. The source/reliability of country signals and how country restrictions behave when location is missing, uncertain, or affected by travel/VPN use.
+18. The language catalogue, regional variants, self-reported language levels, and strict-filter versus ranking behavior.
+19. The relationship-intention taxonomy and explicit compatibility matrix. Do not infer compatibility between different intentions until those rules are reviewed.
+20. Birthday/holiday calendar sources, locale/time-zone rules, opt-out handling, and notification scheduling.
+21. Exact failed-login rate-limit thresholds, progressive restrictions, recovery behavior, and false-positive handling.
+22. Provider support and actual implementation behavior for new-device recognition and member-visible per-session listing/revocation.
 
-These decisions must be reviewed before the live authentication implementation begins.
+The approved product policies in this document are decisions about intended behavior, not proof that the corresponding provider capabilities or live features exist. Resolve each open item before implementing its feature. Do not enable public registration until the applicable legal, provider, security, and launch checks pass.
 
 ## Implementation boundary
 
-When approved, implementation should proceed in small reviewed steps:
+Implementation should proceed in small reviewed steps, using the single existing JoyHeart Supabase project and the existing GitHub-to-Cloudflare deployment workflow. Do not create a separate staging database.
 
-1. Review Supabase Auth settings, mandatory email confirmation, email templates, and production redirect configuration.
-2. Implement server-side session handling and safe public auth routes.
-3. Configure and test the approved password length/strength controls, then implement signup, verification, login, and logout.
-4. Implement recovery and session revocation behavior.
-5. Implement age eligibility and policy acceptance gates.
-6. Add account deletion and security notifications.
-7. Validate RLS and authorization with multiple test accounts.
-8. Conduct a production security review before enabling public registration.
+1. Complete the open legal, provider-capability, data-retention, and product-rule decisions listed above.
+2. Review the existing Supabase Auth configuration, email-confirmation settings, templates, and production redirect allowlist without changing them until the review is approved.
+3. Define and review the minimum data model, authorization boundaries, RLS policies, and server-side security functions before creating application tables or migrations.
+4. Implement and test secure session handling, signup, email verification, login, logout, recovery, and approved password controls.
+5. Implement age eligibility and policy acceptance gates, including country-specific launch restrictions.
+6. Implement account security controls: MFA, security notifications, new-device alerts, active-session controls, failed-login protections, sensitive-change step-up checks, and email-change confirmation.
+7. Implement account lifecycle features: data export, deactivation, deletion, retention, and security support processes.
+8. Implement member privacy controls: presence visibility, messaging eligibility, photo access, country restrictions, and protected media delivery.
+9. Implement matching preferences: language selection and filtering/ranking, relationship intentions and reviewed compatibility rules, plus consistent server-side enforcement across discovery, recommendations, likes, and matches.
+10. Validate RLS and authorization using multiple distinct test accounts; test abuse cases, privacy bypasses, cross-account access, and failure paths.
+11. Conduct a production security, privacy, legal, and operational review before enabling public registration or announcing any feature as live.
 
-Do not create application tables or migrations as part of the specification-only step.
+Do not create application tables or migrations as part of this specification-review step. A reviewed policy document does not authorize production implementation by itself.
 
 ## Current status
 
-**Design specification only — the proposed 18-year minimum age is approved as a product decision, subject to country-specific legal review. Authentication is not implemented and is not approved for live launch.** No Supabase Auth settings, database schema, migrations, credentials, account forms, or production user data have been changed by this document.
+**Design and product-policy specification only.** The proposed 18-year minimum age and the product policies marked approved in this document have been approved as intended JoyHeart behavior, subject to country-specific legal review and the open implementation decisions above.
+
+Authentication, member privacy controls, notifications, account lifecycle tools, and matching preferences are **not confirmed as implemented or live** by this document. PR #6 is a documentation change and must remain subject to the repository's normal review, CI, and merge protections.
+
+No Supabase Auth settings, database schema, migrations, storage buckets, credentials, email provider, sender domain, notification schedules, or production user data were changed by this specification review.
+
