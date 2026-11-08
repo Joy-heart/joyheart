@@ -454,6 +454,21 @@ Implementation requirements:
 - Define how blocking, account deactivation, staff access, and safety investigations interact with presence visibility.
 - Test privacy settings, API responses, cross-account access, and changes to settings before launch.
 
+## Member control over who can send messages
+
+**Approved product policy:** Members will be able to control who can send them messages, with options for everyone, matches only, or nobody.
+
+Implementation requirements:
+
+- Provide clear, accessible controls for the three approved choices: everyone, matches only, and nobody.
+- Explain how each choice affects new conversations and existing conversations before the member saves a change.
+- Apply messaging eligibility and privacy rules server-side for every message and conversation-creation request; never rely only on hiding buttons in the interface.
+- Ensure the nobody setting prevents new incoming messages while clearly defining whether existing conversations remain readable and whether members can reply.
+- Respect blocks, reports, suspensions, account deactivation, and other safety restrictions regardless of the selected messaging preference.
+- Do not let a sender infer private account details from message rejection responses; use safe, consistent responses.
+- Allow members to change their preference at any time, subject to safety and moderation restrictions.
+- Test all preference combinations, existing-conversation behavior, blocked accounts, unauthorized API requests, and cross-account isolation before launch.
+
 ## Decisions required before implementation
 
 The following are deliberately not decided by this specification:
