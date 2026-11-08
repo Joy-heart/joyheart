@@ -364,6 +364,21 @@ Implementation requirements:
 - Define a safe support route for members who have lost access to their current verified email; support must follow the approved identity-verification process and must not bypass security controls.
 - Verify Supabase Auth email-change behavior and test expiry, replay, failed confirmation, notification delivery, and recovery before launch.
 
+## Re-authentication for sensitive profile changes
+
+**Approved product policy:** Require members to confirm their identity again before changing sensitive profile information, including their date of birth and other important account details.
+
+Implementation requirements:
+
+- Require recent authentication or an appropriate step-up verification before accepting a sensitive change.
+- Define the sensitive-field list and the verification level for each field before implementation; do not treat every ordinary profile edit as a high-risk action.
+- Enforce authorization and validation server-side. Never trust a client-supplied user ID, role, or verification status.
+- Record security-relevant changes in an appropriately protected audit trail, with minimal necessary data and no passwords, raw tokens, or unnecessary sensitive values.
+- Notify the member when high-impact account details change, where a safe and deliverable notification channel exists.
+- Apply appropriate abuse controls and prevent changes that would violate minimum-age or other eligibility requirements.
+- Define a careful support and correction process for legitimate mistakes, including incorrect date-of-birth entries; support must not bypass identity, age, or moderation controls.
+- Verify provider capabilities and test step-up verification, authorization, audit logging, notifications, and failed/expired verification before launch.
+
 ## Decisions required before implementation
 
 The following are deliberately not decided by this specification:
