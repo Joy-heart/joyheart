@@ -224,17 +224,23 @@ Monitoring requirements:
 - Do not expose secrets in client bundles, HTML, source maps, analytics, or error responses.
 - Avoid caching authenticated pages and personalized responses in shared public caches.
 
-## Future multi-factor authentication
+## Multi-factor authentication (MFA)
 
-MFA is a planned security enhancement, not assumed to be enabled.
+**Approved product policy:**
 
-Before enabling it:
+- Members: MFA is optional at launch.
+- Staff and administrators: MFA is required before accessing the administration system.
+- Require additional verification for sensitive actions where appropriate.
+- Provide a secure, documented recovery process if a member or staff user loses access to their MFA device.
 
-- Select supported factors and recovery methods.
-- Require step-up verification for sensitive account actions where appropriate.
-- Define lost-device recovery and support verification.
+Implementation requirements:
+
+- Verify the MFA factors and enrollment/challenge capabilities supported by the selected Supabase Auth configuration before implementation.
+- Enforce the staff/admin MFA requirement server-side; hiding administration screens in the browser is not sufficient.
+- Do not trust client-supplied role or MFA status.
 - Do not allow support staff to silently bypass MFA.
-- Test enrollment, challenge, recovery, revocation, and session behavior.
+- Define identity checks, escalation, audit logging, and restricted permissions for MFA recovery.
+- Test enrollment, challenge, recovery, revocation, session behavior, and enforcement for staff/admin routes before launch.
 
 ## Required validation before launch
 
@@ -263,7 +269,7 @@ The following are deliberately not decided by this specification:
 4. Session policy is approved: 30-day inactivity expiry, current-device logout, logout from all devices, session revocation after password recovery/ suspected compromise/account deletion, and re-authentication for sensitive actions. Provider capabilities must be verified before implementation.
 5. Recovery policy is approved: verified-email recovery link, plus a documented and carefully verified support route if the member loses access to that email. Support must never retrieve or set passwords or bypass safeguards.
 6. Account deletion retention periods and treatment of messages/reports.
-7. Whether MFA is required, optional, or deferred for launch.
+7. MFA policy is approved: optional for members at launch and mandatory for staff/administrators before admin access; secure lost-device recovery and server-side enforcement must be implemented and tested.
 8. Production email delivery provider, sender identity, and domain configuration.
 9. Exact legal notices, consent wording, and launch-country approvals.
 
