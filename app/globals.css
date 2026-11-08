@@ -899,3 +899,140 @@ a:focus-visible {
 @media (max-width: 600px) {
   .auth-brand-lockup { margin-bottom: 20px; }
 }
+
+
+/* Gentle, accessible photo motion for JoyHeart's public experience. */
+.hero-photo-showcase {
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid rgba(100, 29, 59, 0.12);
+  border-radius: 30px;
+  background: #ead9d3;
+  box-shadow: 0 28px 70px rgba(83, 33, 53, 0.16);
+}
+.photo-slide {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.04);
+  animation: joyheart-photo-fade 18s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+.photo-slide-one {
+  background-image: url("https://images.unsplash.com/photo-1776266100794-4a6e984ba0ad?auto=format&fit=crop&w=1500&q=85");
+  animation-delay: 0s;
+}
+.photo-slide-two {
+  background-image: url("https://images.unsplash.com/photo-1739986892010-60a3c4ada142?auto=format&fit=crop&w=1500&q=85");
+  animation-delay: 9s;
+  opacity: 0;
+}
+.hero-photo-showcase::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  background: linear-gradient(180deg, rgba(42, 24, 31, 0.04) 35%, rgba(42, 24, 31, 0.62) 100%);
+}
+.photo-caption {
+  position: absolute;
+  right: 26px;
+  bottom: 28px;
+  left: 26px;
+  z-index: 2;
+  display: grid;
+  gap: 7px;
+  color: #fff;
+  text-shadow: 0 2px 14px rgba(0,0,0,.35);
+}
+.photo-caption span {
+  font-size: .78rem;
+  font-weight: 750;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.photo-caption strong {
+  max-width: 340px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.45rem, 3vw, 2.1rem);
+  font-weight: 500;
+  line-height: 1.12;
+}
+.hero-photo-showcase .floating-note {
+  z-index: 3;
+}
+.auth-page {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.auth-page::before,
+.auth-page::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  background-size: cover;
+  background-position: center 35%;
+  opacity: .15;
+  animation: joyheart-auth-drift 24s ease-in-out infinite alternate;
+}
+.auth-page::after {
+  opacity: .0;
+  animation: joyheart-auth-fade 16s ease-in-out infinite;
+}
+.auth-page-signup::before {
+  background-image: url("https://images.unsplash.com/photo-1663550910374-a9c0a9f8b455?auto=format&fit=crop&w=1800&q=85");
+}
+.auth-page-signup::after {
+  background-image: url("https://images.unsplash.com/photo-1525134479668-1bee5c7c6845?auto=format&fit=crop&w=1800&q=85");
+}
+.auth-page-login::before {
+  background-image: url("https://images.unsplash.com/photo-1741940423626-6710e2e06089?auto=format&fit=crop&w=1800&q=85");
+}
+.auth-page-login::after {
+  background-image: url("https://images.unsplash.com/photo-1663550910374-a9c0a9f8b455?auto=format&fit=crop&w=1800&q=85");
+  animation-delay: 8s;
+}
+.auth-page::before,
+.auth-page::after {
+  background-blend-mode: luminosity;
+  filter: saturate(.75);
+}
+.auth-page-signup::before,
+.auth-page-signup::after,
+.auth-page-login::before,
+.auth-page-login::after {
+  opacity: .18;
+}
+.auth-card {
+  background: rgba(255, 253, 252, .94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+@keyframes joyheart-photo-fade {
+  0%, 8% { opacity: 0; transform: scale(1.02); }
+  14%, 43% { opacity: 1; transform: scale(1.10); }
+  52%, 100% { opacity: 0; transform: scale(1.13); }
+}
+@keyframes joyheart-auth-drift {
+  from { transform: scale(1.02) translate3d(-.5%, 0, 0); }
+  to { transform: scale(1.10) translate3d(.5%, -1%, 0); }
+}
+@keyframes joyheart-auth-fade {
+  0%, 12% { opacity: 0; }
+  24%, 66% { opacity: .18; }
+  78%, 100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .photo-slide,
+  .auth-page::before,
+  .auth-page::after {
+    animation: none !important;
+    transform: none !important;
+  }
+  .photo-slide-one { opacity: 1; }
+  .photo-slide-two { display: none; }
+}
