@@ -517,6 +517,22 @@ Implementation requirements:
 - Explain that language preferences do not guarantee fluency or compatibility; member-entered language levels should be clearly labelled as self-reported unless independently verified.
 - Test multiple-language selections, strict versus preference mode, missing language data, and cross-account authorization before launch.
 
+## Relationship intentions and compatibility preferences
+
+**Approved product policy:** Members can state their relationship intentions and choose to have JoyHeart prioritise or strictly filter potential matches by compatible intentions.
+
+Implementation requirements:
+
+- Offer clear, respectful options such as serious relationship, marriage, friendship, and casual dating, with concise explanations so members understand each choice.
+- Allow members to select more than one intention where appropriate and update their choices at any time.
+- Let members choose whether intention compatibility is a strict matching requirement or a ranking preference. Explain that strict filtering can reduce the number of profiles shown.
+- Apply any strict intention filter consistently across discovery, recommendations, likes, and matching, with server-side enforcement.
+- Do not assume that two different intentions are compatible. Define and review the compatibility rules before implementation, and show members how their selected intentions affect matching.
+- Keep intentions under member control and apply profile visibility/privacy settings consistently.
+- Do not infer a member's intentions from photos, messages, age, gender, location, or other profile attributes.
+- Provide neutral language, avoid shaming or ranking relationship choices, and review translations for cultural clarity.
+- Test multiple selections, strict versus preference mode, changed preferences, missing intention data, and authorization boundaries before launch.
+
 ## Decisions required before implementation
 
 The following are deliberately not decided by this specification:
