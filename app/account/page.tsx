@@ -20,6 +20,7 @@ export default async function AccountPage() {
   }
 
   const verified = Boolean(user.email_confirmed_at);
+  if (!verified) redirect("/login?reason=verify&next=%2Faccount");
 
   return (
     <main className="auth-page">
@@ -27,11 +28,7 @@ export default async function AccountPage() {
         <div className="auth-brand-lockup"><img src="/joyheart-mark.svg" alt="JoyHeart" width="60" height="60" /><span>JoyHeart</span></div>
         <p className="auth-eyebrow">Member account</p>
         <h1 id="account-title">Welcome to JoyHeart.</h1>
-        {verified ? (
-          <p className="auth-intro">Your account is signed in and your email address is verified.</p>
-        ) : (
-          <p className="auth-message auth-message-error" role="status">Please verify your email address before using member features. Check your inbox for the verification link.</p>
-        )}
+        <p className="auth-intro">Your account is signed in and your email address is verified.</p>
         <dl className="account-summary">
           <div><dt>Email address</dt><dd>{user.email ?? "Not available"}</dd></div>
           <div><dt>Email verification</dt><dd>{verified ? "Verified" : "Not verified"}</dd></div>
