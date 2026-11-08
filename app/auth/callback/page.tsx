@@ -1,0 +1,8 @@
+﻿"use client";
+import { useEffect,useState } from "react";
+import { supabase } from "@/app/lib/supabase/client";
+export default function AuthCallbackPage(){
+ const [message,setMessage]=useState("Confirming your email address…");const [failed,setFailed]=useState(false);
+ useEffect(()=>{let active=true;async function complete(){const params=new URLSearchParams(window.location.search);const code=params.get("code");const next=params.get("next");const safeNext=next&&next.startsWith("/")&&!next.startsWith("//")?next:"/";if(!supabase||!code){if(active){setFailed(true);setMessage("This verification link is incomplete or has expired. Please request a new link.");}return;}const {error}=await supabase.auth.exchangeCodeForSession(code);if(!active)return;if(error){setFailed(true);setMessage("We could not verify this link. It may have expired or already been used. Please request a new verification email.");return;}setMessage("Your email is verified. Your JoyHeart account is ready.");window.setTimeout(()=>window.location.replace(safeNext),1400);}void complete();return()=>{active=false;};},[]);
+ return <main className="auth-page"><section className="auth-card" aria-live="polite"><div className="auth-brand-lockup"><img src="/joyheart-mark.svg" alt="JoyHeart" width="60" height="60"/><span>JoyHeart</span></div><p className="auth-eyebrow">Email verification</p><h1>{failed?"Verification needs attention":"One more step."}</h1><p className="auth-intro">{message}</p>{failed&&<p className="auth-switch"><a href="/signup">Return to registration</a> or <a href="/login">log in</a>.</p>}</section></main>;
+}

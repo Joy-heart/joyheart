@@ -1192,3 +1192,31 @@ a:focus-visible {
     font-size: clamp(1.35rem, 6vw, 1.75rem);
   }
 }
+
+/* Functional authentication feedback and controls */
+.auth-text-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--joy-burgundy);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.auth-text-button:disabled { opacity: .6; cursor: wait; }
+.auth-message {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(82, 125, 104, .28);
+  border-radius: 12px;
+  background: rgba(82, 125, 104, .08);
+  color: var(--joy-charcoal);
+  font-size: .86rem;
+  line-height: 1.55;
+}
+.auth-message-error {
+  border-color: rgba(160, 48, 58, .25);
+  background: rgba(160, 48, 58, .07);
+}
+.auth-consent a { color: var(--joy-burgundy); font-weight: 700; text-decoration: underline; }
