@@ -379,6 +379,20 @@ Implementation requirements:
 - Define a careful support and correction process for legitimate mistakes, including incorrect date-of-birth entries; support must not bypass identity, age, or moderation controls.
 - Verify provider capabilities and test step-up verification, authorization, audit logging, notifications, and failed/expired verification before launch.
 
+## Notifications for sensitive profile changes
+
+**Approved product policy:** Notify members when sensitive profile information, including date of birth or other important account details, is changed.
+
+Implementation requirements:
+
+- Send a security notification to the member's verified email address, or another approved and verified notification channel where available.
+- Identify the category of information changed and the approximate time, without unnecessarily repeating sensitive values such as the full date of birth.
+- Explain how to contact JoyHeart support promptly if the member did not make the change.
+- Do not include passwords, raw authentication tokens, or unnecessary sensitive personal information in notifications or logs.
+- Trigger notifications from trusted server-side change events, not client claims.
+- Avoid sending duplicate or excessive alerts; monitor delivery failures and define safe retry behavior.
+- Test notification delivery, event coverage, privacy, and failure handling before launch.
+
 ## Decisions required before implementation
 
 The following are deliberately not decided by this specification:
