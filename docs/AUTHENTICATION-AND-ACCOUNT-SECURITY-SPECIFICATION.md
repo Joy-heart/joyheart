@@ -439,6 +439,21 @@ Implementation requirements:
 - Avoid excessive notifications, respect local dates and time zones where known, and do not send a greeting when the relevant date or locale is uncertain.
 - Keep personal details private, use minimal data in logs, and test scheduling, opt-outs, locale handling, and delivery failures before launch.
 
+## Member control of online status and last-active visibility
+
+**Approved product policy:** Members will be able to control who can see their online status and last-active time.
+
+Implementation requirements:
+
+- Provide clear privacy controls to hide or show online status and last-active information, with understandable descriptions of each setting.
+- Default to the more privacy-protective setting unless a different default is explicitly approved after product and legal review.
+- Apply visibility rules consistently across discovery, profiles, matches, and other places where presence information may appear.
+- Do not expose precise activity timestamps when a broader or hidden status is selected.
+- Do not let a member's privacy setting reveal whether another member is online through indirect UI or API behavior.
+- Enforce visibility permissions server-side; do not rely only on hiding interface elements.
+- Define how blocking, account deactivation, staff access, and safety investigations interact with presence visibility.
+- Test privacy settings, API responses, cross-account access, and changes to settings before launch.
+
 ## Decisions required before implementation
 
 The following are deliberately not decided by this specification:
