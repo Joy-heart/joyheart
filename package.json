@@ -1,0 +1,18 @@
+{
+  "name": "joyheart",
+  "version": "0.1.0",
+  "private": true,
+  "description": "JoyHeart — an international dating and matchmaking platform focused on genuine connections, trust, safety, and meaningful relationships.",
+  "type": "module",
+  "scripts": {
+    "dev": "vinext dev",
+    "build": "vinext build",
+    "check:compatibility": "vinext check",
+    "deploy": "npx @vinext/cloudflare deploy"
+  },
+  "dependencies": {
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "vinext": "1.3.1"
+  }
+}
