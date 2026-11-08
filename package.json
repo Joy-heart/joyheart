@@ -9,6 +9,7 @@
     "build": "vinext build",
     "start": "vinext start",
     "check:compatibility": "vinext check",
+    "setup:cloudflare": "vinext init --platform=cloudflare --cdn-cache=none --data-cache=none --image-optimization=none --no-prerender",
     "deploy": "npx @vinext/cloudflare deploy"
   },
   "dependencies": {
