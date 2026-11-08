@@ -469,6 +469,22 @@ Implementation requirements:
 - Allow members to change their preference at any time, subject to safety and moderation restrictions.
 - Test all preference combinations, existing-conversation behavior, blocked accounts, unauthorized API requests, and cross-account isolation before launch.
 
+## Member control over photo visibility
+
+**Approved product policy:** Members will be able to control who can see their profile photos, with options for everyone, matches only, or selected people.
+
+Implementation requirements:
+
+- Provide clear, understandable controls for the three approved choices: everyone, matches only, and selected people.
+- Define how selected-person access is granted, reviewed, and revoked; do not expose private photos through guessable URLs or client-side-only checks.
+- Enforce photo visibility server-side for every image request and any generated thumbnail or alternate image size.
+- Keep private photo storage and delivery protected with authorization checks; use short-lived access links where appropriate.
+- Explain how photo visibility interacts with discovery, likes, matches, messaging, blocking, reporting, account deactivation, and moderation before members save a change.
+- Ensure blocked members and suspended or otherwise restricted accounts cannot bypass photo visibility rules.
+- Do not let unauthorized viewers infer whether a private photo exists through API responses, metadata, or predictable file paths.
+- Provide members with a clear way to review and revoke selected-person access.
+- Test authorization, link expiry, thumbnail protection, cross-account access, revocation, and privacy behavior before launch.
+
 ## Decisions required before implementation
 
 The following are deliberately not decided by this specification:
