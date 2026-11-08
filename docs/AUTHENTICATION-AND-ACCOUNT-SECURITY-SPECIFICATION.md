@@ -109,15 +109,18 @@ These are recommended settings, not yet an approved final policy. Confirm provid
 
 ### 4. Password recovery
 
-Proposed flow:
+**Approved product policy:** Members recover access through a time-limited recovery link sent to their verified email address. If a member has also lost access to that email account, they may contact JoyHeart support for a carefully verified account-recovery review. Support must never retrieve, view, or set a member's existing password, and must not bypass identity checks or account restrictions.
 
-1. Member requests a recovery message using their email address.
+Approved flow:
+
+1. Member requests account recovery using their email address.
 2. JoyHeart returns a generic acknowledgement regardless of whether an account exists.
 3. Supabase Auth sends a time-limited recovery link when appropriate.
-4. The link is accepted only for an approved redirect destination.
+4. The link is accepted only for an approved redirect destination and is single-use.
 5. The member completes the password change through the trusted Auth flow.
-6. Existing sessions are revoked where supported and according to the approved recovery policy.
+6. Existing sessions are revoked using the approved session policy and supported provider behavior.
 7. The member receives a security notification that recovery or password change occurred.
+8. If the member cannot access their verified email, they may contact support. Support follows a documented identity-verification process, records the decision, and escalates uncertain or high-risk cases rather than bypassing safeguards.
 
 Requirements:
 
@@ -125,8 +128,11 @@ Requirements:
 - Never ask staff to retrieve or set a member's password.
 - Rate-limit recovery requests and prevent token reuse.
 - Do not disclose account existence through response text, timing, or detailed errors.
-- Provide a safe support route if the member no longer controls their email.
-- Recovery support must not bypass identity checks or account restrictions.
+- Support identity checks must use proportionate evidence, protect submitted documents/data, restrict staff access, and be documented before launch.
+- Do not use public profile details, social media messages, or easily discovered personal facts as sole proof of account ownership.
+- Notify the member of recovery and credential changes through available trusted contact channels.
+- Recovery support must not bypass identity checks, age/eligibility restrictions, account suspensions, or moderation decisions.
+- Verify the selected Supabase Auth recovery and session-revocation capabilities before implementation.
 
 ### 5. Session management and logout
 
@@ -255,7 +261,7 @@ The following are deliberately not decided by this specification:
 2. Conditions and safeguards for any future risk-based phone verification; email verification is mandatory at launch.
 3. Approval of the recommended 12-character minimum and email/password-only launch; whether passwordless or social login is deferred.
 4. Session policy is approved: 30-day inactivity expiry, current-device logout, logout from all devices, session revocation after password recovery/ suspected compromise/account deletion, and re-authentication for sensitive actions. Provider capabilities must be verified before implementation.
-5. Recovery and account-compromise support process.
+5. Recovery policy is approved: verified-email recovery link, plus a documented and carefully verified support route if the member loses access to that email. Support must never retrieve or set passwords or bypass safeguards.
 6. Account deletion retention periods and treatment of messages/reports.
 7. Whether MFA is required, optional, or deferred for launch.
 8. Production email delivery provider, sender identity, and domain configuration.
