@@ -56,9 +56,12 @@ export function SignupForm() {
         options: { emailRedirectTo: redirectTo, data: { display_name: name.trim() } },
       });
       if (authError) throw authError;
-      setMessage(data.session
-        ? "Your account was created. Please check your email to complete verification before using member features."
-        : "We sent a verification link if this address is eligible. Open the email and follow its link to verify your account. Check your spam folder too.");
+      if (data.session && data.user?.email_confirmed_at) {
+        window.location.assign("/account");
+        return;
+      }
+      if (data.session) await supabase.auth.signOut({ scope: "local" });
+      setMessage("If this address is eligible, a verification link has been sent. Open the email and follow its link before signing in. Check your spam folder too.");
       setPassword("");
       setConfirm("");
     } catch (caught) {
@@ -100,6 +103,7 @@ export function LoginForm() {
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("reason") === "verify") {
       setCanResend(true);
+      setError(true);
       setMessage("Your email address must be verified before member access. Enter your email below to resend the verification link.");
     }
   }, []);
