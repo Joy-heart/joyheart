@@ -63,12 +63,26 @@ Requirements:
 - Apply rate limits and progressive abuse controls; avoid permanent lockouts that attackers can trigger against another member.
 - Never log passwords, tokens, verification codes, or recovery links.
 - Do not trust a role or account status supplied in a browser request.
-- Require verified contact and eligibility before profile publication and discovery.
+- Require verified email and approved age eligibility before profile publication and discovery. Phone verification is not a universal launch requirement.
 - Handle expired, revoked, and invalid sessions safely.
 
-### 3. Email/contact verification
+### 3. Email and phone verification policy
 
-- Define whether launch requires email verification only or email plus phone verification.
+**Approved launch policy:** Email verification is required for every new account before the member can publish a profile, enter member discovery, send likes, or use other member-only features. A newly registered account remains pending until the email address is verified.
+
+**Phone verification:** Phone verification is not required for every member at initial signup. It may be introduced later as an additional, proportionate safety check for higher-risk activity, account recovery, suspicious behavior, or sensitive account changes. Any such requirement must have a clear purpose, privacy notice, rate limits, and a safe support/alternative process for members who cannot use the available phone method. Phone numbers must remain private and must never appear on public profiles.
+
+Implementation requirements:
+
+- Use Supabase Auth's supported email verification flow; do not create a separate password or token system.
+- Keep the account in a pending/unverified state until Supabase Auth confirms the email address.
+- Enforce verification on the server for every protected member action; hiding buttons in the browser is not sufficient.
+- A browser must not be able to set its own verified flag.
+- Resend actions must be rate-limited.
+- Verification links must not allow arbitrary external redirects.
+- Changing an email address must require confirmation through the approved secure process.
+- Do not expose verification tokens or private contact details to other members.
+- If phone verification is later enabled, verification status must come from a trusted provider/server-side record, never a client-submitted flag.
 - Verification status must come from trusted Supabase Auth state or a trusted server-side verification record.
 - A browser must not be able to set its own verified flag.
 - Resend actions must be rate-limited.
@@ -214,7 +228,7 @@ Tests must demonstrate that:
 The following are deliberately not decided by this specification:
 
 1. Country-by-country legal confirmation of the proposed 18-year minimum age and any stricter eligibility rules.
-2. Email verification only, or email plus phone verification.
+2. Conditions and safeguards for any future risk-based phone verification; email verification is mandatory at launch.
 3. Password policy and whether passwordless or social login is offered at launch.
 4. Session lifetime and device/session management behavior.
 5. Recovery and account-compromise support process.
@@ -229,7 +243,7 @@ These decisions must be reviewed before the live authentication implementation b
 
 When approved, implementation should proceed in small reviewed steps:
 
-1. Review Supabase Auth settings and production redirect configuration.
+1. Review Supabase Auth settings, mandatory email confirmation, email templates, and production redirect configuration.
 2. Implement server-side session handling and safe public auth routes.
 3. Implement signup, verification, login, and logout.
 4. Implement recovery and session revocation behavior.
