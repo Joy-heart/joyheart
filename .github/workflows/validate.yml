@@ -56,14 +56,14 @@ jobs:
         run: node -e "const fs=require('fs');const p='tsconfig.json';const c=JSON.parse(fs.readFileSync(p,'utf8'));c.exclude=(c.exclude||[]).filter(x=>x!=='.cloudflare');fs.writeFileSync(p,JSON.stringify(c,null,2)+'\\n')"
 
       - name: Commit generated Cloudflare source configuration
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add package.json package-lock.json vite.config.ts cloudflare.config.ts .gitignore tsconfig.json
           if ! git diff --cached --quiet; then
             git commit -m "chore: preserve generated Cloudflare configuration"
-            git push origin "HEAD:${{ github.head_ref || github.ref_name }}"
+            git push origin "HEAD:${{ github.ref_name }}"
           fi
 
       - name: Check vinext compatibility
