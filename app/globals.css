@@ -1036,3 +1036,45 @@ a:focus-visible {
   .photo-slide-one { opacity: 1; }
   .photo-slide-two { display: none; }
 }
+
+/* Warm, welcoming hero photography and clear caption spacing. */
+.photo-slide-one {
+  background-image: url("https://images.unsplash.com/photo-1746813629190-80f67d5050fa?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=1800");
+  background-position: center 38%;
+}
+.photo-slide-two {
+  background-image: url("https://images.unsplash.com/photo-1755189550394-5bab640c3897?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=1800");
+  background-position: center 42%;
+}
+.hero-photo-showcase {
+  min-height: 480px;
+  border-radius: 32px;
+  background: linear-gradient(145deg, #f4d8cb, #8d5e62);
+}
+.hero-photo-showcase::after {
+  background: linear-gradient(180deg, rgba(42,24,31,.02) 28%, rgba(42,24,31,.12) 52%, rgba(42,24,31,.72) 100%);
+}
+.photo-caption {
+  right: 28px;
+  bottom: 28px;
+  left: 28px;
+  max-width: 390px;
+}
+.photo-caption strong {
+  max-width: 360px;
+  font-size: clamp(1.55rem, 2.8vw, 2.15rem);
+  line-height: 1.12;
+}
+.hero-photo-showcase .note-top {
+  top: 22px;
+  right: 22px;
+}
+.hero-photo-showcase .note-bottom {
+  bottom: 126px;
+  left: 22px;
+}
+@media (max-width: 600px) {
+  .hero-photo-showcase { min-height: 340px; }
+  .hero-photo-showcase .note-bottom { bottom: 112px; }
+  .photo-caption { right: 20px; bottom: 20px; left: 20px; }
+}
