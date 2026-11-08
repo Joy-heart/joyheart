@@ -410,6 +410,35 @@ Implementation requirements:
 - Define processing times, file format, supported data categories, retention, and applicable legal exceptions before launch, consistent with the laws of each launch country.
 - Test authorization, cross-account isolation, completeness, secure delivery, expiry, and deletion of temporary files before public launch.
 
+## Temporary account deactivation
+
+**Approved product policy:** Members may temporarily deactivate their JoyHeart accounts without permanently deleting them.
+
+Implementation requirements:
+
+- Require the member to be authenticated and confirm the deactivation request.
+- Hide the deactivated member's profile from discovery and prevent new member interactions while deactivation is active.
+- Preserve account data securely so the member can reactivate the account, subject to applicable safety, legal, and moderation restrictions.
+- Define how existing matches, conversations, messages, subscriptions, and pending interactions behave during deactivation; explain this clearly before confirmation.
+- Do not treat deactivation as permanent deletion or as a way to erase safety records, reports, or valid legal-retention obligations.
+- Provide a secure reactivation process and verify the member's identity before restoring account access and visibility.
+- Notify the member that deactivation has taken effect, using a verified channel where available.
+- Test discovery exclusion, access restrictions, reactivation, and interactions with account deletion and moderation before launch.
+
+## Birthday and holiday greetings
+
+**Approved product policy:** JoyHeart will send members birthday greetings and greetings on relevant holidays.
+
+Implementation requirements:
+
+- Birthday greetings must use the member's stored date of birth only for the intended greeting; never disclose the full date of birth in the greeting or to other members.
+- Determine relevant holidays using a clearly defined locale, such as the member's chosen country or region, and maintain a reviewed holiday calendar. Do not assume a holiday is celebrated by every member.
+- Give members clear controls to opt out of birthday and holiday greetings independently, and respect notification preferences and applicable consent requirements.
+- Distinguish these greetings from marketing messages; do not include promotions or advertising without separate consent and legal review.
+- Use the approved transactional/notification delivery provider once selected and configured; do not claim delivery is live before setup and testing.
+- Avoid excessive notifications, respect local dates and time zones where known, and do not send a greeting when the relevant date or locale is uncertain.
+- Keep personal details private, use minimal data in logs, and test scheduling, opt-outs, locale handling, and delivery failures before launch.
+
 ## Decisions required before implementation
 
 The following are deliberately not decided by this specification:
