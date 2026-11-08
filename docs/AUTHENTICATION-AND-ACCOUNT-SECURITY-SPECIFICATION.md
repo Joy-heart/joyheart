@@ -348,6 +348,22 @@ Implementation requirements:
 - Test rate-limit bypasses, distributed attempts, false positives, account enumeration, and recovery behavior before launch.
 - Verify Supabase Auth and any server-side rate-limiting capabilities before selecting the implementation; do not claim account lockout is active until implemented and tested.
 
+## Re-authentication before changing the account email address
+
+**Approved product policy:** Before a member changes the email address on their JoyHeart account, require confirmation through the member's currently verified email address, in addition to any required recent-authentication or step-up check.
+
+Implementation requirements:
+
+- Send a time-limited, single-use confirmation link or code to the currently verified email address; use only a method supported and securely configured by the authentication provider.
+- Do not apply the new email address as verified until the required confirmation of the change has succeeded.
+- Verify the new email address before treating it as the account's verified contact address.
+- Notify the previous verified address about the attempted or completed change where it remains deliverable, and notify the new address as appropriate.
+- Keep the current verified email unchanged if confirmation fails or expires.
+- Apply rate limits and generic responses to prevent account enumeration and abuse.
+- Do not reveal passwords, raw tokens, or unnecessary personal information in messages or logs.
+- Define a safe support route for members who have lost access to their current verified email; support must follow the approved identity-verification process and must not bypass security controls.
+- Verify Supabase Auth email-change behavior and test expiry, replay, failed confirmation, notification delivery, and recovery before launch.
+
 ## Decisions required before implementation
 
 The following are deliberately not decided by this specification:
