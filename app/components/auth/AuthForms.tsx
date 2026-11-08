@@ -8,6 +8,16 @@ function Notice({ children, error = false }: NoticeProps) {
   return <p className={error ? "auth-message auth-message-error" : "auth-message"} role={error ? "alert" : "status"}>{children}</p>;
 }
 
+function safeNextPath(value: string | null) {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return "/account";
+  try {
+    const target = new URL(value, window.location.origin);
+    return target.origin === window.location.origin ? target.pathname + target.search + target.hash : "/account";
+  } catch {
+    return "/account";
+  }
+}
+
 function friendlyAuthError(message: string) {
   const value = message.toLowerCase();
   if (value.includes("invalid login credentials") || value.includes("invalid email or password")) return "The email address or password is incorrect. Please check them and try again.";
@@ -104,10 +114,8 @@ export function LoginForm() {
         setMessage("Please verify your email address before signing in. You can request a fresh verification email below.");
         return;
       }
-      const requested = new URLSearchParams(window.location.search).get("next");
-      const destination = requested && requested.startsWith("/") && !requested.startsWith("//") && !requested.includes("\\\\") ? requested : "/account";
-      const safeDestination = new URL(destination, window.location.origin).origin === window.location.origin ? destination : "/account";
-      window.location.assign(safeDestination);
+      const destination = safeNextPath(new URLSearchParams(window.location.search).get("next"));
+      window.location.assign(destination);
     } catch (caught) {
       const raw = caught instanceof Error ? caught.message : "";
       setError(true);
