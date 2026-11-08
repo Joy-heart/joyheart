@@ -7,12 +7,30 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
+    "start": "vinext start",
     "check:compatibility": "vinext check",
-    "deploy": "npx @vinext/cloudflare deploy"
+    "setup:cloudflare": "vinext init --platform=cloudflare --cdn-cache=none --data-cache=none --image-optimization=none --no-prerender",
+    "deploy": "npx @vinext/cloudflare deploy",
+    "dev:vinext": "vite dev --port 3001",
+    "build:vinext": "vite build",
+    "start:vinext": "vite preview",
+    "deploy:vinext": "vinext-cloudflare deploy"
   },
   "dependencies": {
-    "react": "19.3.1",
-    "react-dom": "19.3.1",
-    "vinext": "1.3.1"
+    "@vinext/cloudflare": "^1.3.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-server-dom-webpack": "^19.3.1",
+    "vinext": "^1.3.1"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^2.0.0-beta.v.12",
+    "@vitejs/plugin-react": "^6.2.1",
+    "@vitejs/plugin-rsc": "^0.5.0",
+    "cf": "^1.0.0-beta.28",
+    "vite": "^8.3.3"
+  },
+  "overrides": {
+    "fflate": "0.7.5"
   }
 }
