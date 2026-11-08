@@ -1220,3 +1220,15 @@ a:focus-visible {
   background: rgba(160, 48, 58, .07);
 }
 .auth-consent a { color: var(--joy-burgundy); font-weight: 700; text-decoration: underline; }
+
+/* Auth-aware navigation */
+.nav-logout {
+  border: 0;
+  background: transparent;
+  color: var(--joy-burgundy);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.nav-logout:hover, .nav-logout:focus-visible { text-decoration: underline; }
+.mobile-nav-panel .nav-logout { text-align: left; padding: 10px 0; }
