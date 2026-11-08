@@ -78,16 +78,13 @@ a:focus-visible {
   letter-spacing: -0.06em;
 }
 
-.brand-mark {
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
-  border-radius: 12px 12px 12px 4px;
-  color: white;
-  background: var(--joy-burgundy);
-  font-size: 1.15rem;
-  line-height: 1;
+.brand-logo {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  display: block;
+  border-radius: 13px;
+  box-shadow: 0 5px 14px rgba(100, 29, 59, 0.16);
 }
 
 .nav-links {
