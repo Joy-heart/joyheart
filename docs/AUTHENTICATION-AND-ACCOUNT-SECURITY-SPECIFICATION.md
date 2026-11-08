@@ -300,6 +300,21 @@ Implementation requirements:
 - Define handling for bounced or undeliverable security notifications before launch.
 - Test notifications for password changes, email changes, and security-setting changes before enabling public registration.
 
+## New-device login security notifications
+
+**Approved product policy:** Notify members when a successful login is detected from a new or unrecognised device.
+
+Implementation requirements:
+
+- Send the alert through the configured transactional email provider to the member's verified email address.
+- Include the login time and only the device or session details that are useful and safe to disclose.
+- Provide clear instructions for contacting JoyHeart support and securing the account if the member does not recognise the login.
+- Do not include passwords, raw authentication tokens, or sensitive session secrets in the alert.
+- Define what qualifies as a new or unrecognised device using signals the authentication provider can reliably supply; do not claim precise device identification or location when it is not available.
+- Avoid exposing whether an email address has an account through login or alert responses.
+- Rate-limit and monitor alerts to prevent abuse and excessive notifications.
+- Test detection, delivery, and the suspicious-login support path before public launch.
+
 ## Decisions required before implementation
 
 The following are deliberately not decided by this specification:
