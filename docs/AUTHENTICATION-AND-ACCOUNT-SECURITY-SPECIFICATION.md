@@ -285,6 +285,21 @@ Implementation requirements:
 - Test email templates, sender authentication, delivery, bounce handling, and recovery/verification links before enabling public registration.
 - Do not send marketing messages as part of transactional authentication email without separate consent and legal review.
 
+## Account security notifications
+
+**Approved product policy:** Notify members when their password changes, their email address changes, or their account security settings change.
+
+Implementation requirements:
+
+- Send notifications through the configured transactional email provider.
+- For an email-address change, notify the previously verified email address where it remains deliverable, and send the required confirmation to the new address before treating it as verified.
+- Do not include passwords, raw authentication tokens, or unnecessary sensitive information in notifications.
+- Include the event type, approximate time, and a clear instruction to contact JoyHeart support promptly if the member did not make the change.
+- Do not include an unsafe one-click action that could allow an attacker to reverse or take over an account.
+- Record notification delivery outcomes without logging secrets or unnecessary personal content.
+- Define handling for bounced or undeliverable security notifications before launch.
+- Test notifications for password changes, email changes, and security-setting changes before enabling public registration.
+
 ## Decisions required before implementation
 
 The following are deliberately not decided by this specification:
@@ -297,7 +312,8 @@ The following are deliberately not decided by this specification:
 6. Account deletion behavior is approved: secure member-initiated permanent deletion, immediate removal from discovery, clear explanation of effects on matches/messages, and retention only for legitimate safety, fraud-prevention, or legal reasons. Exact retention periods and treatment of messages/reports must still be defined before launch.
 7. MFA policy is approved: optional for members at launch and mandatory for staff/administrators before admin access; secure lost-device recovery and server-side enforcement must be implemented and tested.
 8. Email delivery policy is approved: dedicated provider, JoyHeart-branded sender, authenticated sending domain (SPF/DKIM/DMARC), and delivery/bounce monitoring. The provider and sender domain still need to be selected and verified before implementation.
-9. Exact legal notices, consent wording, and launch-country approvals.
+9. Account security notifications are approved for password changes, email-address changes, and account security-setting changes. Notification templates, delivery-failure handling, and event coverage must be tested before launch.
+10. Exact legal notices, consent wording, and launch-country approvals.
 
 These decisions must be reviewed before the live authentication implementation begins.
 
