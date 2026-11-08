@@ -136,7 +136,7 @@ export function LoginForm() {
   );
 }
 
-export function ResetPasswordForm() {
+export function ResetPasswordForm({ recoveryVerified = false }: { recoveryVerified?: boolean }) {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
@@ -146,6 +146,12 @@ export function ResetPasswordForm() {
 
   useEffect(() => {
     if (!supabase) { setError(true); setMessage("Password recovery is temporarily unavailable."); return; }
+    if (recoveryVerified) {
+      setReady(true);
+      setError(false);
+      setMessage("Your recovery link is valid. Choose a new password below.");
+      return;
+    }
     let active = true;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
@@ -158,12 +164,6 @@ export function ResetPasswordForm() {
     void supabase.auth.getSession().then(({ data, error: sessionError }) => {
       if (!active) return;
       if (sessionError) { setError(true); setMessage("We could not verify this recovery session. Request a new password-reset email."); return; }
-      if (data.session) {
-        setReady(true);
-        setError(false);
-        setMessage("Your recovery session is ready. Choose a new password below.");
-        return;
-      }
       const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
       const query = new URLSearchParams(window.location.search);
       if (hash.get("error") || query.get("error")) {
