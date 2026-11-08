@@ -38,6 +38,17 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Record dependency security audit
+        run: npm audit --json > npm-audit.json || true
+
+      - name: Preserve dependency audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: joyheart-dependency-audit
+          path: npm-audit.json
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Generate Cloudflare configuration with caching disabled
         run: npm run setup:cloudflare
 
