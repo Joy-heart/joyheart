@@ -130,14 +130,21 @@ Requirements:
 
 ### 5. Session management and logout
 
+**Approved product policy:** Keep members signed in on their own trusted devices, with an inactivity expiry after 30 days. Members must be able to log out of the current device and request logout from all devices. Revoke sessions after password recovery, suspected account compromise, and account deletion. Require the member to authenticate again before sensitive account actions.
+
+Implementation requirements:
+
 - Use secure, HTTP-only, appropriately SameSite cookies where the application architecture supports them.
 - Set Secure cookies in production and protect state-changing requests against CSRF where cookie-based sessions are used.
 - Do not place long-lived session tokens in local storage.
 - Rotate or refresh sessions using the Supabase-supported secure flow.
 - Provide logout on the current device.
-- Define whether members can view and revoke other active sessions/devices; do not claim device-level controls until implemented and tested.
-- Revoke sessions after password recovery, account compromise, account deletion, and certain high-risk security events where supported.
+- Provide a way for members to sign out of all devices; verify the chosen Supabase session-revocation behavior before implementation.
+- Enforce the 30-day inactivity expiry server-side using supported session controls; do not rely only on a browser timer.
+- Revoke sessions after password recovery, suspected account compromise, and account deletion, using supported provider behavior.
+- Require recent authentication or an approved step-up check before sensitive account actions.
 - Handle session expiry without exposing private data or creating redirect loops.
+- Do not claim device-level session lists or per-device revocation until implemented and tested.
 
 ### 6. Account deletion and deactivation
 
@@ -247,7 +254,7 @@ The following are deliberately not decided by this specification:
 1. Country-by-country legal confirmation of the proposed 18-year minimum age and any stricter eligibility rules.
 2. Conditions and safeguards for any future risk-based phone verification; email verification is mandatory at launch.
 3. Approval of the recommended 12-character minimum and email/password-only launch; whether passwordless or social login is deferred.
-4. Session lifetime and device/session management behavior.
+4. Session policy is approved: 30-day inactivity expiry, current-device logout, logout from all devices, session revocation after password recovery/ suspected compromise/account deletion, and re-authentication for sensitive actions. Provider capabilities must be verified before implementation.
 5. Recovery and account-compromise support process.
 6. Account deletion retention periods and treatment of messages/reports.
 7. Whether MFA is required, optional, or deferred for launch.
