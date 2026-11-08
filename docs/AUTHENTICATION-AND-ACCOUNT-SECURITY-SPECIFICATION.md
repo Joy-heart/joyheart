@@ -485,6 +485,22 @@ Implementation requirements:
 - Provide members with a clear way to review and revoke selected-person access.
 - Test authorization, link expiry, thumbnail protection, cross-account access, revocation, and privacy behavior before launch.
 
+## Member control over country-based discovery and matching
+
+**Approved product policy:** Members will be able to exclude specific countries from seeing their profiles and choose the countries from which they want to receive potential matches.
+
+Implementation requirements:
+
+- Provide separate, clearly explained controls for (a) countries from which the member's profile should be hidden and (b) countries from which the member wants to discover or receive potential matches.
+- Allow members to select multiple countries and update their choices at any time.
+- Apply country restrictions consistently to discovery, recommendations, likes, profile views, and other relevant entry points; do not rely only on hiding cards in the interface.
+- Enforce eligibility and country restrictions server-side for every relevant query and interaction.
+- Define the source and reliability of a member's country/region signal, including how travel, VPN use, inaccurate location data, and missing location information are handled. Do not promise precise geographic blocking where the system cannot reliably establish a viewer's country.
+- Do not expose a member's private location or reveal whether their profile exists in a restricted country.
+- Respect blocks, reports, suspensions, account deactivation, and all other safety restrictions regardless of country preferences.
+- Explain that country preferences affect discovery and matching, not legal availability or a guarantee that every selected country will produce matches.
+- Test multiple-country selections, cross-country discovery, location uncertainty, API bypass attempts, and interactions with other privacy controls before launch.
+
 ## Decisions required before implementation
 
 The following are deliberately not decided by this specification:
