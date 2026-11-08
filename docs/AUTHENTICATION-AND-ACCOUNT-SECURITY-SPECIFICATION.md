@@ -133,11 +133,11 @@ Authentication alone must not grant access to another member's information.
 
 ## Age eligibility and policy acceptance
 
-The minimum age and country-specific requirements are product/legal decisions that remain open.
+**Proposed minimum age: 18 years.** This is the approved product proposal for JoyHeart, subject to country-specific legal review before launch. If a launch country's law requires a higher minimum age or additional age-assurance measures, JoyHeart must follow those requirements. Do not launch in a country until its applicable requirements have been reviewed.
 
 Before enabling registration:
 
-- Approve the minimum age for JoyHeart.
+- Confirm the proposed 18-year minimum age is lawful in each launch country; apply any higher local minimum or additional age-assurance requirement.
 - Review age and online dating requirements in each launch country.
 - Decide whether date-of-birth declaration is sufficient at signup and where additional age assurance is required.
 - Keep exact date of birth private and derive any displayed age through trusted server-side logic.
@@ -213,7 +213,7 @@ Tests must demonstrate that:
 
 The following are deliberately not decided by this specification:
 
-1. Minimum age and country-by-country eligibility rules.
+1. Country-by-country legal confirmation of the proposed 18-year minimum age and any stricter eligibility rules.
 2. Email verification only, or email plus phone verification.
 3. Password policy and whether passwordless or social login is offered at launch.
 4. Session lifetime and device/session management behavior.
@@ -242,4 +242,4 @@ Do not create application tables or migrations as part of the specification-only
 
 ## Current status
 
-**Design specification only — not implemented and not approved for live authentication.** No Supabase Auth settings, database schema, migrations, credentials, account forms, or production user data have been changed by this document.
+**Design specification only — the proposed 18-year minimum age is approved as a product decision, subject to country-specific legal review. Authentication is not implemented and is not approved for live launch.** No Supabase Auth settings, database schema, migrations, credentials, account forms, or production user data have been changed by this document.
