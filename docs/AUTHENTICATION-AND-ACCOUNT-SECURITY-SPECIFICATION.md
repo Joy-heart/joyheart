@@ -1,0 +1,245 @@
+# JoyHeart authentication and account security specification
+
+## Purpose and scope
+
+Define the secure account lifecycle for JoyHeart before implementing registration, login, password recovery, or live authentication.
+
+This is a design document only. It does not configure Supabase Auth, create database tables, add policies, collect credentials, or enable account registration.
+
+JoyHeart will use the existing Supabase project. Do not create a second Supabase project or a separate staging database.
+
+## Security principles
+
+1. Supabase Auth is the sole owner of passwords, credential verification, and authentication tokens.
+2. Never store plaintext passwords, password hashes, access tokens, refresh tokens, recovery tokens, or one-time codes in application tables or logs.
+3. Authentication proves identity; server-side authorization decides what that identity may do.
+4. Never trust client-supplied role, staff status, verification status, subscription status, account status, or permissions.
+5. Use deny-by-default authorization and Row Level Security for every exposed user-owned table.
+6. Use generic responses where detailed errors could reveal whether an email or phone number has an account.
+7. Apply rate limits and abuse controls to signup, login, verification, recovery, and other sensitive actions.
+8. Keep secrets server-side. A Supabase service-role key must never be shipped to a browser or committed to Git.
+9. Make account security and recovery understandable to ordinary members.
+10. Do not enable live registration until the required legal, age, privacy, and security decisions are approved.
+
+## Account lifecycle
+
+### 1. Registration
+
+Proposed flow:
+
+1. Member opens the Join JoyHeart page.
+2. Member reviews the applicable Terms, Privacy Notice, and age eligibility statement.
+3. Member provides an email address and a password, or uses another explicitly approved authentication method.
+4. The server validates input and applies signup rate limits and abuse checks.
+5. Supabase Auth creates the pending account.
+6. Supabase sends a verification message using the configured approved method.
+7. The account remains unverified and cannot publish a public profile or use member discovery until required verification and eligibility checks pass.
+8. After verification, the member completes onboarding and creates a profile.
+
+Requirements:
+
+- Use Supabase Auth; do not implement custom password storage.
+- Require explicit acceptance of the current terms and privacy notice and record the applicable policy version and timestamp.
+- Do not treat clicking a client-side checkbox as sufficient proof of age.
+- Do not expose account existence through different signup error messages.
+- Prevent automated signup abuse with server-side rate limits and proportionate bot controls.
+- Do not request unnecessary personal information during registration.
+- Email verification links must use approved redirect destinations only.
+- Verification tokens must be short-lived and single-use according to provider capabilities.
+
+### 2. Login
+
+Proposed flow:
+
+1. Member submits their email and password over HTTPS.
+2. Supabase Auth verifies the credentials.
+3. The application establishes the authenticated session using secure cookie/session handling appropriate to the chosen architecture.
+4. Server-side authorization checks account state before granting access to protected features.
+5. The member is redirected only to an approved internal destination.
+
+Requirements:
+
+- Use generic login failure messages that do not reveal whether the email exists.
+- Apply rate limits and progressive abuse controls; avoid permanent lockouts that attackers can trigger against another member.
+- Never log passwords, tokens, verification codes, or recovery links.
+- Do not trust a role or account status supplied in a browser request.
+- Require verified contact and eligibility before profile publication and discovery.
+- Handle expired, revoked, and invalid sessions safely.
+
+### 3. Email/contact verification
+
+- Define whether launch requires email verification only or email plus phone verification.
+- Verification status must come from trusted Supabase Auth state or a trusted server-side verification record.
+- A browser must not be able to set its own verified flag.
+- Resend actions must be rate-limited.
+- Verification links must not allow arbitrary external redirects.
+- Changing an email address must require confirmation through the approved secure process.
+- Do not expose verification tokens or private contact details to other members.
+
+### 4. Password recovery
+
+Proposed flow:
+
+1. Member requests a recovery message using their email address.
+2. JoyHeart returns a generic acknowledgement regardless of whether an account exists.
+3. Supabase Auth sends a time-limited recovery link when appropriate.
+4. The link is accepted only for an approved redirect destination.
+5. The member completes the password change through the trusted Auth flow.
+6. Existing sessions are revoked where supported and according to the approved recovery policy.
+7. The member receives a security notification that recovery or password change occurred.
+
+Requirements:
+
+- Never email or display an existing password.
+- Never ask staff to retrieve or set a member's password.
+- Rate-limit recovery requests and prevent token reuse.
+- Do not disclose account existence through response text, timing, or detailed errors.
+- Provide a safe support route if the member no longer controls their email.
+- Recovery support must not bypass identity checks or account restrictions.
+
+### 5. Session management and logout
+
+- Use secure, HTTP-only, appropriately SameSite cookies where the application architecture supports them.
+- Set Secure cookies in production and protect state-changing requests against CSRF where cookie-based sessions are used.
+- Do not place long-lived session tokens in local storage.
+- Rotate or refresh sessions using the Supabase-supported secure flow.
+- Provide logout on the current device.
+- Define whether members can view and revoke other active sessions/devices; do not claim device-level controls until implemented and tested.
+- Revoke sessions after password recovery, account compromise, account deletion, and certain high-risk security events where supported.
+- Handle session expiry without exposing private data or creating redirect loops.
+
+### 6. Account deletion and deactivation
+
+- Provide a clear member-initiated account deletion request.
+- Require recent authentication or an approved step-up check before destructive account actions.
+- Explain what happens to profile visibility, photos, matches, and message history before confirmation.
+- Remove or anonymize personal data according to an approved retention schedule and applicable law.
+- Preserve only records that must be retained for legitimate safety, fraud-prevention, or legal reasons, with restricted access and a defined retention period.
+- Deletion must be performed by trusted server-side logic, not by trusting a client-supplied user ID.
+- Define a recovery/cancellation window only if the product and legal policy explicitly support it.
+
+## Authorization and access control
+
+Authentication alone must not grant access to another member's information.
+
+- Enable Row Level Security on every exposed application table.
+- Use explicit owner and participant checks for private profiles, preferences, photos, likes, matches, conversations, and messages.
+- A member can update only permitted fields belonging to their own account.
+- Staff access must use trusted server-side roles and narrowly scoped permissions.
+- Never use a public profile field or user-editable metadata as an authorization source.
+- Service-role credentials are server-only and must be used only for narrowly scoped trusted operations.
+- Every server action must independently validate the authenticated user and requested resource.
+- Blocked, suspended, unverified, and underage/ineligible accounts must be prevented from using restricted features even if they possess a valid session.
+
+## Age eligibility and policy acceptance
+
+The minimum age and country-specific requirements are product/legal decisions that remain open.
+
+Before enabling registration:
+
+- Approve the minimum age for JoyHeart.
+- Review age and online dating requirements in each launch country.
+- Decide whether date-of-birth declaration is sufficient at signup and where additional age assurance is required.
+- Keep exact date of birth private and derive any displayed age through trusted server-side logic.
+- Prevent an ineligible account from publishing a profile or entering discovery.
+- Define a fair review and appeal process for eligibility restrictions.
+- Record terms/privacy policy version, acceptance time, and relevant consent state.
+- Obtain legal review for country-specific notices, consent, retention, and deletion.
+
+Do not launch in a country until its applicable requirements have been reviewed.
+
+## Abuse prevention and security monitoring
+
+Apply proportionate controls to:
+
+- Signup and repeated account creation.
+- Login failures and credential-stuffing patterns.
+- Verification resend and token redemption.
+- Password recovery.
+- Email/phone changes.
+- Session refresh and suspicious session activity.
+- Profile publication and account deletion.
+- Staff access and privileged actions.
+
+Monitoring requirements:
+
+- Record security events without storing passwords, tokens, recovery URLs, or unnecessary personal content.
+- Restrict access to security logs.
+- Define alert thresholds and incident response ownership before launch.
+- Avoid revealing detailed risk rules to attackers.
+- Provide a member-facing path to report suspected account compromise.
+
+## Redirects, cookies, and browser security
+
+- Maintain an explicit allowlist for post-login, verification, and recovery redirect destinations.
+- Reject arbitrary external redirect URLs.
+- Use HTTPS throughout production.
+- Configure cookie domain, Secure, HttpOnly, and SameSite attributes for the deployed domain and application architecture.
+- Protect cookie-authenticated state-changing requests against CSRF.
+- Apply an appropriate Content Security Policy and other security headers after testing compatibility with the app.
+- Do not expose secrets in client bundles, HTML, source maps, analytics, or error responses.
+- Avoid caching authenticated pages and personalized responses in shared public caches.
+
+## Future multi-factor authentication
+
+MFA is a planned security enhancement, not assumed to be enabled.
+
+Before enabling it:
+
+- Select supported factors and recovery methods.
+- Require step-up verification for sensitive account actions where appropriate.
+- Define lost-device recovery and support verification.
+- Do not allow support staff to silently bypass MFA.
+- Test enrollment, challenge, recovery, revocation, and session behavior.
+
+## Required validation before launch
+
+Tests must demonstrate that:
+
+- Unauthenticated visitors cannot access protected account or member data.
+- One authenticated member cannot read or modify another member's private data.
+- A member cannot assign themselves staff, moderator, verified, premium, or other privileged status.
+- Unverified or ineligible accounts cannot publish profiles or enter discovery.
+- Recovery and login responses do not disclose account existence.
+- Rate limits apply to sensitive authentication actions.
+- Redirect allowlists reject untrusted destinations.
+- Session expiry and revocation behave safely.
+- Cookie and CSRF protections work in the deployed Cloudflare environment.
+- Account deletion follows the approved retention and anonymization policy.
+- Secrets and credentials never appear in client code or logs.
+- RLS policies and server-side authorization are tested with multiple distinct users.
+
+## Decisions required before implementation
+
+The following are deliberately not decided by this specification:
+
+1. Minimum age and country-by-country eligibility rules.
+2. Email verification only, or email plus phone verification.
+3. Password policy and whether passwordless or social login is offered at launch.
+4. Session lifetime and device/session management behavior.
+5. Recovery and account-compromise support process.
+6. Account deletion retention periods and treatment of messages/reports.
+7. Whether MFA is required, optional, or deferred for launch.
+8. Production email delivery provider, sender identity, and domain configuration.
+9. Exact legal notices, consent wording, and launch-country approvals.
+
+These decisions must be reviewed before the live authentication implementation begins.
+
+## Implementation boundary
+
+When approved, implementation should proceed in small reviewed steps:
+
+1. Review Supabase Auth settings and production redirect configuration.
+2. Implement server-side session handling and safe public auth routes.
+3. Implement signup, verification, login, and logout.
+4. Implement recovery and session revocation behavior.
+5. Implement age eligibility and policy acceptance gates.
+6. Add account deletion and security notifications.
+7. Validate RLS and authorization with multiple test accounts.
+8. Conduct a production security review before enabling public registration.
+
+Do not create application tables or migrations as part of the specification-only step.
+
+## Current status
+
+**Design specification only — not implemented and not approved for live authentication.** No Supabase Auth settings, database schema, migrations, credentials, account forms, or production user data have been changed by this document.
