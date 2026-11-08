@@ -910,10 +910,10 @@ a:focus-visible {
   background: #ead9d3;
   box-shadow: 0 28px 70px rgba(83, 33, 53, 0.16);
 }
-.photo-slide {
+ .photo-slide {
   position: absolute;
   inset: 0;
-  z-index: -2;
+  z-index: 0;
   background-size: cover;
   background-position: center;
   transform: scale(1.04);
@@ -929,10 +929,10 @@ a:focus-visible {
   animation-delay: 9s;
   opacity: 0;
 }
-.hero-photo-showcase::after {
+ .hero-photo-showcase::after {
   position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 1;
   content: "";
   background: linear-gradient(180deg, rgba(42, 24, 31, 0.04) 35%, rgba(42, 24, 31, 0.62) 100%);
 }
