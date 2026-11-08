@@ -85,17 +85,49 @@ export function LoginForm() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState(false);
+  const [canResend, setCanResend] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
     setError(false);
+    setCanResend(false);
     if (!supabase) { setError(true); setMessage("Sign-in is temporarily unavailable."); return; }
     setBusy(true);
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
       if (authError) throw authError;
-      window.location.assign("/");
+      if (!data.user?.email_confirmed_at) {
+        await supabase.auth.signOut({ scope: "local" });
+        setError(true);
+        setCanResend(true);
+        setMessage("Please verify your email address before signing in. You can request a fresh verification email below.");
+        return;
+      }
+      const requested = new URLSearchParams(window.location.search).get("next");
+      const destination = requested && requested.startsWith("/") && !requested.startsWith("//") && !requested.includes("\\\\") ? requested : "/account";
+      const safeDestination = new URL(destination, window.location.origin).origin === window.location.origin ? destination : "/account";
+      window.location.assign(safeDestination);
+    } catch (caught) {
+      const raw = caught instanceof Error ? caught.message : "";
+      setError(true);
+      setCanResend(raw.toLowerCase().includes("email not confirmed"));
+      setMessage(friendlyAuthError(raw));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resendVerification() {
+    if (!supabase || !email.trim()) return;
+    setBusy(true);
+    setError(false);
+    setCanResend(false);
+    try {
+      const emailRedirectTo = new URL("/auth/callback?next=%2Faccount", window.location.origin).toString();
+      const { error: resendError } = await supabase.auth.resend({ type: "signup", email: email.trim().toLowerCase(), options: { emailRedirectTo } });
+      if (resendError) throw resendError;
+      setMessage("If this address has an unverified account, a fresh verification email has been sent. Check your inbox and spam folder.");
     } catch (caught) {
       setError(true);
       setMessage(friendlyAuthError(caught instanceof Error ? caught.message : ""));
@@ -132,6 +164,7 @@ export function LoginForm() {
       <div className="auth-form-meta"><span className="auth-muted">Secure member access</span><button type="button" className="auth-text-button" onClick={forgotPassword} disabled={busy}>Forgot password?</button></div>
       <button className="button button-primary auth-submit" type="submit" disabled={busy}>{busy ? "Signing in…" : "Log in"}</button>
       {message && <Notice error={error}>{message}</Notice>}
+      {canResend && <button type="button" className="auth-text-button" onClick={resendVerification} disabled={busy}>Resend verification email</button>}
     </form>
   );
 }
