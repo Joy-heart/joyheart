@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ResetPasswordForm } from "@/app/components/auth/AuthForms";
 import { supabase } from "@/app/lib/supabase/client";
 
 function safeInternalPath(value: string | null) {
@@ -16,6 +17,7 @@ function safeInternalPath(value: string | null) {
 export default function AuthCallbackPage() {
   const [message, setMessage] = useState("Confirming your email address…");
   const [failed, setFailed] = useState(false);
+  const [recoveryReady, setRecoveryReady] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -46,8 +48,8 @@ export default function AuthCallbackPage() {
         return;
       }
       if (next === "/reset-password") {
-        setMessage("Your recovery link is verified. You can now choose a new password.");
-        window.location.replace(next);
+        setMessage("Your recovery link is verified. Choose a new password below.");
+        setRecoveryReady(true);
         return;
       }
       setMessage("Your email is verified. Your JoyHeart account is ready.");
@@ -65,9 +67,10 @@ export default function AuthCallbackPage() {
     <main className="auth-page">
       <section className="auth-card" aria-live="polite">
         <div className="auth-brand-lockup"><img src="/joyheart-mark.svg" alt="JoyHeart" width="60" height="60" /><span>JoyHeart</span></div>
-        <p className="auth-eyebrow">{failed ? "Account link" : "Email verification"}</p>
-        <h1>{failed ? "Verification needs attention." : "One more step."}</h1>
+        <p className="auth-eyebrow">{recoveryReady ? "Account recovery" : failed ? "Account link" : "Email verification"}</p>
+        <h1>{recoveryReady ? "Choose a new password." : failed ? "Verification needs attention." : "One more step."}</h1>
         <p className="auth-intro">{message}</p>
+        {recoveryReady && <ResetPasswordForm recoveryVerified />}
         {failed && <p className="auth-switch"><a href="/signup">Return to registration</a> or <a href="/login">log in</a>.</p>}
       </section>
     </main>
