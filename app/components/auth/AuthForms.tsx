@@ -49,7 +49,7 @@ export function SignupForm() {
     if (!consent) { setError(true); setMessage("Please confirm the age requirement and accept the Terms and Privacy Notice."); return; }
     setBusy(true);
     try {
-      const redirectTo = new URL("/auth/callback?next=%2F", window.location.origin).toString();
+      const redirectTo = new URL("/auth/callback?next=%2Faccount", window.location.origin).toString();
       const { data, error: authError } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
