@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   description:
     "Meet people with intention. JoyHeart is an international dating and matchmaking community built around genuine connections, trust, and meaningful relationships.",
   applicationName: "JoyHeart",
+  icons: {
+    icon: "/joyheart-mark.svg",
+    shortcut: "/joyheart-mark.svg",
+  },
   keywords: [
     "international dating",
     "matchmaking",
