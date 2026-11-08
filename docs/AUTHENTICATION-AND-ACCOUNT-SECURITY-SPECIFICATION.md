@@ -331,6 +331,23 @@ Implementation requirements:
 - If the provider cannot support reliable per-session listing or revocation, do not simulate those capabilities; clearly limit the interface to the controls that are genuinely supported.
 - Verify provider capabilities and test cross-account isolation, revocation, and logout behavior before launch.
 
+## Protection against repeated failed login attempts
+
+**Approved product policy:** JoyHeart will apply temporary protective restrictions after repeated failed login attempts to reduce password-guessing and account-compromise risk.
+
+Implementation requirements:
+
+- Use server-side rate limits and risk controls; never rely on client-side counters.
+- Apply progressive delays or temporary throttling before considering a temporary account-level lock, where supported and safe.
+- Define thresholds, lock duration, reset behavior, and escalation rules using security testing and abuse monitoring before launch; do not hard-code unreviewed thresholds in this policy.
+- Avoid permanent lockouts from login failures alone. Provide a safe recovery path through the verified account-recovery process.
+- Keep login and recovery responses generic so attackers cannot use them to determine whether an account exists.
+- Apply protections across relevant signals (such as account and network/device risk) without allowing one shared network to trivially deny service to many members.
+- Log security events with minimal necessary information; never log passwords, raw tokens, or other authentication secrets.
+- Notify members when suspicious repeated attempts create a meaningful security event, where safe and deliverable.
+- Test rate-limit bypasses, distributed attempts, false positives, account enumeration, and recovery behavior before launch.
+- Verify Supabase Auth and any server-side rate-limiting capabilities before selecting the implementation; do not claim account lockout is active until implemented and tested.
+
 ## Decisions required before implementation
 
 The following are deliberately not decided by this specification:
