@@ -24,9 +24,14 @@ export default function HomePage() {
     <main className="site-shell">
       <header className="site-header">
         <a className="brand" href="/" aria-label="JoyHeart home">
-          <span className="brand-mark" aria-hidden="true">
-            ♡
-          </span>
+          <img
+            className="brand-logo"
+            src="/joyheart-mark.svg"
+            alt=""
+            width="42"
+            height="42"
+            aria-hidden="true"
+          />
           <span>JoyHeart</span>
         </a>
 
