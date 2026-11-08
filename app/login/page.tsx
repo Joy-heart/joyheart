@@ -7,7 +7,10 @@ export default function LoginPage() {
   return (
     <main className="auth-page">
       <section className="auth-card" aria-labelledby="login-title">
-        <div className="auth-brand-mark" aria-hidden="true">♡</div>
+        <div className="auth-brand-lockup">
+          <img src="/joyheart-mark.svg" alt="JoyHeart" width="60" height="60" />
+          <span>JoyHeart</span>
+        </div>
         <p className="auth-eyebrow">Welcome back</p>
         <h1 id="login-title">Good to see you again.</h1>
         <p className="auth-intro">
@@ -28,7 +31,7 @@ export default function LoginPage() {
 
           <div className="auth-form-meta">
             <span className="auth-muted">Secure member access</span>
-            <a aria-disabled="true" className="auth-disabled-link">Forgot password?</a>
+            <span aria-disabled="true" className="auth-disabled-link">Forgot password?</span>
           </div>
 
           <button className="button button-primary auth-submit" type="button" disabled>
