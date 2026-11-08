@@ -48,18 +48,16 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="hero-art" aria-label="JoyHeart brand illustration">
-          <div className="art-orbit" aria-hidden="true" />
+        <div className="hero-art hero-photo-showcase" aria-label="JoyHeart couples photography">
+          <div className="photo-slide photo-slide-one" role="img" aria-label="A couple sharing a happy moment outdoors" />
+          <div className="photo-slide photo-slide-two" role="img" aria-label="A couple enjoying a sunny day together" />
+          <div className="photo-caption">
+            <span>Where hearts find happiness</span>
+            <strong>Real people. Meaningful connections.</strong>
+          </div>
           <div className="floating-note note-top">
             <span aria-hidden="true">✧</span>
             Connection with intention
-          </div>
-          <div className="heart-card">
-            <div className="heart-symbol" aria-hidden="true">
-              ♡
-            </div>
-            <strong>A little more heart.</strong>
-            <p>Because the best connections start with being yourself.</p>
           </div>
           <div className="floating-note note-bottom">
             <span aria-hidden="true">⌖</span>

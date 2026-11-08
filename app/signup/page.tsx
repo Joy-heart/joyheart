@@ -5,7 +5,7 @@ export const metadata = {
 
 export default function SignupPage() {
   return (
-    <main className="auth-page">
+    <main className="auth-page auth-page-signup">
       <section className="auth-card" aria-labelledby="signup-title">
         <div className="auth-brand-lockup">
           <img src="/joyheart-mark.svg" alt="JoyHeart" width="60" height="60" />
