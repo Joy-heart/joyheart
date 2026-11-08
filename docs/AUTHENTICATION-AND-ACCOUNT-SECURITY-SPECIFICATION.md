@@ -501,6 +501,22 @@ Implementation requirements:
 - Explain that country preferences affect discovery and matching, not legal availability or a guarantee that every selected country will produce matches.
 - Test multiple-country selections, cross-country discovery, location uncertainty, API bypass attempts, and interactions with other privacy controls before launch.
 
+## Member language preferences for discovery and matching
+
+**Approved product policy:** Members will be able to select their preferred languages and choose to receive potential matches only from people who speak at least one of those languages.
+
+Implementation requirements:
+
+- Allow members to select multiple languages and update their preferences at any time.
+- Distinguish languages a member speaks from languages they are learning or would like to practise; only languages marked as spoken should qualify for a strict spoken-language matching filter unless the member chooses otherwise.
+- Provide a clear choice between requiring a language match and using language as a ranking preference, so members understand whether non-matching profiles are excluded or simply ranked lower.
+- Apply strict language eligibility consistently in discovery, recommendations, likes, and matching when the member enables the strict filter.
+- Enforce matching rules server-side; do not rely only on client-side filtering.
+- Use a maintained language catalogue with stable identifiers and support regional variants where useful, without assuming that dialects are interchangeable.
+- Avoid exposing private language-learning or profile information beyond the member's visibility settings.
+- Explain that language preferences do not guarantee fluency or compatibility; member-entered language levels should be clearly labelled as self-reported unless independently verified.
+- Test multiple-language selections, strict versus preference mode, missing language data, and cross-account authorization before launch.
+
 ## Decisions required before implementation
 
 The following are deliberately not decided by this specification:
