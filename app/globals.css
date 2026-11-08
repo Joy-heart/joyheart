@@ -845,3 +845,57 @@ a:focus-visible {
   .auth-page { min-height: calc(100vh - 120px); padding: 36px 14px 54px; }
   .auth-card { padding: 30px 22px; border-radius: 23px; }
 }
+
+
+/* Brand lockup and stronger readable contrast on disabled preview controls. */
+.auth-brand-lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto 24px;
+  color: var(--joy-burgundy);
+  font-size: 1.45rem;
+  font-weight: 850;
+  letter-spacing: -0.055em;
+}
+.auth-brand-lockup img {
+  display: block;
+  width: 60px;
+  height: 60px;
+  border-radius: 17px;
+  box-shadow: 0 7px 18px rgba(100, 29, 59, 0.16);
+}
+.auth-form input:disabled {
+  opacity: 1;
+  color: #29232a;
+  background: #f7f1ef;
+  -webkit-text-fill-color: #29232a;
+}
+.auth-form input:disabled::placeholder {
+  color: #65565e;
+  opacity: 1;
+}
+.auth-consent,
+.auth-preview-notice,
+.auth-intro,
+.auth-switch,
+.auth-footnote,
+.auth-muted,
+.auth-disabled-link {
+  color: #51444b;
+}
+.auth-submit:disabled {
+  opacity: 1;
+  color: #ffffff;
+  background: #641d3b;
+  -webkit-text-fill-color: #ffffff;
+  cursor: not-allowed;
+}
+.auth-consent input:disabled {
+  opacity: 1;
+  accent-color: #641d3b;
+}
+@media (max-width: 600px) {
+  .auth-brand-lockup { margin-bottom: 20px; }
+}

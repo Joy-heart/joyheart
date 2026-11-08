@@ -7,7 +7,10 @@ export default function SignupPage() {
   return (
     <main className="auth-page">
       <section className="auth-card" aria-labelledby="signup-title">
-        <div className="auth-brand-mark" aria-hidden="true">♡</div>
+        <div className="auth-brand-lockup">
+          <img src="/joyheart-mark.svg" alt="JoyHeart" width="60" height="60" />
+          <span>JoyHeart</span>
+        </div>
         <p className="auth-eyebrow">Begin something meaningful</p>
         <h1 id="signup-title">Create your account</h1>
         <p className="auth-intro">
