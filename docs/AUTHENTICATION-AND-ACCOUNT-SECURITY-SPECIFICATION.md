@@ -154,13 +154,23 @@ Implementation requirements:
 
 ### 6. Account deletion and deactivation
 
-- Provide a clear member-initiated account deletion request.
-- Require recent authentication or an approved step-up check before destructive account actions.
-- Explain what happens to profile visibility, photos, matches, and message history before confirmation.
-- Remove or anonymize personal data according to an approved retention schedule and applicable law.
-- Preserve only records that must be retained for legitimate safety, fraud-prevention, or legal reasons, with restricted access and a defined retention period.
+**Approved product policy:**
+
+- Members can request permanent account deletion.
+- Require secure identity confirmation, such as recent authentication or an approved step-up check, before processing the destructive action.
+- Hide the member's profile from discovery immediately when the deletion request is accepted for processing.
+- Before final confirmation, clearly explain what happens to profile information, photos, matches, and message history.
+- Retain only records that are legitimately required for safety, fraud prevention, or legal reasons. Any retained records must have restricted access and a defined retention period.
+- Delete or anonymize other personal data according to the approved retention schedule and applicable law.
+
+Implementation requirements:
+
 - Deletion must be performed by trusted server-side logic, not by trusting a client-supplied user ID.
+- Confirm the request and explain its consequences before the final irreversible step.
+- Define and publish retention periods and the treatment of messages, matches, reports, and safety records before launch.
 - Define a recovery/cancellation window only if the product and legal policy explicitly support it.
+- Keep deletion actions auditable without retaining unnecessary personal information.
+- Ensure profile removal from discovery and public caches is handled promptly and safely.
 
 ## Authorization and access control
 
@@ -268,7 +278,7 @@ The following are deliberately not decided by this specification:
 3. Approval of the recommended 12-character minimum and email/password-only launch; whether passwordless or social login is deferred.
 4. Session policy is approved: 30-day inactivity expiry, current-device logout, logout from all devices, session revocation after password recovery/ suspected compromise/account deletion, and re-authentication for sensitive actions. Provider capabilities must be verified before implementation.
 5. Recovery policy is approved: verified-email recovery link, plus a documented and carefully verified support route if the member loses access to that email. Support must never retrieve or set passwords or bypass safeguards.
-6. Account deletion retention periods and treatment of messages/reports.
+6. Account deletion behavior is approved: secure member-initiated permanent deletion, immediate removal from discovery, clear explanation of effects on matches/messages, and retention only for legitimate safety, fraud-prevention, or legal reasons. Exact retention periods and treatment of messages/reports must still be defined before launch.
 7. MFA policy is approved: optional for members at launch and mandatory for staff/administrators before admin access; secure lost-device recovery and server-side enforcement must be implemented and tested.
 8. Production email delivery provider, sender identity, and domain configuration.
 9. Exact legal notices, consent wording, and launch-country approvals.
