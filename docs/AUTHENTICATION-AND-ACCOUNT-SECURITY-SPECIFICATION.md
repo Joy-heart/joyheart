@@ -315,6 +315,22 @@ Implementation requirements:
 - Rate-limit and monitor alerts to prevent abuse and excessive notifications.
 - Test detection, delivery, and the suspicious-login support path before public launch.
 
+## Member-visible active session management
+
+**Approved product policy:** Members will be able to view and manage their active login sessions from their account security page.
+
+Implementation requirements:
+
+- Show only session information that the authentication provider reliably exposes, such as device/browser summary, approximate last activity, and session status.
+- Allow a member to end an individual session where the provider supports reliable session-level revocation.
+- Provide a clear option to sign out of all other sessions, while preserving the current session only when the provider can safely guarantee that behavior.
+- Keep the existing current-device logout control available.
+- Require recent authentication or another approved step-up check before sensitive session-management actions.
+- Enforce session ownership and revocation server-side; never trust a client-supplied user ID or session ownership claim.
+- Do not display raw session tokens, secrets, or unnecessarily precise location data.
+- If the provider cannot support reliable per-session listing or revocation, do not simulate those capabilities; clearly limit the interface to the controls that are genuinely supported.
+- Verify provider capabilities and test cross-account isolation, revocation, and logout behavior before launch.
+
 ## Decisions required before implementation
 
 The following are deliberately not decided by this specification:
