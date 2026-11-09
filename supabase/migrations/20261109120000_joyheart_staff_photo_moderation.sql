@@ -44,6 +44,7 @@ as $$
   );
 $$;
 
+alter function public.joyheart_is_active_staff() owner to postgres;
 revoke all on function public.joyheart_is_active_staff() from public, anon;
 grant execute on function public.joyheart_is_active_staff() to authenticated;
 
@@ -126,6 +127,7 @@ begin
 end;
 $$;
 
+alter function public.joyheart_review_profile_photo(uuid, text, text) owner to postgres;
 revoke all on function public.joyheart_review_profile_photo(uuid, text, text)
   from public, anon;
 grant execute on function public.joyheart_review_profile_photo(uuid, text, text)
