@@ -209,7 +209,7 @@ language sql
 immutable
 security definer
 set search_path = ''
-as $
+as $$
   select case lower(btrim(coalesce(p_seeking, '')))
     when 'everyone' then lower(btrim(coalesce(p_gender, ''))) in
       ('man', 'woman', 'non-binary', 'prefer not to say')
@@ -217,7 +217,7 @@ as $
     when 'women' then lower(btrim(coalesce(p_gender, ''))) = 'woman'
     else false
   end;
-$;
+$$;
 alter function private.joyheart_preference_accepts(text, text) owner to postgres;
 revoke all on function private.joyheart_preference_accepts(text, text) from public, anon, authenticated;
 
