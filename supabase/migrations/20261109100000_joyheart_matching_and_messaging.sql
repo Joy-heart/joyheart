@@ -54,7 +54,10 @@ create table if not exists public.messages (
   sender_id uuid not null references auth.users(id) on delete cascade,
   body text not null check (char_length(btrim(body)) between 1 and 4000),
   created_at timestamptz not null default now(),
-  read_at timestamptz
+  read_at timestamptz,
+  reply_to_message_id uuid references public.messages(id) on delete set null,
+  edited_at timestamptz,
+  deleted_at timestamptz
 );
 
 create index if not exists messages_conversation_created_idx
@@ -462,6 +465,30 @@ begin
 end;
 $$;
 
+-- Message actions: edits and soft deletion are limited to the sender and retain audit evidence.
+create or replace function private.joyheart_edit_message(p_message_id uuid, p_body text)
+returns void language plpgsql security definer set search_path = '' as $
+declare v_actor uuid := auth.uid(); v_conversation uuid;
+begin
+  if v_actor is null then raise exception 'Authentication required'; end if;
+  if p_body is null or char_length(btrim(p_body)) not between 1 and 4000 then raise exception 'Message must be between 1 and 4000 characters'; end if;
+  select conversation_id into v_conversation from public.messages where id = p_message_id and sender_id = v_actor and deleted_at is null and created_at > now() - interval '15 minutes' for update;
+  if v_conversation is null then raise exception 'This message can no longer be edited'; end if;
+  if not exists (select 1 from public.conversations c join public.profile_matches m on m.id=c.match_id where c.id=v_conversation and m.status='active' and v_actor in (m.member_low,m.member_high)) then raise exception 'Conversation is unavailable'; end if;
+  update public.messages set body=btrim(p_body), edited_at=now() where id=p_message_id;
+end; $;
+
+create or replace function private.joyheart_delete_message(p_message_id uuid)
+returns void language plpgsql security definer set search_path = '' as $
+declare v_actor uuid := auth.uid(); v_conversation uuid;
+begin
+  if v_actor is null then raise exception 'Authentication required'; end if;
+  select conversation_id into v_conversation from public.messages where id=p_message_id and sender_id=v_actor and deleted_at is null and created_at > now() - interval '24 hours' for update;
+  if v_conversation is null then raise exception 'This message can no longer be deleted'; end if;
+  if not exists (select 1 from public.conversations c join public.profile_matches m on m.id=c.match_id where c.id=v_conversation and m.status='active' and v_actor in (m.member_low,m.member_high)) then raise exception 'Conversation is unavailable'; end if;
+  update public.messages set deleted_at=now(), body='Message deleted' where id=p_message_id;
+end; $;
+
 -- Public RPC wrappers are invoker functions. Privileged logic lives in
 -- the non-exposed private schema and independently validates auth.uid().
 create or replace function public.joyheart_record_interaction(p_target_id uuid, p_action text)
@@ -491,7 +518,12 @@ create or replace function public.joyheart_report_member(
 returns uuid language sql security invoker set search_path = ''
 as $$ select private.joyheart_report_member(p_reported_id, p_reason, p_conversation_id, p_message_id); $$;
 
-revoke all on function private.joyheart_record_interaction(uuid, text) from public, anon;
+create or replace function public.joyheart_edit_message(p_message_id uuid, p_body text)
+returns void language sql security invoker set search_path = '' as $ select private.joyheart_edit_message(p_message_id,p_body); $;
+create or replace function public.joyheart_delete_message(p_message_id uuid)
+returns void language sql security invoker set search_path = '' as $ select private.joyheart_delete_message(p_message_id); $;
+
+revoke all on function private.joyheart_edit_message(uuid,text) from public, anon;\nrevoke all on function private.joyheart_delete_message(uuid) from public, anon;\ngrant execute on function private.joyheart_edit_message(uuid,text) to authenticated;\ngrant execute on function private.joyheart_delete_message(uuid) to authenticated;\nrevoke all on function public.joyheart_edit_message(uuid,text) from public, anon;\nrevoke all on function public.joyheart_delete_message(uuid) from public, anon;\ngrant execute on function public.joyheart_edit_message(uuid,text) to authenticated;\ngrant execute on function public.joyheart_delete_message(uuid) to authenticated;\n\nrevoke all on function private.joyheart_record_interaction(uuid, text) from public, anon;
 revoke all on function private.joyheart_send_message(uuid, text) from public, anon;
 revoke all on function private.joyheart_unmatch_member(uuid) from public, anon;
 revoke all on function private.joyheart_block_member(uuid) from public, anon;
