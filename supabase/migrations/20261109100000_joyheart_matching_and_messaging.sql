@@ -196,6 +196,26 @@ alter function private.joyheart_is_match_eligible(uuid) owner to postgres;
 revoke all on function private.joyheart_is_match_eligible(uuid) from public, anon;
 revoke all on function private.joyheart_is_match_eligible(uuid) from public, anon, authenticated;
 
+-- Central preference rule used by the server-side mutual matching check.
+-- "Everyone" means Man, Woman, Non-binary, and Prefer not to say.
+create or replace function private.joyheart_preference_accepts(p_seeking text, p_gender text)
+returns boolean
+language sql
+immutable
+security definer
+set search_path = ''
+as $
+  select case lower(btrim(coalesce(p_seeking, '')))
+    when 'everyone' then lower(btrim(coalesce(p_gender, ''))) in
+      ('man', 'woman', 'non-binary', 'prefer not to say')
+    when 'men' then lower(btrim(coalesce(p_gender, ''))) = 'man'
+    when 'women' then lower(btrim(coalesce(p_gender, ''))) = 'woman'
+    else false
+  end;
+$;
+alter function private.joyheart_preference_accepts(text, text) owner to postgres;
+revoke all on function private.joyheart_preference_accepts(text, text) from public, anon, authenticated;
+
 create or replace function private.joyheart_record_interaction(p_target_id uuid, p_action text)
 returns table (interaction_id uuid, match_id uuid, matched boolean)
 language plpgsql
@@ -228,27 +248,15 @@ begin
     raise exception 'Your account, age, published profile, or approved photo does not meet discovery requirements';
   end if;
 
-  -- Preferences are reciprocal. "Everyone" accepts every listed gender;
-  -- Men/Women map to the profile's selected Man/Woman identity.
+  -- Preferences are reciprocal and evaluated against the four supported
+  -- profile identity choices. "Everyone" explicitly accepts all four.
   if not exists (
     select 1
     from public.profiles actor_profile
     join public.profiles target_profile on target_profile.user_id = p_target_id
     where actor_profile.user_id = v_actor
-      and (
-        lower(btrim(actor_profile.seeking)) = 'everyone'
-        or (lower(btrim(actor_profile.seeking)) = 'men'
-            and lower(btrim(target_profile.gender)) = 'man')
-        or (lower(btrim(actor_profile.seeking)) = 'women'
-            and lower(btrim(target_profile.gender)) = 'woman')
-      )
-      and (
-        lower(btrim(target_profile.seeking)) = 'everyone'
-        or (lower(btrim(target_profile.seeking)) = 'men'
-            and lower(btrim(actor_profile.gender)) = 'man')
-        or (lower(btrim(target_profile.seeking)) = 'women'
-            and lower(btrim(actor_profile.gender)) = 'woman')
-      )
+      and private.joyheart_preference_accepts(actor_profile.seeking, target_profile.gender)
+      and private.joyheart_preference_accepts(target_profile.seeking, actor_profile.gender)
   ) then raise exception 'This profile does not match both members’ preferences'; end if;
 
   insert into public.profile_interactions(actor_id, target_id, action)
