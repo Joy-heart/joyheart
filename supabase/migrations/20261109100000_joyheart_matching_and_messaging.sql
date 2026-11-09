@@ -143,6 +143,39 @@ grant select on public.profile_interactions, public.profile_matches, public.conv
 grant select on public.member_reports to authenticated;
 grant select on public.messages to authenticated;
 
+-- A profile is eligible only when the account is active and verified,
+-- the private DOB proves the member is 18+, the profile is published,
+-- and at least one photo has passed moderation.
+create or replace function private.joyheart_is_match_eligible(p_user_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $
+  select exists (
+    select 1
+    from auth.users u
+    join public.profiles p on p.user_id = u.id
+    join public.profile_private pp on pp.user_id = u.id
+    where u.id = p_user_id
+      and u.email_confirmed_at is not null
+      and u.deleted_at is null
+      and (u.banned_until is null or u.banned_until <= pg_catalog.now())
+      and pp.date_of_birth <= (current_date - interval '18 years')::date
+      and pp.date_of_birth > (current_date - interval '121 years')::date
+      and p.publication_status = 'published'
+      and exists (
+        select 1 from public.profile_photos ph
+        where ph.user_id = u.id
+          and ph.moderation_status = 'approved'
+      )
+  );
+$;
+alter function private.joyheart_is_match_eligible(uuid) owner to postgres;
+revoke all on function private.joyheart_is_match_eligible(uuid) from public, anon;
+grant execute on function private.joyheart_is_match_eligible(uuid) to authenticated;
+
 create or replace function private.joyheart_record_interaction(p_target_id uuid, p_action text)
 returns table (interaction_id uuid, match_id uuid, matched boolean)
 language plpgsql
@@ -166,15 +199,36 @@ begin
        or (b.blocker_id = p_target_id and b.blocked_id = v_actor)
   ) then raise exception 'This profile is unavailable'; end if;
 
-  if not exists (
-    select 1 from public.profiles p
-    where p.user_id = p_target_id and p.publication_status = 'published'
-  ) then raise exception 'This profile is unavailable'; end if;
+  if not private.joyheart_is_match_eligible(p_target_id) then
+    raise exception 'This profile is unavailable';
+  end if;
 
+  if not private.joyheart_is_match_eligible(v_actor) then
+    raise exception 'Your account, age, published profile, or approved photo does not meet discovery requirements';
+  end if;
+
+  -- Preferences are reciprocal. "Everyone" accepts every listed gender;
+  -- Men/Women map to the profile's selected Man/Woman identity.
   if not exists (
-    select 1 from public.profiles p
-    where p.user_id = v_actor and p.publication_status = 'published'
-  ) then raise exception 'Complete and publish your profile before interacting'; end if;
+    select 1
+    from public.profiles actor_profile
+    join public.profiles target_profile on target_profile.user_id = p_target_id
+    where actor_profile.user_id = v_actor
+      and (
+        lower(btrim(actor_profile.seeking)) = 'everyone'
+        or (lower(btrim(actor_profile.seeking)) = 'men'
+            and lower(btrim(target_profile.gender)) = 'man')
+        or (lower(btrim(actor_profile.seeking)) = 'women'
+            and lower(btrim(target_profile.gender)) = 'woman')
+      )
+      and (
+        lower(btrim(target_profile.seeking)) = 'everyone'
+        or (lower(btrim(target_profile.seeking)) = 'men'
+            and lower(btrim(actor_profile.gender)) = 'man')
+        or (lower(btrim(target_profile.seeking)) = 'women'
+            and lower(btrim(actor_profile.gender)) = 'woman')
+      )
+  ) then raise exception 'This profile does not match both members’ preferences'; end if;
 
   insert into public.profile_interactions(actor_id, target_id, action)
   values (v_actor, p_target_id, p_action)
