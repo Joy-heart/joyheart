@@ -539,7 +539,16 @@ returns void language sql security invoker set search_path = '' as $ select priv
 create or replace function public.joyheart_delete_message(p_message_id uuid)
 returns void language sql security invoker set search_path = '' as $ select private.joyheart_delete_message(p_message_id); $;
 
-revoke all on function private.joyheart_edit_message(uuid,text) from public, anon;\nrevoke all on function private.joyheart_delete_message(uuid) from public, anon;\ngrant execute on function private.joyheart_edit_message(uuid,text) to authenticated;\ngrant execute on function private.joyheart_delete_message(uuid) to authenticated;\nrevoke all on function public.joyheart_edit_message(uuid,text) from public, anon;\nrevoke all on function public.joyheart_delete_message(uuid) from public, anon;\ngrant execute on function public.joyheart_edit_message(uuid,text) to authenticated;\ngrant execute on function public.joyheart_delete_message(uuid) to authenticated;\n\nrevoke all on function private.joyheart_record_interaction(uuid, text) from public, anon;
+revoke all on function private.joyheart_edit_message(uuid,text) from public, anon;
+revoke all on function private.joyheart_delete_message(uuid) from public, anon;
+grant execute on function private.joyheart_edit_message(uuid,text) to authenticated;
+grant execute on function private.joyheart_delete_message(uuid) to authenticated;
+revoke all on function public.joyheart_edit_message(uuid,text) from public, anon;
+revoke all on function public.joyheart_delete_message(uuid) from public, anon;
+grant execute on function public.joyheart_edit_message(uuid,text) to authenticated;
+grant execute on function public.joyheart_delete_message(uuid) to authenticated;
+
+revoke all on function private.joyheart_record_interaction(uuid, text) from public, anon;
 revoke all on function private.joyheart_send_message(uuid, text, uuid) from public, anon;
 revoke all on function private.joyheart_unmatch_member(uuid) from public, anon;
 revoke all on function private.joyheart_block_member(uuid) from public, anon;
