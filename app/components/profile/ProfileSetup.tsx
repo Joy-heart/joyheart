@@ -6,9 +6,11 @@ import ProfilePhotoUpload from "@/app/components/profile/ProfilePhotoUpload";
 
 type Profile = {
   display_name: string;
-  country_code: string;
+  country: string;
   city: string | null;
-  about_me: string | null;
+  bio: string;
+  gender: string;
+  seeking: string;
   relationship_intention: string;
   interests: string[];
   publication_status: string;
@@ -39,9 +41,11 @@ const interestOptions = [
 
 export default function ProfileSetup({ initialProfile }: { initialProfile: Profile | null }) {
   const [displayName, setDisplayName] = useState(initialProfile?.display_name ?? "");
-  const [countryCode, setCountryCode] = useState(initialProfile?.country_code ?? "");
+  const [countryCode, setCountryCode] = useState(initialProfile?.country ?? "");
   const [city, setCity] = useState(initialProfile?.city ?? "");
-  const [aboutMe, setAboutMe] = useState(initialProfile?.about_me ?? "");
+  const [aboutMe, setAboutMe] = useState(initialProfile?.bio ?? "");
+  const [gender, setGender] = useState(initialProfile?.gender ?? "");
+  const [seeking, setSeeking] = useState(initialProfile?.seeking ?? "");
   const [intention, setIntention] = useState(initialProfile?.relationship_intention ?? "");
   const [interests, setInterests] = useState<string[]>(initialProfile?.interests ?? []);
   const [busy, setBusy] = useState(false);
@@ -83,6 +87,11 @@ export default function ProfileSetup({ initialProfile }: { initialProfile: Profi
       setNotice("Please choose your country.");
       return;
     }
+    if (!gender || !seeking) {
+      setFailed(true);
+      setNotice("Please choose your gender and who you would like to meet.");
+      return;
+    }
     if (!intention) {
       setFailed(true);
       setNotice("Please choose what kind of connection you are looking for.");
@@ -101,9 +110,11 @@ export default function ProfileSetup({ initialProfile }: { initialProfile: Profi
         .upsert({
           user_id: user.id,
           display_name: displayName.trim(),
-          country_code: countryCode,
+          country: countryCode,
           city: city.trim() || null,
-          about_me: aboutMe.trim() || null,
+          bio: aboutMe.trim(),
+          gender,
+          seeking,
           relationship_intention: intention,
           interests,
         }, { onConflict: "user_id" });
@@ -171,7 +182,7 @@ export default function ProfileSetup({ initialProfile }: { initialProfile: Profi
           </div>
 
           <div className="profile-form-section">
-            <div className="profile-section-title"><span>03</span><div><h2>Your interests</h2><p>Select up to 20 things you enjoy.</p></div></div>
+            <div className="profile-section-title"><span>04</span><div><h2>Your interests</h2><p>Select up to 20 things you enjoy.</p></div></div>
             <div className="profile-interest-list">
               {interestOptions.map((interest) => (
                 <label className={interests.includes(interest) ? "profile-interest selected" : "profile-interest"} key={interest}>
@@ -184,7 +195,7 @@ export default function ProfileSetup({ initialProfile }: { initialProfile: Profi
           </div>
 
           <div className="profile-form-section">
-            <div className="profile-section-title"><span>04</span><div><h2>Introduce yourself</h2><p>A few genuine words help start a conversation.</p></div></div>
+            <div className="profile-section-title"><span>05</span><div><h2>Introduce yourself</h2><p>A few genuine words help start a conversation.</p></div></div>
             <label htmlFor="profile-about">About me <small>Optional</small></label>
             <textarea id="profile-about" value={aboutMe} onChange={(event) => setAboutMe(event.target.value)} maxLength={500} rows={5} placeholder="What do you enjoy? What matters most to you? What would you like someone to know?" />
             <p className="profile-field-hint">{aboutMe.length} of 500 characters</p>
