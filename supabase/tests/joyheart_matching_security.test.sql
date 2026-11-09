@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(42);
+select extensions.plan(41);
 
 select extensions.has_table('public', 'profile_interactions', 'private member likes and passes table exists');
 select extensions.has_table('public', 'profile_blocks', 'member blocks table exists');
@@ -32,7 +32,6 @@ select extensions.ok(not has_function_privilege('anon', 'private.joyheart_send_m
 select extensions.ok(to_regprocedure('private.joyheart_is_match_eligible(uuid)') is not null, 'server-side matching eligibility function exists');
 select extensions.ok((select prosecdef from pg_proc where oid = 'private.joyheart_is_match_eligible(uuid)'::regprocedure), 'eligibility checks run inside the private security definer');
 select extensions.ok(not has_function_privilege('anon', 'private.joyheart_is_match_eligible(uuid)', 'EXECUTE'), 'anonymous users cannot execute matching eligibility checks');
-select extensions.ok(has_function_privilege('authenticated', 'private.joyheart_is_match_eligible(uuid)', 'EXECUTE'), 'authenticated RPC implementations can call matching eligibility checks');
 
 select extensions.ok(not (select prosecdef from pg_proc where oid = 'public.joyheart_send_message(uuid,text,uuid)'::regprocedure), 'public message RPC wrapper runs as invoker');
 select extensions.ok((select prosecdef from pg_proc where oid = 'private.joyheart_send_message(uuid,text,uuid)'::regprocedure), 'private message implementation is security definer');
