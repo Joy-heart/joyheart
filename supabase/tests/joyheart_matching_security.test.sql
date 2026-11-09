@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(39);
+select extensions.plan(42);
 
 select extensions.has_table('public', 'profile_interactions', 'private member likes and passes table exists');
 select extensions.has_table('public', 'profile_blocks', 'member blocks table exists');
@@ -51,6 +51,10 @@ select extensions.ok(to_regprocedure('private.joyheart_edit_message(uuid,text)')
 select extensions.ok(to_regprocedure('private.joyheart_delete_message(uuid)') is not null, 'private soft-delete implementation exists');
 select extensions.ok(to_regprocedure('public.joyheart_edit_message(uuid,text)') is not null, 'public edit-message wrapper exists');
 select extensions.ok(to_regprocedure('public.joyheart_delete_message(uuid)') is not null, 'public delete-message wrapper exists');
+
+select extensions.ok(to_regclass('private.joyheart_message_evidence') is not null, 'deleted message evidence is stored outside the exposed public schema');
+select extensions.ok(not has_table_privilege('authenticated', 'private.joyheart_message_evidence', 'SELECT'), 'members cannot read original deleted message evidence');
+select extensions.ok(not has_function_privilege('authenticated', 'private.joyheart_is_match_eligible(uuid)', 'EXECUTE'), 'members cannot directly probe another account eligibility');
 
 select * from extensions.finish();
 rollback;
