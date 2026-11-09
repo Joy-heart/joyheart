@@ -63,6 +63,72 @@ $$;
 
 revoke all on function public.joyheart_touch_member_profile_settings() from public, anon, authenticated;
 
+-- Enforce the same allowed values for direct owner writes as for RPC writes.
+create or replace function public.joyheart_validate_member_profile_settings()
+returns trigger
+language plpgsql
+set search_path = ''
+as $
+declare
+  v_item text;
+  v_key text;
+  v_value text;
+begin
+  if tg_table_name = 'member_discovery_preferences' then
+    if new.preferred_age_min < 18 or new.preferred_age_max > 120
+       or new.preferred_age_min > new.preferred_age_max
+       or pg_catalog.cardinality(new.preferred_countries) > 30
+       or pg_catalog.cardinality(new.preferred_languages) > 20
+       or pg_catalog.cardinality(new.relationship_intentions) > 12
+       or not (new.relationship_intentions <@ array[
+         'Long-term relationship', 'Serious relationship', 'Marriage-minded',
+         'Life partner', 'Friendship first', 'Casual dating'
+       ]::text[]) then
+      raise exception 'Invalid discovery preferences' using errcode = '22023';
+    end if;
+    foreach v_item in array new.preferred_countries || new.preferred_languages loop
+      if v_item is null or v_item <> pg_catalog.btrim(v_item)
+         or pg_catalog.length(v_item) < 1 or pg_catalog.length(v_item) > 80 then
+        raise exception 'Country and language entries must be 1 to 80 trimmed characters' using errcode = '22023';
+      end if;
+    end loop;
+  elsif tg_table_name = 'member_personality_answers' then
+    if pg_catalog.jsonb_typeof(new.answers) is distinct from 'object'
+       or pg_catalog.pg_column_size(new.answers) > 16384
+       or (select pg_catalog.count(*) from pg_catalog.jsonb_object_keys(new.answers)) > 6 then
+      raise exception 'Invalid personality answers' using errcode = '22023';
+    end if;
+    for v_key, v_value in select key, value #>> '{}' from pg_catalog.jsonb_each(new.answers) loop
+      if pg_catalog.jsonb_typeof(new.answers -> v_key) is distinct from 'string'
+         or v_value is null
+         or not (
+           (v_key = 'communication' and v_value in ('A thoughtful conversation', 'A little message throughout the day', 'Phone or video calls', 'A balance of all three'))
+           or (v_key = 'weekend' and v_value in ('Quiet time and recharging', 'Exploring somewhere new', 'Friends, family and social time', 'Outdoor activities and adventure'))
+           or (v_key = 'conflict' and v_value in ('Talk it through calmly', 'Take a little time, then talk', 'Write down how I feel', 'Listen first and understand each other'))
+           or (v_key = 'values' and v_value in ('Trust and honesty', 'Kindness and respect', 'Shared goals and commitment', 'Humour and friendship'))
+           or (v_key = 'affection' and v_value in ('Words and encouragement', 'Time and attention', 'Helpful actions', 'Thoughtful gestures and touch'))
+           or (v_key = 'pace' and v_value in ('Slow and intentional', 'Steady with regular communication', 'Open to seeing how it develops'))
+         ) then
+        raise exception 'Invalid personality answer' using errcode = '22023';
+      end if;
+    end loop;
+  end if;
+  return new;
+end;
+$;
+
+revoke all on function public.joyheart_validate_member_profile_settings() from public, anon, authenticated;
+
+drop trigger if exists member_discovery_preferences_validate on public.member_discovery_preferences;
+create trigger member_discovery_preferences_validate
+  before insert or update on public.member_discovery_preferences
+  for each row execute function public.joyheart_validate_member_profile_settings();
+
+drop trigger if exists member_personality_answers_validate on public.member_personality_answers;
+create trigger member_personality_answers_validate
+  before insert or update on public.member_personality_answers
+  for each row execute function public.joyheart_validate_member_profile_settings();
+
 drop trigger if exists member_discovery_preferences_touch on public.member_discovery_preferences;
 create trigger member_discovery_preferences_touch
   before update on public.member_discovery_preferences
