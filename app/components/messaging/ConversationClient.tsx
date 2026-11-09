@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/app/lib/supabase/client";
 
-export type ChatMessage = { id: string; sender_id: string; body: string; created_at: string };
+export type ChatMessage = {
+  id: string; sender_id: string; body: string; created_at: string;
+  read_at?: string | null; reply_to_message_id?: string | null;
+  edited_at?: string | null; deleted_at?: string | null;
+};
+const MESSAGE_FIELDS = "id,sender_id,body,created_at,read_at,reply_to_message_id,edited_at,deleted_at";
 
 export default function ConversationClient({ conversationId, matchId, currentUserId, otherMemberId, initialMessages }: { conversationId: string; matchId: string; currentUserId: string; otherMemberId: string; initialMessages: ChatMessage[] }) {
   const [messages, setMessages] = useState(initialMessages);
@@ -12,29 +17,71 @@ export default function ConversationClient({ conversationId, matchId, currentUse
   const [notice, setNotice] = useState("");
   const [reportReason, setReportReason] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
+  const [reportMessageId, setReportMessageId] = useState<string | null>(null);
   const [conversationClosed, setConversationClosed] = useState(false);
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [editing, setEditing] = useState<ChatMessage | null>(null);
+
+  async function refreshMessages() {
+    if (!supabase) return;
+    const { data, error } = await supabase.from("messages").select(MESSAGE_FIELDS).eq("conversation_id", conversationId).order("created_at", { ascending: true }).limit(100);
+    if (!error && data) setMessages(data as ChatMessage[]);
+  }
 
   useEffect(() => {
     if (!supabase) return;
     void supabase.rpc("joyheart_mark_conversation_read", { p_conversation_id: conversationId });
-  }, [conversationId]);
+    const channel = supabase.channel("joyheart-conversation-" + conversationId)
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: "conversation_id=eq." + conversationId }, (payload) => {
+        if (payload.eventType === "DELETE") {
+          const oldRow = payload.old as { id?: string };
+          if (oldRow.id) setMessages((current) => current.filter((message) => message.id !== oldRow.id));
+          return;
+        }
+        const row = payload.new as ChatMessage;
+        if (!row?.id) return;
+        setMessages((current) => {
+          const exists = current.some((message) => message.id === row.id);
+          return exists ? current.map((message) => message.id === row.id ? { ...message, ...row } : message) : [...current, row].sort((a, b) => a.created_at.localeCompare(b.created_at));
+        });
+        if (row.sender_id !== currentUserId && !row.read_at) void supabase.rpc("joyheart_mark_conversation_read", { p_conversation_id: conversationId });
+      }).subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [conversationId, currentUserId]);
 
   async function sendMessage(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const clean = body.trim();
-    if (!clean || busy || conversationClosed) return;
-    if (!supabase) { setNotice("Messaging is not configured yet."); return; }
+    if (!clean || busy || conversationClosed || !supabase) return;
     setBusy(true); setNotice("");
-    const { error } = await supabase.rpc("joyheart_send_message", { p_conversation_id: conversationId, p_body: clean });
-    if (error) {
-      setNotice(error.message.includes("function") ? "Messaging is waiting for the approved database setup." : "Your message could not be sent. The conversation may be unavailable.");
-    } else {
-      const { data } = await supabase.from("messages").select("id,sender_id,body,created_at").eq("conversation_id", conversationId).order("created_at", { ascending: true }).limit(100);
-      if (data) setMessages(data as ChatMessage[]);
-      await supabase.rpc("joyheart_mark_conversation_read", { p_conversation_id: conversationId });
-      setBody("");
-    }
+    const { error } = await supabase.rpc("joyheart_send_message", { p_conversation_id: conversationId, p_body: clean, p_reply_to_message_id: replyTo?.id ?? null });
+    if (error) setNotice("Your message could not be sent. The conversation may be unavailable.");
+    else { setBody(""); setReplyTo(null); await refreshMessages(); }
     setBusy(false);
+  }
+
+  async function saveEdit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!supabase || !editing || !body.trim()) return;
+    setBusy(true);
+    const { error } = await supabase.rpc("joyheart_edit_message", { p_message_id: editing.id, p_body: body.trim() });
+    setBusy(false);
+    if (error) setNotice("This message could not be edited. The edit window may have expired.");
+    else { setEditing(null); setBody(""); setNotice("Message updated."); await refreshMessages(); }
+  }
+
+  async function deleteMessage(message: ChatMessage) {
+    if (!supabase || !window.confirm("Delete this message? Its content is retained securely for safety review.")) return;
+    setBusy(true);
+    const { error } = await supabase.rpc("joyheart_delete_message", { p_message_id: message.id });
+    setBusy(false);
+    if (error) setNotice("This message could not be deleted. The deletion window may have expired.");
+    else { setNotice("Message deleted."); await refreshMessages(); }
+  }
+
+  async function copyMessage(message: ChatMessage) {
+    try { await navigator.clipboard.writeText(message.body); setNotice("Message copied."); }
+    catch { setNotice("Copy is unavailable in this browser."); }
   }
 
   async function unmatchMember() {
@@ -49,9 +96,9 @@ export default function ConversationClient({ conversationId, matchId, currentUse
   async function submitReport(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!supabase || reportReason.trim().length < 3) return;
-    const { error } = await supabase.rpc("joyheart_report_member", { p_reported_id: otherMemberId, p_reason: reportReason.trim(), p_conversation_id: conversationId, p_message_id: null });
+    const { error } = await supabase.rpc("joyheart_report_member", { p_reported_id: otherMemberId, p_reason: reportReason.trim(), p_conversation_id: conversationId, p_message_id: reportMessageId });
     setNotice(error ? "Your report could not be submitted. Please try again." : "Thank you. Your report has been sent privately to JoyHeart.");
-    if (!error) { setReportReason(""); setReportOpen(false); }
+    if (!error) { setReportReason(""); setReportOpen(false); setReportMessageId(null); }
   }
 
   async function blockMember() {
@@ -63,15 +110,31 @@ export default function ConversationClient({ conversationId, matchId, currentUse
 
   return <section className="member-panel chat-layout">
     <div className="chat-messages" aria-live="polite">
-      {messages.length === 0 ? <div className="member-empty"><div className="empty-mark">♡</div><h2>Say hello</h2><p>Start with a kind message. Respect and kindness make every connection better.</p></div> : messages.map((message) => <div key={message.id} className={`chat-bubble ${message.sender_id === currentUserId ? "mine" : ""}`}><div>{message.body}</div><small style={{display:"block",opacity:.7,marginTop:6}}>{new Date(message.created_at).toLocaleString()}</small></div>)}
+      {messages.length === 0 ? <div className="member-empty"><div className="empty-mark">♡</div><h2>Say hello</h2><p>Start with a kind message. Respect and kindness make every connection better.</p></div> : messages.map((message) => {
+        const own = message.sender_id === currentUserId;
+        const quoted = message.reply_to_message_id ? messages.find((item) => item.id === message.reply_to_message_id) : null;
+        return <article key={message.id} className={"chat-bubble " + (own ? "mine" : "")}>
+          {quoted && <div className="chat-reply-preview">Replying to: {quoted.deleted_at ? "Deleted message" : quoted.body}</div>}
+          <div>{message.deleted_at ? "This message was deleted" : message.body}</div>
+          <small style={{display:"block",opacity:.7,marginTop:6}}>{new Date(message.created_at).toLocaleString()}{message.edited_at && !message.deleted_at ? " · edited" : ""}{own && message.read_at ? " · Seen" : ""}</small>
+          {!message.deleted_at && <div className="chat-message-actions">
+            <button type="button" onClick={() => void copyMessage(message)}>Copy</button>
+            {!conversationClosed && <button type="button" onClick={() => { setReplyTo(message); setEditing(null); }}>Reply</button>}
+            {own && !conversationClosed && <button type="button" onClick={() => { setEditing(message); setBody(message.body); setReplyTo(null); }}>Edit</button>}
+            {own && !conversationClosed && <button type="button" onClick={() => void deleteMessage(message)} disabled={busy}>Delete</button>}
+            {!own && !conversationClosed && <button type="button" onClick={() => { setReportMessageId(message.id); setReportOpen(true); }}>Report message</button>}
+          </div>}
+        </article>;
+      })}
     </div>
     {notice && <p className="member-alert" role="status">{notice}</p>}
-    {!conversationClosed && <form className="chat-compose" onSubmit={sendMessage}>
-      <textarea aria-label="Your message" maxLength={4000} placeholder="Write a thoughtful message…" value={body} onChange={(event) => setBody(event.target.value)} />
-      <button className="member-action" type="submit" disabled={busy || !body.trim()}>{busy ? "Sending…" : "Send message"}</button>
+    {!conversationClosed && <form className="chat-compose" onSubmit={editing ? saveEdit : sendMessage}>
+      {(replyTo || editing) && <div className="chat-compose-context">{editing ? "Editing your message" : "Replying to: " + (replyTo?.body ?? "")} <button type="button" onClick={() => { setReplyTo(null); setEditing(null); setBody(""); }}>Cancel</button></div>}
+      <textarea aria-label={editing ? "Edit message" : "Your message"} maxLength={4000} placeholder="Write a thoughtful message…" value={body} onChange={(event) => setBody(event.target.value)} />
+      <button className="member-action" type="submit" disabled={busy || !body.trim()}>{busy ? "Saving…" : editing ? "Save edit" : "Send message"}</button>
     </form>}
-    {!conversationClosed && <div style={{display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}><button type="button" className="member-action secondary" onClick={unmatchMember} disabled={busy}>Unmatch</button><button type="button" className="member-action secondary" onClick={blockMember} disabled={busy}>Block member</button><button type="button" className="member-action secondary" onClick={() => setReportOpen((open) => !open)}>Report member</button></div>}
-    {reportOpen && !conversationClosed && <form onSubmit={submitReport} style={{display:"grid",gap:10}}><label htmlFor="report-reason">Why are you reporting this member?</label><textarea id="report-reason" value={reportReason} onChange={(event) => setReportReason(event.target.value)} minLength={3} maxLength={1000} required placeholder="Tell us what happened…" /><button className="member-action" type="submit" disabled={reportReason.trim().length < 3}>Send private report</button></form>}
-    <p style={{color:"var(--joy-muted)",fontSize:".85rem",margin:0}}>Keep personal information private. Blocking or unmatching closes this conversation. Reports are private and reviewed by the JoyHeart team.</p>
+    {!conversationClosed && <div style={{display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}><button type="button" className="member-action secondary" onClick={unmatchMember} disabled={busy}>Unmatch</button><button type="button" className="member-action secondary" onClick={blockMember} disabled={busy}>Block member</button><button type="button" className="member-action secondary" onClick={() => { setReportMessageId(null); setReportOpen((open) => !open); }}>Report member</button></div>}
+    {reportOpen && !conversationClosed && <form onSubmit={submitReport} style={{display:"grid",gap:10}}><label htmlFor="report-reason">{reportMessageId ? "Why are you reporting this message?" : "Why are you reporting this member?"}</label><textarea id="report-reason" value={reportReason} onChange={(event) => setReportReason(event.target.value)} minLength={3} maxLength={1000} required placeholder="Tell us what happened…" /><button className="member-action" type="submit" disabled={reportReason.trim().length < 3}>Send private report</button></form>}
+    <p style={{color:"var(--joy-muted)",fontSize:".85rem",margin:0}}>Deleted messages are retained securely for safety review. Blocking or unmatching closes this conversation. Reports are private.</p>
   </section>;
 }
