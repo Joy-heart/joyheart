@@ -31,6 +31,7 @@ function friendlyAuthError(message: string) {
 export function SignupForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [consent, setConsent] = useState(false);
@@ -44,6 +45,11 @@ export function SignupForm() {
     setError(false);
     if (!supabase) { setError(true); setMessage("Registration is temporarily unavailable. Please try again later."); return; }
     if (name.trim().length < 2 || name.trim().length > 80) { setError(true); setMessage("Enter a name between 2 and 80 characters."); return; }
+    if (!dateOfBirth || !/^\\d{4}-\\d{2}-\\d{2}$/.test(dateOfBirth)) { setError(true); setMessage("Enter your date of birth to confirm your age eligibility."); return; }
+    const birthDate = new Date(`${dateOfBirth}T00:00:00.000Z`);
+    const today = new Date();
+    const cutoff = new Date(Date.UTC(today.getUTCFullYear() - 18, today.getUTCMonth(), today.getUTCDate()));
+    if (Number.isNaN(birthDate.getTime()) || birthDate.toISOString().slice(0, 10) !== dateOfBirth || birthDate > cutoff) { setError(true); setMessage("JoyHeart is for adults aged 18 and over."); return; }
     if (password.length < 12) { setError(true); setMessage("Please use a password with at least 12 characters."); return; }
     if (password !== confirm) { setError(true); setMessage("The passwords do not match."); return; }
     if (!consent) { setError(true); setMessage("Please confirm the age requirement and accept the Terms and Privacy Notice."); return; }
@@ -53,7 +59,7 @@ export function SignupForm() {
       const { data, error: authError } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
-        options: { emailRedirectTo: redirectTo, data: { display_name: name.trim() } },
+        options: { emailRedirectTo: redirectTo, data: { display_name: name.trim(), date_of_birth: dateOfBirth } },
       });
       if (authError) throw authError;
       if (data.session && data.user?.email_confirmed_at) {
@@ -76,7 +82,7 @@ export function SignupForm() {
     <form className="auth-form" aria-label="Create a JoyHeart account" onSubmit={submit}>
       <label htmlFor="signup-name">Your name</label>
       <input id="signup-name" type="text" autoComplete="name" placeholder="How should we call you?" value={name} onChange={(event) => setName(event.target.value)} required minLength={2} maxLength={80} />
-      <label htmlFor="signup-email">Email address</label>
+      <label htmlFor="signup-date-of-birth">Date of birth</label>\n      <input id="signup-date-of-birth" type="date" autoComplete="bday" value={dateOfBirth} onChange={(event) => setDateOfBirth(event.target.value)} required max={new Date(Date.UTC(new Date().getUTCFullYear() - 18, new Date().getUTCMonth(), new Date().getUTCDate())).toISOString().slice(0, 10)} aria-describedby="signup-dob-note" />\n      <small id="signup-dob-note">You must be at least 18. Your exact birth date is private and will not appear on your profile.</small>\n      <label htmlFor="signup-email">Email address</label>
       <input id="signup-email" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(event) => setEmail(event.target.value)} required maxLength={254} />
       <label htmlFor="signup-password">Create a password</label>
       <input id="signup-password" type="password" autoComplete="new-password" placeholder="At least 12 characters" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={12} maxLength={128} />
