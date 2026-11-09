@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
-  if (origin && origin !== request.nextUrl.origin) {
+  if (!origin || origin !== request.nextUrl.origin || request.headers.get("sec-fetch-site") === "cross-site") {
     return NextResponse.json({ error: "Cross-origin requests are not allowed." }, { status: 403 });
   }
 
@@ -31,16 +31,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "A photo and decision are required." }, { status: 400 });
   }
 
-  const { photoId, decision } = body as { photoId: unknown; decision: unknown };
-  if (typeof photoId !== "string" || !/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(photoId)
-      || (decision !== "approved" && decision !== "rejected")) {
+  const { photoId, decision, reason } = body as { photoId: unknown; decision: unknown; reason?: unknown };
+  const validUuid = typeof photoId === "string"
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(photoId);
+  const validReason = reason === undefined || (typeof reason === "string" && reason.trim().length <= 500);
+  if (!validUuid || !validReason || (decision !== "approved" && decision !== "rejected")
+      || (decision === "rejected" && (typeof reason !== "string" || !reason.trim()))) {
     return NextResponse.json({ error: "Invalid photo review details." }, { status: 400 });
   }
 
   const { error } = await supabase.rpc("joyheart_review_profile_photo", {
     p_photo_id: photoId,
     p_decision: decision,
-    p_reason: null,
+    p_reason: typeof reason === "string" ? reason.trim() : null,
   });
   if (error) {
     const forbidden = error.message.includes("STAFF_REQUIRED") || error.message.includes("CANNOT_REVIEW_OWN");
