@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(55);
+select extensions.plan(56);
 
 select extensions.has_table('public', 'profile_interactions', 'private member likes and passes table exists');
 select extensions.has_table('public', 'profile_blocks', 'member blocks table exists');
@@ -22,6 +22,7 @@ select extensions.ok(not has_table_privilege('authenticated', 'public.messages',
 select extensions.ok(not has_table_privilege('authenticated', 'public.member_reports', 'INSERT'), 'members cannot bypass the report RPC');
 select extensions.ok(not has_table_privilege('authenticated', 'public.profile_interactions', 'INSERT'), 'members cannot write interactions directly');
 select extensions.ok(not has_table_privilege('authenticated', 'public.profile_blocks', 'INSERT'), 'members cannot write blocks directly');
+select extensions.ok(has_table_privilege('authenticated', 'public.profile_blocks', 'SELECT'), 'block RLS checks have table access while row policy limits visibility');
 select extensions.ok(not has_table_privilege('authenticated', 'public.profile_matches', 'UPDATE'), 'members cannot alter match status directly');
 select extensions.ok(not has_table_privilege('authenticated', 'public.conversations', 'INSERT'), 'members cannot create conversations directly');
 select extensions.ok(not has_table_privilege('authenticated', 'public.messages', 'UPDATE'), 'members cannot edit or delete messages directly');
