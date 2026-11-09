@@ -1,4 +1,9 @@
 -- JoyHeart matching and private messaging foundation.
+-- Keep privileged implementations outside the exposed public API schema.
+create schema if not exists private;
+revoke all on schema private from public, anon;
+grant usage on schema private to authenticated;
+
 -- Apply only after explicit production migration approval.
 -- All interaction and message access is enforced by PostgreSQL RLS and RPCs.
 
@@ -138,7 +143,7 @@ grant select on public.profile_interactions, public.profile_matches, public.conv
 grant select on public.member_reports to authenticated;
 grant select on public.messages to authenticated;
 
-create or replace function public.joyheart_record_interaction(p_target_id uuid, p_action text)
+create or replace function private.joyheart_record_interaction(p_target_id uuid, p_action text)
 returns table (interaction_id uuid, match_id uuid, matched boolean)
 language plpgsql
 security definer
@@ -362,6 +367,42 @@ begin
   return v_report_id;
 end;
 $$;
+
+-- Public RPC wrappers are invoker functions. Privileged logic lives in
+-- the non-exposed private schema and independently validates auth.uid().
+create or replace function public.joyheart_record_interaction(p_target_id uuid, p_action text)
+returns table (interaction_id uuid, match_id uuid, matched boolean)
+language sql security invoker set search_path = ''
+as $ select * from private.joyheart_record_interaction(p_target_id, p_action); $;
+
+create or replace function public.joyheart_send_message(p_conversation_id uuid, p_body text)
+returns uuid language sql security invoker set search_path = ''
+as $ select private.joyheart_send_message(p_conversation_id, p_body); $;
+
+create or replace function public.joyheart_mark_conversation_read(p_conversation_id uuid)
+returns integer language sql security invoker set search_path = ''
+as $ select private.joyheart_mark_conversation_read(p_conversation_id); $;
+
+create or replace function public.joyheart_block_member(p_target_id uuid)
+returns void language sql security invoker set search_path = ''
+as $ select private.joyheart_block_member(p_target_id); $;
+
+create or replace function public.joyheart_report_member(
+  p_reported_id uuid, p_reason text, p_conversation_id uuid default null, p_message_id uuid default null
+)
+returns uuid language sql security invoker set search_path = ''
+as $ select private.joyheart_report_member(p_reported_id, p_reason, p_conversation_id, p_message_id); $;
+
+revoke all on function private.joyheart_record_interaction(uuid, text) from public, anon;
+revoke all on function private.joyheart_send_message(uuid, text) from public, anon;
+revoke all on function private.joyheart_block_member(uuid) from public, anon;
+revoke all on function private.joyheart_mark_conversation_read(uuid) from public, anon;
+revoke all on function private.joyheart_report_member(uuid, text, uuid, uuid) from public, anon;
+grant execute on function private.joyheart_record_interaction(uuid, text) to authenticated;
+grant execute on function private.joyheart_send_message(uuid, text) to authenticated;
+grant execute on function private.joyheart_block_member(uuid) to authenticated;
+grant execute on function private.joyheart_mark_conversation_read(uuid) to authenticated;
+grant execute on function private.joyheart_report_member(uuid, text, uuid, uuid) to authenticated;
 
 revoke all on function public.joyheart_record_interaction(uuid, text) from public, anon;
 revoke all on function public.joyheart_send_message(uuid, text) from public, anon;
