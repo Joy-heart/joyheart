@@ -73,7 +73,8 @@ create table if not exists private.joyheart_message_evidence (
   captured_at timestamptz not null default pg_catalog.now(),
   deleted_at timestamptz not null
 );
-revoke all on table private.joyheart_message_evidence from public, anon, authenticated, service_role;
+revoke all on table private.joyheart_message_evidence from public, anon, authenticated;
+grant select on table private.joyheart_message_evidence to service_role;
 
 create index if not exists messages_conversation_created_idx
   on public.messages(conversation_id, created_at desc);
