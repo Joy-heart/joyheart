@@ -188,6 +188,7 @@ declare
   v_high uuid;
   v_match_id uuid;
   v_interaction_id uuid;
+  v_existing_match_status text;
 begin
   if v_actor is null then raise exception 'Authentication required'; end if;
   if p_action not in ('like', 'pass') then raise exception 'Invalid action'; end if;
@@ -242,20 +243,59 @@ begin
   ) then
     v_low := least(v_actor, p_target_id);
     v_high := greatest(v_actor, p_target_id);
+    -- A pair gets one permanent match record. Never reopen an ended match
+    -- or reuse its old conversation/history after an unmatch or block.
     insert into public.profile_matches(member_low, member_high)
     values (v_low, v_high)
-    on conflict (member_low, member_high)
-    do update set status = 'active', ended_at = null
+    on conflict (member_low, member_high) do nothing
     returning id into v_match_id;
 
-    insert into public.conversations(match_id)
-    values (v_match_id)
-    on conflict (match_id) do nothing;
+    if v_match_id is null then
+      select m.id, m.status
+      into v_match_id, v_existing_match_status
+      from public.profile_matches m
+      where m.member_low = v_low and m.member_high = v_high
+      for update;
+
+      if v_existing_match_status <> 'active' then
+        raise exception 'This match has ended and cannot be reopened';
+      end if;
+    else
+      insert into public.conversations(match_id)
+      values (v_match_id)
+      on conflict (match_id) do nothing;
+    end if;
   end if;
 
   return query select v_interaction_id, v_match_id, v_match_id is not null;
 end;
 $$;
+
+create or replace function private.joyheart_unmatch_member(p_match_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $
+declare
+  v_actor uuid := auth.uid();
+  v_updated integer;
+begin
+  if v_actor is null then raise exception 'Authentication required'; end if;
+  if p_match_id is null then raise exception 'Invalid match'; end if;
+
+  update public.profile_matches
+  set status = 'unmatched', ended_at = now()
+  where id = p_match_id
+    and status = 'active'
+    and v_actor in (member_low, member_high);
+
+  get diagnostics v_updated = row_count;
+  if v_updated = 0 then raise exception 'This match is unavailable or has already ended'; end if;
+  -- Keep the conversation and messages for record integrity, but all read/send
+  -- paths require an active match, so the history is no longer accessible.
+end;
+$;
 
 create or replace function public.joyheart_send_message(p_conversation_id uuid, p_body text)
 returns uuid
@@ -429,6 +469,10 @@ returns table (interaction_id uuid, match_id uuid, matched boolean)
 language sql security invoker set search_path = ''
 as $ select * from private.joyheart_record_interaction(p_target_id, p_action); $;
 
+create or replace function public.joyheart_unmatch_member(p_match_id uuid)
+returns void language sql security invoker set search_path = ''
+as $ select private.joyheart_unmatch_member(p_match_id); $;
+
 create or replace function public.joyheart_send_message(p_conversation_id uuid, p_body text)
 returns uuid language sql security invoker set search_path = ''
 as $ select private.joyheart_send_message(p_conversation_id, p_body); $;
@@ -449,22 +493,26 @@ as $ select private.joyheart_report_member(p_reported_id, p_reason, p_conversati
 
 revoke all on function private.joyheart_record_interaction(uuid, text) from public, anon;
 revoke all on function private.joyheart_send_message(uuid, text) from public, anon;
+revoke all on function private.joyheart_unmatch_member(uuid) from public, anon;
 revoke all on function private.joyheart_block_member(uuid) from public, anon;
 revoke all on function private.joyheart_mark_conversation_read(uuid) from public, anon;
 revoke all on function private.joyheart_report_member(uuid, text, uuid, uuid) from public, anon;
 grant execute on function private.joyheart_record_interaction(uuid, text) to authenticated;
 grant execute on function private.joyheart_send_message(uuid, text) to authenticated;
+grant execute on function private.joyheart_unmatch_member(uuid) to authenticated;
 grant execute on function private.joyheart_block_member(uuid) to authenticated;
 grant execute on function private.joyheart_mark_conversation_read(uuid) to authenticated;
 grant execute on function private.joyheart_report_member(uuid, text, uuid, uuid) to authenticated;
 
 revoke all on function public.joyheart_record_interaction(uuid, text) from public, anon;
 revoke all on function public.joyheart_send_message(uuid, text) from public, anon;
+revoke all on function public.joyheart_unmatch_member(uuid) from public, anon;
 revoke all on function public.joyheart_block_member(uuid) from public, anon;
 revoke all on function public.joyheart_mark_conversation_read(uuid) from public, anon;
 revoke all on function public.joyheart_report_member(uuid, text, uuid, uuid) from public, anon;
 grant execute on function public.joyheart_record_interaction(uuid, text) to authenticated;
 grant execute on function public.joyheart_send_message(uuid, text) to authenticated;
+grant execute on function public.joyheart_unmatch_member(uuid) to authenticated;
 grant execute on function public.joyheart_block_member(uuid) to authenticated;
 grant execute on function public.joyheart_mark_conversation_read(uuid) to authenticated;
 grant execute on function public.joyheart_report_member(uuid, text, uuid, uuid) to authenticated;
