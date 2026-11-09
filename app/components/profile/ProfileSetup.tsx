@@ -13,6 +13,7 @@ type Profile = {
   seeking: string;
   relationship_intention: string;
   interests: string[];
+  explore_interests: string[];
   publication_status: string;
 };
 
@@ -31,6 +32,9 @@ const intentionOptions = [
   "Marriage-minded",
   "Life partner",
   "Friendship first",
+  "Short-term dating",
+  "Casual dating",
+  "Open to exploring",
 ];
 
 const interestOptions = [
