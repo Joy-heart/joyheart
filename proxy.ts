@@ -8,7 +8,7 @@ const PRIVATE_HEADERS = {
 };
 
 export async function proxy(request: NextRequest) {
-  const isAccountRoute = request.nextUrl.pathname.startsWith("/account");
+  const isPrivateMemberRoute = ["/account", "/discover", "/matches", "/messages"].some((route) => request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(`${route}/`));
   let response = NextResponse.next({ request });
   Object.entries(PRIVATE_HEADERS).forEach(([name, value]) => response.headers.set(name, value));
 
@@ -16,7 +16,7 @@ export async function proxy(request: NextRequest) {
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!url || !key) {
-    if (isAccountRoute) {
+    if (isPrivateMemberRoute) {
       const destination = new URL("/login", request.url);
       destination.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
       const redirect = NextResponse.redirect(destination);
@@ -57,7 +57,7 @@ export async function proxy(request: NextRequest) {
     verificationFailed = true;
   }
 
-  if (isAccountRoute && (verificationFailed || !claims?.sub)) {
+  if (isPrivateMemberRoute && (verificationFailed || !claims?.sub)) {
     const destination = new URL("/login", request.url);
     destination.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
     const redirect = NextResponse.redirect(destination);
@@ -70,5 +70,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/account/:path*", "/staff/:path*", "/api/staff/:path*", "/auth/callback", "/reset-password"],
+  matcher: ["/account/:path*", "/discover/:path*", "/matches/:path*", "/messages/:path*", "/staff/:path*", "/api/staff/:path*", "/auth/callback", "/reset-password"],
 };
