@@ -95,6 +95,10 @@ begin
     raise exception 'JOYHEART_REVIEW_REASON_TOO_LONG' using errcode = '22023';
   end if;
 
+  if p_decision = 'rejected' and nullif(pg_catalog.btrim(p_reason), '') is null then
+    raise exception 'JOYHEART_REJECTION_REASON_REQUIRED' using errcode = '22023';
+  end if;
+
   select user_id, moderation_status
     into photo_owner, current_status
   from public.profile_photos
