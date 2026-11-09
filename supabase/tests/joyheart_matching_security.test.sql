@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(31);
+select extensions.plan(35);
 
 select extensions.has_table('public', 'profile_interactions', 'private member likes and passes table exists');
 select extensions.has_table('public', 'profile_blocks', 'member blocks table exists');
@@ -41,6 +41,11 @@ select extensions.ok(not has_function_privilege('anon', 'public.joyheart_send_me
 select extensions.ok(to_regprocedure('private.joyheart_unmatch_member(uuid)') is not null, 'private unmatch implementation exists');
 select extensions.ok((select prosecdef from pg_proc where oid = 'private.joyheart_unmatch_member(uuid)'::regprocedure), 'unmatch implementation is security definer');
 select extensions.ok(not has_function_privilege('anon', 'public.joyheart_unmatch_member(uuid)', 'EXECUTE'), 'anonymous users cannot unmatch members');
+
+select extensions.ok(to_regprocedure('private.joyheart_send_message(uuid,text)') is not null, 'private send-message implementation exists');
+select extensions.ok(to_regprocedure('private.joyheart_mark_conversation_read(uuid)') is not null, 'private read-receipt implementation exists');
+select extensions.ok(to_regprocedure('private.joyheart_block_member(uuid)') is not null, 'private block implementation exists');
+select extensions.ok(to_regprocedure('private.joyheart_report_member(uuid,text,uuid,uuid)') is not null, 'private report implementation exists');
 
 select * from extensions.finish();
 rollback;
