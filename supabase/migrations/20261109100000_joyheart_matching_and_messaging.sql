@@ -3,6 +3,7 @@
 create schema if not exists private;
 revoke all on schema private from public, anon;
 grant usage on schema private to authenticated;
+grant usage on schema private to service_role;
 
 -- Apply only after explicit production migration approval.
 -- All interaction and message access is enforced by PostgreSQL RLS and RPCs.
