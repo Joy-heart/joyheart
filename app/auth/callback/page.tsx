@@ -28,18 +28,51 @@ export default function AuthCallbackPage() {
         if (active) { setFailed(true); setMessage("Authentication is temporarily unavailable. Please try again later."); }
         return;
       }
+
       const params = new URLSearchParams(window.location.search);
       const code = params.get("code");
+      const tokenHash = params.get("token_hash");
+      const type = params.get("type");
       const next = safeInternalPath(params.get("next"));
       const providerError = params.get("error_description") || params.get("error");
+
       if (providerError) {
         if (active) { setFailed(true); setMessage("This verification or recovery link is invalid or has expired. Request a fresh email and try again."); }
         return;
       }
+
+      // Supabase recovery templates can link directly with a one-time token hash.
+      // Verify it here so recovery does not depend on an intermediate redirect.
+      if (tokenHash) {
+        if (type !== "recovery" && type !== "signup" && type !== "email") {
+          if (active) { setFailed(true); setMessage("This authentication link has an unsupported type. Request a fresh email and try again."); }
+          return;
+        }
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: type as "recovery" | "signup" | "email",
+        });
+        if (!active) return;
+        if (verifyError) {
+          setFailed(true);
+          setMessage("We could not verify this link. It may have expired or already been used. Request a fresh email and try again.");
+          return;
+        }
+        if (type === "recovery" || next === "/reset-password") {
+          setMessage("Your recovery link is verified. Choose a new password below.");
+          setRecoveryReady(true);
+          return;
+        }
+        setMessage("Your email is verified. Your JoyHeart account is ready.");
+        redirectTimer = window.setTimeout(() => window.location.replace(next), 900);
+        return;
+      }
+
       if (!code) {
         if (active) { setFailed(true); setMessage("This link is incomplete or has expired. Request a fresh verification or recovery email."); }
         return;
       }
+
       const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
       if (!active) return;
       if (exchangeError) {
