@@ -365,9 +365,11 @@ $$;
 
 revoke all on function public.joyheart_record_interaction(uuid, text) from public, anon;
 revoke all on function public.joyheart_send_message(uuid, text) from public, anon;
-revoke all on function public.joyheart_block_member(uuid) from public, anon;\nrevoke all on function public.joyheart_mark_conversation_read(uuid) from public, anon;
+revoke all on function public.joyheart_block_member(uuid) from public, anon;
+revoke all on function public.joyheart_mark_conversation_read(uuid) from public, anon;
 revoke all on function public.joyheart_report_member(uuid, text, uuid, uuid) from public, anon;
 grant execute on function public.joyheart_record_interaction(uuid, text) to authenticated;
 grant execute on function public.joyheart_send_message(uuid, text) to authenticated;
-grant execute on function public.joyheart_block_member(uuid) to authenticated;\ngrant execute on function public.joyheart_mark_conversation_read(uuid) to authenticated;
+grant execute on function public.joyheart_block_member(uuid) to authenticated;
+grant execute on function public.joyheart_mark_conversation_read(uuid) to authenticated;
 grant execute on function public.joyheart_report_member(uuid, text, uuid, uuid) to authenticated;
