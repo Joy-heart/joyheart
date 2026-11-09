@@ -120,7 +120,7 @@ export default function ProfileSetup({ initialProfile }: { initialProfile: Profi
         }, { onConflict: "user_id" });
 
       if (saveError) throw saveError;
-      setSavedStatus("draft");
+      setSavedStatus(initialProfile?.publication_status ?? "draft");
       setProfileSaved(true);
       setNotice("Your profile details have been saved as a private draft. You can review them before publishing.");
     } catch (error) {
