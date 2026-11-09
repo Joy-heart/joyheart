@@ -86,7 +86,7 @@ begin
        ]::text[]) then
       raise exception 'Invalid discovery preferences' using errcode = '22023';
     end if;
-    foreach v_item in array new.preferred_countries || new.preferred_languages loop
+    foreach v_item in array pg_catalog.array_cat(new.preferred_countries, new.preferred_languages) loop
       if v_item is null or v_item <> pg_catalog.btrim(v_item)
          or pg_catalog.length(v_item) < 1 or pg_catalog.length(v_item) > 80 then
         raise exception 'Country and language entries must be 1 to 80 trimmed characters' using errcode = '22023';
