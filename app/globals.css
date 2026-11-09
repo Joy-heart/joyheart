@@ -1307,3 +1307,24 @@ a:focus-visible {
   .profile-form-grid, .profile-intention-options { grid-template-columns: 1fr; gap: 7px; }
   .profile-form-section { padding: 23px 0; }
 }
+
+/* Private profile photo uploader */
+.profile-photo-uploader { margin: 26px 0 0; padding: 20px; border: 1px solid var(--joy-border); border-radius: 18px; background: #fffaf8; }
+.profile-photo-uploader-heading { display: flex; align-items: flex-start; gap: 13px; margin-bottom: 16px; }
+.profile-photo-icon { width: 42px; height: 42px; flex: 0 0 42px; display: grid; place-items: center; border-radius: 14px; color: var(--joy-burgundy); background: #f8e5e6; font-size: 1.45rem; }
+.profile-photo-uploader h3 { margin: 1px 0 5px; color: var(--joy-charcoal); font: 500 1.25rem Georgia,serif; }
+.profile-photo-uploader-heading p, .profile-photo-help { margin: 0; color: var(--joy-muted); font-size: .82rem; line-height: 1.6; }
+.profile-photo-upload-button { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 15px 0 10px; padding: 0 17px; border: 1px solid rgba(100,29,59,.22); border-radius: 999px; color: var(--joy-burgundy); background: #fff; cursor: pointer; font-size: .86rem; font-weight: 750; }
+.profile-photo-upload-button input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+.profile-photo-upload-button:focus-within { outline: 3px solid rgba(217,130,145,.28); outline-offset: 3px; }
+.profile-photo-upload-button.disabled { opacity: .55; cursor: not-allowed; }
+.profile-photo-upload-button > span { font-size: 1.2rem; }
+.profile-photo-list { display: grid; gap: 8px; margin: 17px 0 0; padding: 0; list-style: none; }
+.profile-photo-list li { display: flex; align-items: center; gap: 11px; padding: 11px; border: 1px solid var(--joy-border); border-radius: 12px; background: #fff; }
+.profile-photo-file-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; color: var(--joy-burgundy); background: #f8e5e6; font-size: 1.2rem; }
+.profile-photo-file-details { display: grid; flex: 1; min-width: 0; gap: 4px; }
+.profile-photo-file-details strong { overflow: hidden; color: var(--joy-charcoal); font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }
+.profile-photo-file-details span { color: var(--joy-muted); font-size: .73rem; }
+.profile-photo-list button { border: 0; color: var(--joy-burgundy); background: transparent; cursor: pointer; font: inherit; font-size: .78rem; font-weight: 750; }
+.profile-photo-list button:disabled { opacity: .5; cursor: wait; }
+.profile-photo-count { margin: 12px 0 0; color: var(--joy-muted); font-size: .75rem; text-align: right; }
