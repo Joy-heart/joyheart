@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/app/lib/supabase/client";
 
 export type ChatMessage = { id: string; sender_id: string; body: string; created_at: string };
@@ -12,6 +12,11 @@ export default function ConversationClient({ conversationId, currentUserId, othe
   const [notice, setNotice] = useState("");
   const [reportReason, setReportReason] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
+
+  useEffect(() => {
+    if (!supabase) return;
+    void supabase.rpc("joyheart_mark_conversation_read", { p_conversation_id: conversationId });
+  }, [conversationId]);
 
   async function sendMessage(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -25,6 +30,7 @@ export default function ConversationClient({ conversationId, currentUserId, othe
     } else {
       const { data } = await supabase.from("messages").select("id,sender_id,body,created_at").eq("conversation_id", conversationId).order("created_at", { ascending: true }).limit(100);
       if (data) setMessages(data as ChatMessage[]);
+      await supabase.rpc("joyheart_mark_conversation_read", { p_conversation_id: conversationId });
       setBody("");
     }
     setBusy(false);
