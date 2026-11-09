@@ -496,7 +496,7 @@ end; $$;
 
 
 -- Enable database change events for live conversation updates when Realtime is available.
-do $
+do $$
 begin
   if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
      and not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'messages') then
@@ -535,9 +535,9 @@ returns uuid language sql security invoker set search_path = ''
 as $$ select private.joyheart_report_member(p_reported_id, p_reason, p_conversation_id, p_message_id); $$;
 
 create or replace function public.joyheart_edit_message(p_message_id uuid, p_body text)
-returns void language sql security invoker set search_path = '' as $ select private.joyheart_edit_message(p_message_id,p_body); $;
+returns void language sql security invoker set search_path = '' as $ select private.joyheart_edit_message(p_message_id,p_body); $$;
 create or replace function public.joyheart_delete_message(p_message_id uuid)
-returns void language sql security invoker set search_path = '' as $ select private.joyheart_delete_message(p_message_id); $;
+returns void language sql security invoker set search_path = '' as $ select private.joyheart_delete_message(p_message_id); $$;
 
 revoke all on function private.joyheart_edit_message(uuid,text) from public, anon;
 revoke all on function private.joyheart_delete_message(uuid) from public, anon;
