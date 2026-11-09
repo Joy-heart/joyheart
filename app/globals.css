@@ -1379,3 +1379,60 @@ a:focus-visible {
 
 
 .chat-message-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}.chat-message-actions button,.chat-compose-context button{border:0;border-radius:999px;padding:5px 9px;background:rgba(255,255,255,.18);color:inherit;font:inherit;font-size:.72rem;font-weight:700;cursor:pointer}.chat-bubble:not(.mine) .chat-message-actions button{background:#fff;color:var(--joy-burgundy)}.chat-reply-preview{margin-bottom:8px;padding:7px 10px;border-left:3px solid var(--joy-gold);border-radius:6px;background:rgba(255,255,255,.18);font-size:.82rem;opacity:.9}.chat-compose-context{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:10px;background:#f7e8eb;color:var(--joy-burgundy);font-size:.82rem}
+
+
+/* JoyHeart Explore experiences */
+.explore-page {
+  min-height: calc(100vh - 140px);
+  padding: 54px 20px 82px;
+  background:
+    radial-gradient(circle at 8% 5%, rgba(217,130,145,.13), transparent 27%),
+    radial-gradient(circle at 92% 30%, rgba(229,189,131,.14), transparent 28%),
+    var(--joy-ivory);
+}
+.explore-shell { width: min(1120px, 100%); margin: 0 auto; }
+.explore-hero { max-width: 780px; margin: 0 auto 46px; text-align: center; }
+.explore-eyebrow { margin: 0 0 12px; color: var(--joy-burgundy); font-size: .75rem; font-weight: 850; letter-spacing: .15em; text-transform: uppercase; }
+.explore-hero h1 { margin: 0; color: var(--joy-charcoal); font: 500 clamp(2.5rem, 6vw, 4.4rem)/1.05 Georgia,serif; letter-spacing: -.045em; text-wrap: balance; }
+.explore-intro { max-width: 680px; margin: 18px auto 0; color: var(--joy-muted); font-size: 1rem; line-height: 1.8; }
+.explore-summary { display: flex; align-items: flex-start; gap: 13px; width: fit-content; max-width: 100%; margin: 25px auto 0; padding: 14px 18px; border: 1px solid var(--joy-border); border-radius: 16px; background: var(--joy-surface); color: var(--joy-charcoal); text-align: left; }
+.explore-summary > span { color: var(--joy-burgundy); font-size: 1.5rem; }
+.explore-summary p { margin: 0; font-size: .85rem; line-height: 1.55; }
+.explore-summary small { display: block; margin-top: 4px; color: var(--joy-muted); font-size: .76rem; }
+.explore-section-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-bottom: 18px; }
+.explore-section-heading h2 { margin: 0; color: var(--joy-charcoal); font: 500 clamp(1.7rem, 4vw, 2.3rem) Georgia,serif; }
+.explore-section-heading p { margin: 7px 0 0; color: var(--joy-muted); font-size: .88rem; line-height: 1.6; }
+.explore-selection-count { flex: 0 0 auto; color: var(--joy-burgundy); font-size: .8rem; font-weight: 800; }
+.explore-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 22px; }
+.explore-filters button { min-height: 39px; padding: 0 15px; border: 1px solid var(--joy-border); border-radius: 999px; background: var(--joy-surface); color: var(--joy-muted); cursor: pointer; font: inherit; font-size: .8rem; font-weight: 700; }
+.explore-filters button.active { border-color: var(--joy-burgundy); background: var(--joy-burgundy); color: #fff; }
+.explore-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.explore-card { display: flex; align-items: flex-start; gap: 14px; min-height: 125px; padding: 18px; border: 1px solid var(--joy-border); border-radius: 18px; background: var(--joy-surface); color: var(--joy-charcoal); cursor: pointer; text-align: left; transition: border-color .16s ease, transform .16s ease, box-shadow .16s ease; }
+.explore-card:hover { transform: translateY(-2px); border-color: rgba(100,29,59,.36); box-shadow: 0 10px 25px rgba(45,22,32,.07); }
+.explore-card.selected { border-color: var(--joy-burgundy); background: color-mix(in srgb, var(--joy-surface) 92%, #d98291 8%); box-shadow: inset 0 0 0 1px var(--joy-burgundy); }
+.explore-card-icon { width: 48px; height: 48px; flex: 0 0 48px; display: grid; place-items: center; border-radius: 15px; background: #f8e9e9; font-size: 1.45rem; }
+.explore-card-copy { display: grid; flex: 1; min-width: 0; gap: 6px; }
+.explore-card-copy strong { color: var(--joy-charcoal); font-size: .96rem; }
+.explore-card-copy small { color: var(--joy-muted); font-size: .79rem; line-height: 1.55; }
+.explore-card-check { width: 25px; height: 25px; flex: 0 0 25px; display: grid; place-items: center; border: 1px solid var(--joy-border); border-radius: 50%; color: var(--joy-burgundy); font-size: 1rem; font-weight: 800; }
+.explore-card.selected .explore-card-check { border-color: var(--joy-burgundy); background: var(--joy-burgundy); color: #fff; }
+.explore-save-row { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-top: 24px; padding: 18px 0; border-top: 1px solid var(--joy-border); }
+.explore-save-row p { margin: 0; color: var(--joy-muted); font-size: .8rem; line-height: 1.5; }
+.explore-save-row button:disabled { opacity: .5; cursor: not-allowed; }
+.explore-notice { margin: 12px 0 0; padding: 13px 15px; border-radius: 12px; font-size: .84rem; line-height: 1.55; }
+.explore-notice.success { border: 1px solid rgba(82,125,104,.22); background: rgba(82,125,104,.08); color: #31523e; }
+.explore-notice.error { border: 1px solid rgba(160,48,58,.22); background: rgba(160,48,58,.07); color: #812b42; }
+.explore-safety-note { display: flex; gap: 13px; margin-top: 24px; padding: 18px; border: 1px solid rgba(82,125,104,.2); border-radius: 17px; background: color-mix(in srgb, var(--joy-surface) 90%, #7da88b 10%); color: var(--joy-charcoal); }
+.explore-safety-note > span { color: #527d68; font-size: 1.4rem; }
+.explore-safety-note p { margin: 0; font-size: .82rem; line-height: 1.65; }
+.explore-safety-note strong { color: #31523e; }
+.explore-coming-soon { margin: 19px auto 0; max-width: 760px; color: var(--joy-muted); font-size: .76rem; line-height: 1.65; text-align: center; }
+@media (max-width: 700px) {
+  .explore-page { padding: 36px 14px 58px; }
+  .explore-hero { margin-bottom: 34px; }
+  .explore-section-heading { align-items: flex-start; flex-direction: column; gap: 7px; }
+  .explore-grid { grid-template-columns: 1fr; gap: 10px; }
+  .explore-card { min-height: 110px; padding: 15px; }
+  .explore-save-row { align-items: stretch; flex-direction: column; }
+  .explore-save-row button { width: 100%; }
+}
