@@ -1328,3 +1328,25 @@ a:focus-visible {
 .profile-photo-list button { border: 0; color: var(--joy-burgundy); background: transparent; cursor: pointer; font: inherit; font-size: .78rem; font-weight: 750; }
 .profile-photo-list button:disabled { opacity: .5; cursor: wait; }
 .profile-photo-count { margin: 12px 0 0; color: var(--joy-muted); font-size: .75rem; text-align: right; }
+
+/* Staff-only private photo moderation */
+.staff-review-page { min-height: 70vh; padding: 54px 20px 80px; background: #fff8f4; }
+.staff-review-shell { width: min(1120px, 100%); margin: 0 auto; }
+.staff-review-eyebrow { margin: 0 0 9px; color: #8a5268; font-size: .76rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.staff-review-shell h1 { margin: 0; color: #641d3b; font: 500 clamp(2rem, 5vw, 3rem) Georgia,serif; }
+.staff-review-intro { max-width: 680px; color: #6f6268; font-size: .92rem; line-height: 1.7; }
+.staff-review-count { margin: 24px 0 16px; color: #641d3b; font-weight: 800; }
+.staff-review-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(245px, 1fr)); gap: 18px; }
+.staff-review-card { overflow: hidden; border: 1px solid #eadde0; border-radius: 18px; background: white; box-shadow: 0 8px 26px rgba(65,35,48,.06); }
+.staff-review-card > img { display: block; width: 100%; height: 260px; object-fit: contain; background: #f4edef; }
+.staff-review-image-error { display: grid; min-height: 220px; place-items: center; padding: 20px; color: #786a70; background: #f4edef; text-align: center; }
+.staff-review-card-details { padding: 15px; }
+.staff-review-card-details p { margin: 5px 0; color: #71646a; font-size: .78rem; overflow-wrap: anywhere; }
+.staff-review-card-details strong { color: #352a30; }
+.staff-review-actions { display: flex; gap: 9px; margin-top: 15px; }
+.staff-review-actions button { flex: 1; min-height: 42px; border: 0; border-radius: 999px; color: white; background: #641d3b; cursor: pointer; font: inherit; font-size: .82rem; font-weight: 800; }
+.staff-review-actions button.reject { color: #812b42; background: #fff0f1; border: 1px solid #f0cbd2; }
+.staff-review-actions button:disabled { opacity: .5; cursor: wait; }
+.staff-review-empty, .staff-review-notice { padding: 18px; border: 1px solid #eadde0; border-radius: 14px; color: #594b52; background: white; }
+.staff-review-notice { margin: 15px 0; }
+@media (max-width: 600px) { .staff-review-page { padding: 35px 14px 55px; } }
