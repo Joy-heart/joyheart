@@ -137,7 +137,6 @@ revoke all on public.profile_interactions, public.profile_matches, public.conver
 grant select on public.profile_interactions, public.profile_matches, public.conversations to authenticated;
 grant select, insert on public.member_reports to authenticated;
 grant select on public.messages to authenticated;
-grant insert on public.messages to authenticated;
 
 create or replace function public.joyheart_record_interaction(p_target_id uuid, p_action text)
 returns table (interaction_id uuid, match_id uuid, matched boolean)
@@ -214,6 +213,13 @@ begin
     raise exception 'Message must be between 1 and 4000 characters';
   end if;
 
+  -- Limit message bursts to reduce spam and abusive automation.
+  if (select count(*) from public.messages msg
+      where msg.sender_id = v_actor
+        and msg.created_at > now() - interval '1 minute') >= 30 then
+    raise exception 'Message rate limit reached. Please wait before sending more.';
+  end if;
+
   if not exists (
     select 1 from public.conversations c
     join public.profile_matches m on m.id = c.match_id
@@ -283,6 +289,31 @@ begin
   if p_reported_id is null or p_reported_id = v_actor then raise exception 'Invalid member'; end if;
   if p_reason is null or char_length(btrim(p_reason)) not between 3 and 1000 then
     raise exception 'Please provide a short report reason';
+  end if;
+
+  -- If a report references a conversation, prove both members belong to it.
+  if p_conversation_id is not null and not exists (
+    select 1
+    from public.conversations c
+    join public.profile_matches m on m.id = c.match_id
+    where c.id = p_conversation_id
+      and v_actor in (m.member_low, m.member_high)
+      and p_reported_id in (m.member_low, m.member_high)
+      and p_reported_id <> v_actor
+  ) then
+    raise exception 'The selected conversation is unavailable';
+  end if;
+
+  -- A message report must reference a message in that conversation written by the reported member.
+  if p_message_id is not null and (
+    p_conversation_id is null or not exists (
+      select 1 from public.messages msg
+      where msg.id = p_message_id
+        and msg.conversation_id = p_conversation_id
+        and msg.sender_id = p_reported_id
+    )
+  ) then
+    raise exception 'The selected message is unavailable';
   end if;
 
   insert into public.member_reports(reporter_id, reported_id, reason, conversation_id, message_id)
