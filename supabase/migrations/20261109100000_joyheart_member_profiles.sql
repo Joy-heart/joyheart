@@ -83,7 +83,7 @@ revoke all on function public.joyheart_set_profile_age_from_private_dob()
 
 drop trigger if exists joyheart_profiles_set_private_age on public.profiles;
 create trigger joyheart_profiles_set_private_age
-  before insert or update of user_id on public.profiles
+  before insert or update on public.profiles
   for each row execute function public.joyheart_set_profile_age_from_private_dob();
 
 -- Keep the old is_visible column synchronized for compatibility while the
