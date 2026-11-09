@@ -247,6 +247,46 @@ begin
 end;
 $$;
 
+create or replace function public.joyheart_mark_conversation_read(p_conversation_id uuid)
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $
+declare
+  v_actor uuid := auth.uid();
+  v_updated integer;
+begin
+  if v_actor is null then raise exception 'Authentication required'; end if;
+
+  if not exists (
+    select 1
+    from public.conversations c
+    join public.profile_matches m on m.id = c.match_id
+    where c.id = p_conversation_id
+      and m.status = 'active'
+      and v_actor in (m.member_low, m.member_high)
+      and not exists (
+        select 1 from public.profile_blocks b
+        where (b.blocker_id = v_actor and b.blocked_id = case
+          when m.member_low = v_actor then m.member_high else m.member_low end)
+           or (b.blocker_id = case
+          when m.member_low = v_actor then m.member_high else m.member_low end
+          and b.blocked_id = v_actor)
+      )
+  ) then raise exception 'Conversation is unavailable'; end if;
+
+  update public.messages
+  set read_at = now()
+  where conversation_id = p_conversation_id
+    and sender_id <> v_actor
+    and read_at is null;
+
+  get diagnostics v_updated = row_count;
+  return v_updated;
+end;
+$;
+
 create or replace function public.joyheart_block_member(p_target_id uuid)
 returns void
 language plpgsql
@@ -325,9 +365,9 @@ $$;
 
 revoke all on function public.joyheart_record_interaction(uuid, text) from public, anon;
 revoke all on function public.joyheart_send_message(uuid, text) from public, anon;
-revoke all on function public.joyheart_block_member(uuid) from public, anon;
+revoke all on function public.joyheart_block_member(uuid) from public, anon;\nrevoke all on function public.joyheart_mark_conversation_read(uuid) from public, anon;
 revoke all on function public.joyheart_report_member(uuid, text, uuid, uuid) from public, anon;
 grant execute on function public.joyheart_record_interaction(uuid, text) to authenticated;
 grant execute on function public.joyheart_send_message(uuid, text) to authenticated;
-grant execute on function public.joyheart_block_member(uuid) to authenticated;
+grant execute on function public.joyheart_block_member(uuid) to authenticated;\ngrant execute on function public.joyheart_mark_conversation_read(uuid) to authenticated;
 grant execute on function public.joyheart_report_member(uuid, text, uuid, uuid) to authenticated;
