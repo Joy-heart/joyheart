@@ -491,7 +491,7 @@ begin
   select conversation_id into v_conversation from public.messages where id=p_message_id and sender_id=v_actor and deleted_at is null and created_at > now() - interval '24 hours' for update;
   if v_conversation is null then raise exception 'This message can no longer be deleted'; end if;
   if not exists (select 1 from public.conversations c join public.profile_matches m on m.id=c.match_id where c.id=v_conversation and m.status='active' and v_actor in (m.member_low,m.member_high)) then raise exception 'Conversation is unavailable'; end if;
-  update public.messages set deleted_at=now(), body='Message deleted' where id=p_message_id;
+  update public.messages set deleted_at=now() where id=p_message_id;
 end; $;
 
 
