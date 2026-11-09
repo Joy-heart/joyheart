@@ -152,7 +152,7 @@ language sql
 stable
 security definer
 set search_path = ''
-as $
+as $$
   select exists (
     select 1
     from auth.users u
@@ -171,7 +171,7 @@ as $
           and ph.moderation_status = 'approved'
       )
   );
-$;
+$$;
 alter function private.joyheart_is_match_eligible(uuid) owner to postgres;
 revoke all on function private.joyheart_is_match_eligible(uuid) from public, anon;
 grant execute on function private.joyheart_is_match_eligible(uuid) to authenticated;
@@ -276,7 +276,7 @@ returns void
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare
   v_actor uuid := auth.uid();
   v_updated integer;
@@ -295,7 +295,7 @@ begin
   -- Keep the conversation and messages for record integrity, but all read/send
   -- paths require an active match, so the history is no longer accessible.
 end;
-$;
+$$;
 
 create or replace function private.joyheart_send_message(p_conversation_id uuid, p_body text)
 returns uuid
