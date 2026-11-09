@@ -165,8 +165,9 @@ revoke all on public.profile_interactions, public.profile_blocks,
   public.profile_matches, public.conversations, public.messages,
   public.member_reports from anon, authenticated;
 
-grant select on public.profile_interactions, public.profile_matches,
-  public.conversations, public.messages, public.member_reports to authenticated;
+grant select on public.profile_interactions, public.profile_blocks,
+  public.profile_matches, public.conversations, public.messages,
+  public.member_reports to authenticated;
 
 -- A profile is eligible only when the account is active and verified,
 -- the private DOB proves the member is 18+, the profile is published,
