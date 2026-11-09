@@ -1,0 +1,29 @@
+begin;
+
+create extension if not exists pgtap with schema extensions;
+select extensions.plan(18);
+
+select extensions.has_table('public', 'profile_interactions', 'private member likes and passes table exists');
+select extensions.has_table('public', 'profile_blocks', 'member blocks table exists');
+select extensions.has_table('public', 'profile_matches', 'mutual matches table exists');
+select extensions.has_table('public', 'conversations', 'private conversations table exists');
+select extensions.has_table('public', 'messages', 'private messages table exists');
+select extensions.has_table('public', 'member_reports', 'private reports table exists');
+
+select extensions.ok((select relrowsecurity from pg_class where oid = 'public.profile_interactions'::regclass), 'interactions enforce row level security');
+select extensions.ok((select relrowsecurity from pg_class where oid = 'public.profile_blocks'::regclass), 'blocks enforce row level security');
+select extensions.ok((select relrowsecurity from pg_class where oid = 'public.profile_matches'::regclass), 'matches enforce row level security');
+select extensions.ok((select relrowsecurity from pg_class where oid = 'public.conversations'::regclass), 'conversations enforce row level security');
+select extensions.ok((select relrowsecurity from pg_class where oid = 'public.messages'::regclass), 'messages enforce row level security');
+select extensions.ok((select relrowsecurity from pg_class where oid = 'public.member_reports'::regclass), 'reports enforce row level security');
+
+select extensions.ok(not has_table_privilege('anon', 'public.messages', 'INSERT'), 'anonymous users cannot insert messages');
+select extensions.ok(not has_table_privilege('authenticated', 'public.messages', 'INSERT'), 'members cannot bypass the message RPC');
+select extensions.ok(not has_table_privilege('authenticated', 'public.member_reports', 'INSERT'), 'members cannot bypass the report RPC');
+
+select extensions.ok(not has_function_privilege('anon', 'public.joyheart_send_message(uuid,text)', 'EXECUTE'), 'anonymous users cannot send messages');
+select extensions.ok(not has_function_privilege('anon', 'public.joyheart_record_interaction(uuid,text)', 'EXECUTE'), 'anonymous users cannot create interactions');
+select extensions.ok(not has_function_privilege('anon', 'public.joyheart_mark_conversation_read(uuid)', 'EXECUTE'), 'anonymous users cannot mark messages read');
+
+select * from extensions.finish();
+rollback;
