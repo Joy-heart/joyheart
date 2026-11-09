@@ -135,7 +135,7 @@ using (reporter_id = (select auth.uid()));
 -- No direct client writes to interactions, matches, conversations, or reports.
 revoke all on public.profile_interactions, public.profile_matches, public.conversations, public.member_reports from anon, authenticated;
 grant select on public.profile_interactions, public.profile_matches, public.conversations to authenticated;
-grant select, insert on public.member_reports to authenticated;
+grant select on public.member_reports to authenticated;
 grant select on public.messages to authenticated;
 
 create or replace function public.joyheart_record_interaction(p_target_id uuid, p_action text)
