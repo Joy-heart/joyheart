@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(24);
+select extensions.plan(28);
 
 select extensions.has_table('public', 'profile_interactions', 'private member likes and passes table exists');
 select extensions.has_table('public', 'profile_blocks', 'member blocks table exists');
@@ -29,6 +29,11 @@ select extensions.ok(not has_function_privilege('anon', 'public.joyheart_mark_co
 select extensions.ok(not has_schema_privilege('anon', 'private', 'USAGE'), 'private schema is not accessible to anonymous API users');
 select extensions.ok(has_schema_privilege('authenticated', 'private', 'USAGE'), 'authenticated users can call approved RPC wrappers');
 select extensions.ok(not has_function_privilege('anon', 'private.joyheart_send_message(uuid,text)', 'EXECUTE'), 'anonymous users cannot execute private message implementation');
+select extensions.ok(to_regprocedure('private.joyheart_is_match_eligible(uuid)') is not null, 'server-side matching eligibility function exists');
+select extensions.ok((select prosecdef from pg_proc where oid = 'private.joyheart_is_match_eligible(uuid)'::regprocedure), 'eligibility checks run inside the private security definer');
+select extensions.ok(not has_function_privilege('anon', 'private.joyheart_is_match_eligible(uuid)', 'EXECUTE'), 'anonymous users cannot execute matching eligibility checks');
+select extensions.ok(has_function_privilege('authenticated', 'private.joyheart_is_match_eligible(uuid)', 'EXECUTE'), 'authenticated RPC implementations can call matching eligibility checks');
+
 select extensions.ok(not (select prosecdef from pg_proc where oid = 'public.joyheart_send_message(uuid,text)'::regprocedure), 'public message RPC wrapper runs as invoker');
 select extensions.ok((select prosecdef from pg_proc where oid = 'private.joyheart_send_message(uuid,text)'::regprocedure), 'private message implementation is security definer');
 select extensions.ok(not has_function_privilege('anon', 'public.joyheart_send_message(uuid,text)', 'EXECUTE'), 'anonymous users cannot execute public message wrapper');
