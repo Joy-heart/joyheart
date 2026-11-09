@@ -525,7 +525,7 @@ end; $$;
 
 
 -- Enable database change events for live conversation updates when Realtime is available.
-do $
+do $$
 begin
   if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
      and not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'messages') then
