@@ -148,16 +148,16 @@ begin
 
   if exists (
     select 1
-    from pg_catalog.jsonb_array_elements(p_preferences -> 'preferred_countries') e
-    where pg_catalog.jsonb_typeof(e) <> 'string'
+    from pg_catalog.jsonb_array_elements(p_preferences -> 'preferred_countries') as item(value)
+    where pg_catalog.jsonb_typeof(value) <> 'string'
   ) or exists (
     select 1
-    from pg_catalog.jsonb_array_elements(p_preferences -> 'preferred_languages') e
-    where pg_catalog.jsonb_typeof(e) <> 'string'
+    from pg_catalog.jsonb_array_elements(p_preferences -> 'preferred_languages') as item(value)
+    where pg_catalog.jsonb_typeof(value) <> 'string'
   ) or exists (
     select 1
-    from pg_catalog.jsonb_array_elements(p_preferences -> 'relationship_intentions') e
-    where pg_catalog.jsonb_typeof(e) <> 'string'
+    from pg_catalog.jsonb_array_elements(p_preferences -> 'relationship_intentions') as item(value)
+    where pg_catalog.jsonb_typeof(value) <> 'string'
   ) then
     raise exception 'Preference lists must contain text values only' using errcode = '22023';
   end if;
