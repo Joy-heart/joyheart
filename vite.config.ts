@@ -1,10 +1,19 @@
+import { cloudflare } from "@cloudflare/vite-plugin";
+import {
+  kvDataAdapter,
+  workersCacheCdnAdapter,
+} from "@vinext/cloudflare/cache";
 import { defineConfig } from "vite";
 import vinext from "vinext";
-import { cloudflare } from "@cloudflare/vite-plugin";
 
 export default defineConfig({
   plugins: [
-    vinext(),
+    vinext({
+      cache: {
+        cdn: workersCacheCdnAdapter(),
+        data: kvDataAdapter(),
+      },
+    }),
     cloudflare({
       viteEnvironment: {
         name: "rsc",
