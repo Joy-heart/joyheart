@@ -60,6 +60,21 @@ create table if not exists public.messages (
   deleted_at timestamptz
 );
 
+
+
+-- Preserve original message content only in the non-exposed private schema.
+-- Members can never select this table; only trusted database-owner routines can read it.
+create table if not exists private.joyheart_message_evidence (
+  message_id uuid primary key,
+  conversation_id uuid not null,
+  sender_id uuid not null,
+  original_body text not null,
+  original_created_at timestamptz not null,
+  captured_at timestamptz not null default pg_catalog.now(),
+  deleted_at timestamptz not null
+);
+revoke all on table private.joyheart_message_evidence from public, anon, authenticated, service_role;
+
 create index if not exists messages_conversation_created_idx
   on public.messages(conversation_id, created_at desc);
 create index if not exists conversations_last_message_idx
@@ -177,7 +192,7 @@ as $$
 $$;
 alter function private.joyheart_is_match_eligible(uuid) owner to postgres;
 revoke all on function private.joyheart_is_match_eligible(uuid) from public, anon;
-grant execute on function private.joyheart_is_match_eligible(uuid) to authenticated;
+revoke all on function private.joyheart_is_match_eligible(uuid) from public, anon, authenticated;
 
 create or replace function private.joyheart_record_interaction(p_target_id uuid, p_action text)
 returns table (interaction_id uuid, match_id uuid, matched boolean)
@@ -491,12 +506,22 @@ begin
   select conversation_id into v_conversation from public.messages where id=p_message_id and sender_id=v_actor and deleted_at is null and created_at > now() - interval '24 hours' for update;
   if v_conversation is null then raise exception 'This message can no longer be deleted'; end if;
   if not exists (select 1 from public.conversations c join public.profile_matches m on m.id=c.match_id where c.id=v_conversation and m.status='active' and v_actor in (m.member_low,m.member_high)) then raise exception 'Conversation is unavailable'; end if;
-  update public.messages set deleted_at=now() where id=p_message_id;
+  insert into private.joyheart_message_evidence (
+    message_id, conversation_id, sender_id, original_body, original_created_at, deleted_at
+  )
+  select id, conversation_id, sender_id, body, created_at, pg_catalog.now()
+  from public.messages
+  where id = p_message_id
+  on conflict (message_id) do nothing;
+
+  update public.messages
+  set body = '[This message was deleted]', deleted_at = pg_catalog.now()
+  where id = p_message_id;
 end; $$;
 
 
 -- Enable database change events for live conversation updates when Realtime is available.
-do $$$
+do $
 begin
   if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
      and not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'messages') then
