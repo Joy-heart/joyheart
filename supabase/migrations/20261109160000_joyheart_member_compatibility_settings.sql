@@ -121,12 +121,14 @@ begin
   end if;
 
   if pg_catalog.jsonb_typeof(p_preferences -> 'preferred_countries') is distinct from 'array'
-     or pg_catalog.jsonb_array_length(p_preferences -> 'preferred_countries') > 30
      or pg_catalog.jsonb_typeof(p_preferences -> 'preferred_languages') is distinct from 'array'
+     or pg_catalog.jsonb_typeof(p_preferences -> 'relationship_intentions') is distinct from 'array' then
+    raise exception 'Preference values must be arrays' using errcode = '22023';
+  end if;
+  if pg_catalog.jsonb_array_length(p_preferences -> 'preferred_countries') > 30
      or pg_catalog.jsonb_array_length(p_preferences -> 'preferred_languages') > 20
-     or pg_catalog.jsonb_typeof(p_preferences -> 'relationship_intentions') is distinct from 'array'
      or pg_catalog.jsonb_array_length(p_preferences -> 'relationship_intentions') > 12 then
-    raise exception 'Invalid preference list' using errcode = '22023';
+    raise exception 'Preference list is too long' using errcode = '22023';
   end if;
 
   if pg_catalog.jsonb_typeof(p_preferences -> 'discovery_enabled') is distinct from 'boolean' then
@@ -173,7 +175,7 @@ begin
     end if;
   end loop;
 
-  if pg_catalog.jsonb_object_length(p_answers) > 6 then
+  if (select pg_catalog.count(*) from pg_catalog.jsonb_object_keys(p_answers)) > 6 then
     raise exception 'Too many personality answers' using errcode = '22023';
   end if;
 
