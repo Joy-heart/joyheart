@@ -48,6 +48,7 @@ export default function ProfileSetup({ initialProfile }: { initialProfile: Profi
   const [notice, setNotice] = useState("");
   const [failed, setFailed] = useState(false);
   const [savedStatus, setSavedStatus] = useState(initialProfile?.publication_status ?? "draft");
+  const [profileSaved, setProfileSaved] = useState(Boolean(initialProfile));
 
   const selectedCountry = useMemo(
     () => countries.find(([code]) => code === countryCode)?.[1] ?? "",
@@ -109,6 +110,7 @@ export default function ProfileSetup({ initialProfile }: { initialProfile: Profi
 
       if (saveError) throw saveError;
       setSavedStatus("draft");
+      setProfileSaved(true);
       setNotice("Your profile details have been saved as a private draft. You can review them before publishing.");
     } catch (error) {
       setFailed(true);
@@ -188,7 +190,7 @@ export default function ProfileSetup({ initialProfile }: { initialProfile: Profi
             <p className="profile-field-hint">{aboutMe.length} of 500 characters</p>
           </div>
 
-          <ProfilePhotoUpload profileReady={Boolean(displayName.trim().length >= 2 && countryCode && intention)} />
+          <ProfilePhotoUpload profileReady={profileSaved} />
 
           {notice && <p className={failed ? "profile-form-notice error" : "profile-form-notice success"} role="status">{notice}</p>}
           <button className="button button-primary profile-save-button" type="submit" disabled={busy}>
