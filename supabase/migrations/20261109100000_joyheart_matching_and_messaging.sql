@@ -297,7 +297,7 @@ begin
 end;
 $;
 
-create or replace function public.joyheart_send_message(p_conversation_id uuid, p_body text)
+create or replace function private.joyheart_send_message(p_conversation_id uuid, p_body text)
 returns uuid
 language plpgsql
 security definer
@@ -346,7 +346,7 @@ begin
 end;
 $$;
 
-create or replace function public.joyheart_mark_conversation_read(p_conversation_id uuid)
+create or replace function private.joyheart_mark_conversation_read(p_conversation_id uuid)
 returns integer
 language plpgsql
 security definer
@@ -386,7 +386,7 @@ begin
 end;
 $$;
 
-create or replace function public.joyheart_block_member(p_target_id uuid)
+create or replace function private.joyheart_block_member(p_target_id uuid)
 returns void
 language plpgsql
 security definer
@@ -412,7 +412,7 @@ begin
 end;
 $$;
 
-create or replace function public.joyheart_report_member(
+create or replace function private.joyheart_report_member(
   p_reported_id uuid, p_reason text, p_conversation_id uuid default null, p_message_id uuid default null
 )
 returns uuid
