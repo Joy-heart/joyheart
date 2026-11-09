@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(41);
+select extensions.plan(49);
 
 select extensions.has_table('public', 'profile_interactions', 'private member likes and passes table exists');
 select extensions.has_table('public', 'profile_blocks', 'member blocks table exists');
@@ -54,6 +54,14 @@ select extensions.ok(to_regprocedure('public.joyheart_delete_message(uuid)') is 
 select extensions.ok(to_regclass('private.joyheart_message_evidence') is not null, 'deleted message evidence is stored outside the exposed public schema');
 select extensions.ok(not has_table_privilege('authenticated', 'private.joyheart_message_evidence', 'SELECT'), 'members cannot read original deleted message evidence');
 select extensions.ok(not has_function_privilege('authenticated', 'private.joyheart_is_match_eligible(uuid)', 'EXECUTE'), 'members cannot directly probe another account eligibility');
+select extensions.ok(private.joyheart_preference_accepts('Everyone', 'Man'), 'Everyone accepts Man');
+select extensions.ok(private.joyheart_preference_accepts('Everyone', 'Woman'), 'Everyone accepts Woman');
+select extensions.ok(private.joyheart_preference_accepts('Everyone', 'Non-binary'), 'Everyone accepts Non-binary');
+select extensions.ok(private.joyheart_preference_accepts('Everyone', 'Prefer not to say'), 'Everyone accepts Prefer not to say');
+select extensions.ok(private.joyheart_preference_accepts('Men', 'Man'), 'Men preference accepts Man');
+select extensions.ok(not private.joyheart_preference_accepts('Men', 'Non-binary'), 'Men preference does not silently include other identities');
+select extensions.ok(private.joyheart_preference_accepts('Women', 'Woman'), 'Women preference accepts Woman');
+select extensions.ok(not private.joyheart_preference_accepts('Women', 'Prefer not to say'), 'Women preference does not silently include other identities');
 
 select * from extensions.finish();
 rollback;
