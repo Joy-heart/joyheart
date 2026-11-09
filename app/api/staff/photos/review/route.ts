@@ -4,6 +4,11 @@ import { createSupabaseServerClient } from "@/app/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
+  const origin = request.headers.get("origin");
+  if (origin && origin !== request.nextUrl.origin) {
+    return NextResponse.json({ error: "Cross-origin requests are not allowed." }, { status: 403 });
+  }
+
   const supabase = await createSupabaseServerClient();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user?.email_confirmed_at) {
