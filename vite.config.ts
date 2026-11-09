@@ -1,8 +1,6 @@
 import { cloudflare } from "@cloudflare/vite-plugin";
-import {
-  kvDataAdapter,
-  workersCacheCdnAdapter,
-} from "@vinext/cloudflare/cache";
+import { kvDataAdapter } from "@vinext/cloudflare/cache/kv-data-adapter";
+import { workersCacheCdnAdapter } from "@vinext/cloudflare/cache/workers-cache-cdn-adapter";
 import { defineConfig } from "vite";
 import vinext from "vinext";
 
