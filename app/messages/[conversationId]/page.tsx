@@ -20,7 +20,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ c
   const otherId = match.member_low === user.id ? match.member_high : match.member_low;
   const [{ data: profile }, { data: messages, error }] = await Promise.all([
     supabase.from("profiles").select("display_name").eq("user_id", otherId).maybeSingle(),
-    supabase.from("messages").select("id,sender_id,body,created_at").eq("conversation_id", conversationId).order("created_at", { ascending: true }).limit(100),
+    supabase.from("messages").select("id,sender_id,body,created_at,read_at,reply_to_message_id,edited_at,deleted_at").eq("conversation_id", conversationId).order("created_at", { ascending: true }).limit(100),
   ]);
 
   return <main className="member-area">
