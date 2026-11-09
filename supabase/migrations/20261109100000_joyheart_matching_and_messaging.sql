@@ -331,6 +331,9 @@ begin
     raise exception 'Message must be between 1 and 4000 characters';
   end if;
 
+  -- Serialize sends per account so simultaneous requests cannot bypass the per-minute cap.
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(v_actor::text, 0));
+
   -- Limit message bursts to reduce spam and abusive automation.
   if (select count(*) from public.messages msg
       where msg.sender_id = v_actor
