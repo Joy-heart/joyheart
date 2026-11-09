@@ -33,19 +33,22 @@ alter table public.member_discovery_preferences force row level security;
 alter table public.member_personality_answers enable row level security;
 alter table public.member_personality_answers force row level security;
 
-drop policy if exists member_preferences_owner_select on public.member_discovery_preferences;
-create policy member_preferences_owner_select
-  on public.member_discovery_preferences for select to authenticated
-  using (user_id = (select auth.uid()));
+drop policy if exists member_preferences_owner_all on public.member_discovery_preferences;
+create policy member_preferences_owner_all
+  on public.member_discovery_preferences for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
 
-drop policy if exists member_personality_owner_select on public.member_personality_answers;
-create policy member_personality_owner_select
-  on public.member_personality_answers for select to authenticated
-  using (user_id = (select auth.uid()));
+drop policy if exists member_personality_owner_all on public.member_personality_answers;
+create policy member_personality_owner_all
+  on public.member_personality_answers for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
 
--- No direct INSERT/UPDATE/DELETE: all writes pass through the RPC's validation.
+-- RLS limits every operation to the authenticated owner. Table constraints
+-- and validation triggers also protect writes that do not use the RPC.
 revoke all on public.member_discovery_preferences, public.member_personality_answers from public, anon, authenticated;
-grant select on public.member_discovery_preferences, public.member_personality_answers to authenticated;
+grant select, insert, update, delete on public.member_discovery_preferences, public.member_personality_answers to authenticated;
 
 create or replace function public.joyheart_touch_member_profile_settings()
 returns trigger
@@ -70,16 +73,15 @@ create trigger member_personality_answers_touch
   before update on public.member_personality_answers
   for each row execute function public.joyheart_touch_member_profile_settings();
 
--- SECURITY DEFINER is narrowly scoped: the target user is always auth.uid(),
--- no caller-supplied user ID is accepted, and the function has a fixed search_path.
--- Both rows are written in one transaction or neither is written.
+-- SECURITY INVOKER preserves the caller's RLS permissions. Both rows are
+-- written in one transaction or neither is written.
 create or replace function public.joyheart_save_member_compatibility_settings(
   p_preferences jsonb,
   p_answers jsonb
 )
 returns void
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 declare
