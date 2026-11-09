@@ -12,6 +12,14 @@ export default async function DiscoverPage() {
 
   return <main className="member-area">
     <div className="member-heading"><div><h1>Discover</h1><p>Meet people with intention, at your own pace.</p></div><Link className="member-action secondary" href="/matches">Your matches</Link></div>
-    <section className="member-panel"><div className="member-empty"><div className="empty-mark">♡</div><h2>A safer way to discover is being prepared</h2><p>We are finishing profile eligibility checks, member preferences, photo approval and privacy controls before showing anyone. This protects you and every JoyHeart member.</p><span className="member-alert">Discovery is not open yet. No unreviewed profiles are being shown.</span></div></section>
+    <section className="member-panel">
+      <div className="member-empty">
+        <div className="empty-mark">♡</div>
+        <h2>Discover is getting ready</h2>
+        <p>We are completing member eligibility, profile publication, photo moderation and two-member matching checks before showing real people. Your safety comes first.</p>
+        <Link className="member-action" href="/explore">Explore experiences</Link>
+        <p className="explore-coming-soon">You can choose the dates, activities and shared interests you enjoy while we finish safe member recommendations. No unreviewed profiles are shown.</p>
+      </div>
+    </section>
   </main>;
 }

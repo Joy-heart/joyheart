@@ -35,7 +35,7 @@ export default function SiteHeader() {
   }
 
   const memberLinks = signedIn
-    ? <><a href="/account">My account</a><button className="nav-logout" type="button" onClick={logout}>Log out</button></>
+    ? <><a href="/explore">Explore</a><a href="/account">My account</a><button className="nav-logout" type="button" onClick={logout}>Log out</button></>
     : <><a href="/login">Log in</a><a className="button button-primary" href="/signup">Join JoyHeart</a></>;
 
   return (

@@ -17,7 +17,7 @@ export default async function AccountPage() {
 
   const { data } = await supabase
     .from("profiles")
-    .select("display_name,country,city,bio,gender,seeking,relationship_intention,interests,publication_status")
+    .select("display_name,country,city,bio,gender,seeking,relationship_intention,interests,explore_interests,publication_status")
     .eq("user_id", user.id)
     .maybeSingle();
 
