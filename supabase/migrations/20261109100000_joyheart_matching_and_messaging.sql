@@ -467,29 +467,29 @@ $$;
 create or replace function public.joyheart_record_interaction(p_target_id uuid, p_action text)
 returns table (interaction_id uuid, match_id uuid, matched boolean)
 language sql security invoker set search_path = ''
-as $ select * from private.joyheart_record_interaction(p_target_id, p_action); $;
+as $$ select * from private.joyheart_record_interaction(p_target_id, p_action); $$;
 
 create or replace function public.joyheart_unmatch_member(p_match_id uuid)
 returns void language sql security invoker set search_path = ''
-as $ select private.joyheart_unmatch_member(p_match_id); $;
+as $$ select private.joyheart_unmatch_member(p_match_id); $$;
 
 create or replace function public.joyheart_send_message(p_conversation_id uuid, p_body text)
 returns uuid language sql security invoker set search_path = ''
-as $ select private.joyheart_send_message(p_conversation_id, p_body); $;
+as $$ select private.joyheart_send_message(p_conversation_id, p_body); $$;
 
 create or replace function public.joyheart_mark_conversation_read(p_conversation_id uuid)
 returns integer language sql security invoker set search_path = ''
-as $ select private.joyheart_mark_conversation_read(p_conversation_id); $;
+as $$ select private.joyheart_mark_conversation_read(p_conversation_id); $$;
 
 create or replace function public.joyheart_block_member(p_target_id uuid)
 returns void language sql security invoker set search_path = ''
-as $ select private.joyheart_block_member(p_target_id); $;
+as $$ select private.joyheart_block_member(p_target_id); $$;
 
 create or replace function public.joyheart_report_member(
   p_reported_id uuid, p_reason text, p_conversation_id uuid default null, p_message_id uuid default null
 )
 returns uuid language sql security invoker set search_path = ''
-as $ select private.joyheart_report_member(p_reported_id, p_reason, p_conversation_id, p_message_id); $;
+as $$ select private.joyheart_report_member(p_reported_id, p_reason, p_conversation_id, p_message_id); $$;
 
 revoke all on function private.joyheart_record_interaction(uuid, text) from public, anon;
 revoke all on function private.joyheart_send_message(uuid, text) from public, anon;
