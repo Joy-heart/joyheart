@@ -157,11 +157,16 @@ create policy "members read own reports"
 on public.member_reports for select to authenticated
 using (reporter_id = (select auth.uid()));
 
--- No direct client writes to interactions, matches, conversations, or reports.
-revoke all on public.profile_interactions, public.profile_matches, public.conversations, public.member_reports from anon, authenticated;
-grant select on public.profile_interactions, public.profile_matches, public.conversations to authenticated;
-grant select on public.member_reports to authenticated;
-grant select on public.messages to authenticated;
+-- Explicitly remove direct client table privileges before granting the
+-- narrow read access required by the member UI. All writes must use the
+-- validated security-definer RPCs; this also protects against broad default
+-- privileges that may exist in a Supabase project.
+revoke all on public.profile_interactions, public.profile_blocks,
+  public.profile_matches, public.conversations, public.messages,
+  public.member_reports from anon, authenticated;
+
+grant select on public.profile_interactions, public.profile_matches,
+  public.conversations, public.messages, public.member_reports to authenticated;
 
 -- A profile is eligible only when the account is active and verified,
 -- the private DOB proves the member is 18+, the profile is published,
