@@ -17,13 +17,21 @@ export default function PhotoModerationQueue({ initialPhotos }: { initialPhotos:
   const [notice, setNotice] = useState("");
 
   async function review(photoId: string, decision: "approved" | "rejected") {
+    const reason = decision === "rejected"
+      ? window.prompt("Please give a short reason for rejecting this photo (required, max 500 characters):")
+      : null;
+    if (decision === "rejected" && (!reason || !reason.trim())) return;
+    if (reason && reason.trim().length > 500) {
+      setNotice("The rejection reason must be 500 characters or fewer.");
+      return;
+    }
     setBusyId(photoId);
     setNotice("");
     try {
       const response = await fetch("/api/staff/photos/review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photoId, decision }),
+        body: JSON.stringify({ photoId, decision, reason }),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "The review could not be saved.");
