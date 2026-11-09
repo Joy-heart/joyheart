@@ -29,10 +29,12 @@ const countries = [
 
 const intentionOptions = [
   "Long-term relationship",
+  "Serious relationship",
   "Marriage-minded",
   "Life partner",
   "Friendship first",
   "Short-term dating",
+  "Short-term fun",
   "Casual dating",
   "Open to exploring",
 ];
