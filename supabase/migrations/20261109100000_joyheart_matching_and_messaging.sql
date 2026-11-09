@@ -252,7 +252,7 @@ returns integer
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare
   v_actor uuid := auth.uid();
   v_updated integer;
@@ -285,7 +285,7 @@ begin
   get diagnostics v_updated = row_count;
   return v_updated;
 end;
-$;
+$$;
 
 create or replace function public.joyheart_block_member(p_target_id uuid)
 returns void
