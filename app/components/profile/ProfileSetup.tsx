@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/app/lib/supabase/client";
+import ProfilePhotoUpload from "@/app/components/profile/ProfilePhotoUpload";
 
 type Profile = {
   display_name: string;
@@ -187,10 +188,7 @@ export default function ProfileSetup({ initialProfile }: { initialProfile: Profi
             <p className="profile-field-hint">{aboutMe.length} of 500 characters</p>
           </div>
 
-          <div className="profile-photo-next">
-            <span aria-hidden="true">✧</span>
-            <div><strong>Next: add your profile photo</strong><p>Photos will be kept private until they pass JoyHeart's safety review.</p></div>
-          </div>
+          <ProfilePhotoUpload profileReady={Boolean(displayName.trim().length >= 2 && countryCode && intention)} />
 
           {notice && <p className={failed ? "profile-form-notice error" : "profile-form-notice success"} role="status">{notice}</p>}
           <button className="button button-primary profile-save-button" type="submit" disabled={busy}>
