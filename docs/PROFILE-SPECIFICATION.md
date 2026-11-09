@@ -130,17 +130,15 @@ Members should be able to:
 
 ## Decisions required before implementation
 
-The following must be confirmed in product policy before migration and registration implementation:
+The following product decisions are now confirmed:
 
-1. Minimum member age and age-verification process.
-2. Required contact verification: email, phone, or both.
-3. Which optional fields are enabled at launch.
-4. Whether city/region is displayed by default or opt-in.
-5. Whether expanded profile fields are match-only.
-6. Which relationship intentions and discovery preference categories are offered.
-7. Photo moderation rules and appeal process.
-8. Data retention and account deletion periods.
+1. **Minimum age: 18+.** Registration and discovery must reject anyone under 18. Any higher country-specific legal minimum takes precedence.
+2. **Date of birth is private.** Collect it during registration, store it outside public profile data, and never expose the exact date to other members.
+3. **Displayed age is derived.** Calculate age from the privately stored date of birth using trusted server-side logic; never accept a client-supplied age as authoritative.
+4. **Email verification is required before member discovery access.** Phone verification is not required for the initial signup flow unless a later risk or legal review changes this.
+
+The following product details still need decisions before their implementation: optional profile fields at launch; city/region display defaults; match-only expanded fields; final relationship-intention and preference catalogues; photo moderation and appeals; and data-retention/account-deletion periods.
 
 ## Status
 
-**Specification drafted — no account form, database migration, or public member profile has been implemented.**
+**Product policy updated — 18+ confirmed, exact date of birth private, and age server-derived.** The profile form, database migration, profile APIs, and public member profile are not yet implemented.

@@ -35,13 +35,13 @@ The database will use the existing JoyHeart Supabase project. Do not create a se
 
 ### profiles
 
-Contains only fields that a member may intentionally show in discovery, such as display name, birth date or calculated age policy, short biography, country, region, city-level location, interests, relationship intention, and profile publication state.
+Contains only fields that a member may intentionally show in discovery: display name, server-derived age (not date of birth), short biography, country, region, city-level location, interests, relationship intention, approved-photo references, and profile publication state. Never put the exact date of birth in this table or expose it through discovery queries.
 
 Do not store exact home address, identity-document numbers, private contact details, or precise live coordinates here.
 
 ### profile_private
 
-Contains restricted account and privacy settings, such as contact preferences and account lifecycle details. A member may read and update only their own private record. Other members and public discovery queries must never read it.
+Contains restricted account and privacy settings, including the exact date of birth and account lifecycle details. The date of birth must be written only by trusted signup logic after the server-side 18+ check. Do not expose it through public profile queries or ordinary discovery APIs. Any owner-facing read or correction flow must be explicitly designed and audited; do not create broad client write access to date of birth.
 
 ### discovery_preferences
 
@@ -103,11 +103,13 @@ Payment-provider events must be verified server-side. Members may read their own
 - Add tests proving a second authenticated user cannot read or modify another user's private data, messages, reports, or evidence.
 - Add tests proving blocks prevent discovery and messaging.
 - Define data retention, account deletion, photo removal, and report-evidence handling before launch.
+- Enforce the platform minimum age of 18 in trusted database/server-side signup logic; apply a higher local legal minimum where required.
+- Store exact date of birth only in restricted private data; derive displayed age server-side.
 - Review location precision and age eligibility requirements for every operating country before enabling discovery.
 
 ## Decisions still required before migration
 
-- Minimum age and country-specific eligibility rules.
+- Country-specific rules that may require a minimum age higher than 18.
 - Whether discovery is global by default or country/region based.
 - Which profile fields are public, match-only, or private.
 - Photo moderation and verification requirements.

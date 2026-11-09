@@ -1,0 +1,279 @@
+"use client";
+
+import { FormEvent, useEffect, useState } from "react";
+import { supabase } from "@/app/lib/supabase/client";
+
+type NoticeProps = { children: React.ReactNode; error?: boolean };
+function Notice({ children, error = false }: NoticeProps) {
+  return <p className={error ? "auth-message auth-message-error" : "auth-message"} role={error ? "alert" : "status"}>{children}</p>;
+}
+
+function safeNextPath(value: string | null) {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return "/account";
+  try {
+    const target = new URL(value, window.location.origin);
+    return target.origin === window.location.origin ? target.pathname + target.search + target.hash : "/account";
+  } catch {
+    return "/account";
+  }
+}
+
+function friendlyAuthError(message: string) {
+  const value = message.toLowerCase();
+  if (value.includes("invalid login credentials") || value.includes("invalid email or password")) return "The email address or password is incorrect. Please check them and try again.";
+  if (value.includes("email not confirmed")) return "Please verify your email address before signing in. Check your inbox for the verification message.";
+  if (value.includes("rate limit") || value.includes("too many requests")) return "There have been too many attempts. Please wait a little before trying again.";
+  if (value.includes("password")) return "The password could not be accepted. Please review the password requirements and try again.";
+  if (value.includes("network") || value.includes("fetch")) return "We could not reach the sign-in service. Check your connection and try again.";
+  return "We could not complete that request. Please try again. If the problem continues, contact JoyHeart support.";
+}
+
+export function SignupForm() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [consent, setConsent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState(false);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage("");
+    setError(false);
+    if (!supabase) { setError(true); setMessage("Registration is temporarily unavailable. Please try again later."); return; }
+    if (name.trim().length < 2 || name.trim().length > 80) { setError(true); setMessage("Enter a name between 2 and 80 characters."); return; }
+    if (!dateOfBirth || !/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) { setError(true); setMessage("Enter your date of birth to confirm your age eligibility."); return; }
+    const birthDate = new Date(`${dateOfBirth}T00:00:00.000Z`);
+    const today = new Date();
+    const cutoff = new Date(Date.UTC(today.getUTCFullYear() - 18, today.getUTCMonth(), today.getUTCDate()));
+    if (Number.isNaN(birthDate.getTime()) || birthDate.toISOString().slice(0, 10) !== dateOfBirth || birthDate > cutoff) { setError(true); setMessage("JoyHeart is for adults aged 18 and over."); return; }
+    if (password.length < 12) { setError(true); setMessage("Please use a password with at least 12 characters."); return; }
+    if (password !== confirm) { setError(true); setMessage("The passwords do not match."); return; }
+    if (!consent) { setError(true); setMessage("Please confirm the age requirement and accept the Terms and Privacy Notice."); return; }
+    setBusy(true);
+    try {
+      const redirectTo = new URL("/auth/callback?next=%2Faccount", window.location.origin).toString();
+      const { data, error: authError } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: { emailRedirectTo: redirectTo, data: { display_name: name.trim(), date_of_birth: dateOfBirth } },
+      });
+      if (authError) throw authError;
+      if (data.session && data.user?.email_confirmed_at) {
+        window.location.assign("/account");
+        return;
+      }
+      if (data.session) await supabase.auth.signOut({ scope: "local" });
+      setMessage("If this address is eligible, a verification link has been sent. Open the email and follow its link before signing in. Check your spam folder too.");
+      setPassword("");
+      setConfirm("");
+    } catch (caught) {
+      setError(true);
+      setMessage(friendlyAuthError(caught instanceof Error ? caught.message : ""));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="auth-form" aria-label="Create a JoyHeart account" onSubmit={submit}>
+      <label htmlFor="signup-name">Your name</label>
+      <input id="signup-name" type="text" autoComplete="name" placeholder="How should we call you?" value={name} onChange={(event) => setName(event.target.value)} required minLength={2} maxLength={80} />
+      <label htmlFor="signup-date-of-birth">Date of birth</label>
+      <input id="signup-date-of-birth" type="date" autoComplete="bday" value={dateOfBirth} onChange={(event) => setDateOfBirth(event.target.value)} required max={new Date(Date.UTC(new Date().getUTCFullYear() - 18, new Date().getUTCMonth(), new Date().getUTCDate())).toISOString().slice(0, 10)} aria-describedby="signup-dob-note" />
+      <small id="signup-dob-note">You must be at least 18. Your exact birth date is private and will not appear on your profile.</small>
+      <label htmlFor="signup-email">Email address</label>
+      <input id="signup-email" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(event) => setEmail(event.target.value)} required maxLength={254} />
+      <label htmlFor="signup-password">Create a password</label>
+      <input id="signup-password" type="password" autoComplete="new-password" placeholder="At least 12 characters" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={12} maxLength={128} />
+      <label htmlFor="signup-confirm-password">Confirm password</label>
+      <input id="signup-confirm-password" type="password" autoComplete="new-password" placeholder="Enter your password again" value={confirm} onChange={(event) => setConfirm(event.target.value)} required minLength={12} maxLength={128} />
+      <label className="auth-consent">
+        <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} />
+        <span>I confirm that I am at least 18 years old (or older where local law requires) and agree to the <a href="/terms">Terms</a> and <a href="/privacy">Privacy Notice</a>.</span>
+      </label>
+      <button className="button button-primary auth-submit" type="submit" disabled={busy}>{busy ? "Creating your account…" : "Create my account"}</button>
+      {message && <Notice error={error}>{message}</Notice>}
+    </form>
+  );
+}
+
+export function LoginForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState(false);
+  const [canResend, setCanResend] = useState(false);
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("reason") === "verify") {
+      setCanResend(true);
+      setError(true);
+      setMessage("Your email address must be verified before member access. Enter your email below to resend the verification link.");
+    }
+  }, []);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage("");
+    setError(false);
+    setCanResend(false);
+    if (!supabase) { setError(true); setMessage("Sign-in is temporarily unavailable."); return; }
+    setBusy(true);
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+      if (authError) throw authError;
+      if (!data.user?.email_confirmed_at) {
+        await supabase.auth.signOut({ scope: "local" });
+        setError(true);
+        setCanResend(true);
+        setMessage("Please verify your email address before signing in. You can request a fresh verification email below.");
+        return;
+      }
+      const destination = safeNextPath(new URLSearchParams(window.location.search).get("next"));
+      window.location.assign(destination);
+    } catch (caught) {
+      const raw = caught instanceof Error ? caught.message : "";
+      setError(true);
+      setCanResend(raw.toLowerCase().includes("email not confirmed"));
+      setMessage(friendlyAuthError(raw));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resendVerification() {
+    if (!email.trim()) { setError(true); setMessage("Enter your email address first so we can send the verification link."); return; }
+    if (!supabase) { setError(true); setMessage("Verification email is temporarily unavailable."); return; }
+    setBusy(true);
+    setError(false);
+    setCanResend(false);
+    try {
+      const emailRedirectTo = new URL("/auth/callback?next=%2Faccount", window.location.origin).toString();
+      const { error: resendError } = await supabase.auth.resend({ type: "signup", email: email.trim().toLowerCase(), options: { emailRedirectTo } });
+      if (resendError) throw resendError;
+      setMessage("If this address has an unverified account, a fresh verification email has been sent. Check your inbox and spam folder.");
+    } catch (caught) {
+      setError(true);
+      setMessage(friendlyAuthError(caught instanceof Error ? caught.message : ""));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function forgotPassword() {
+    setMessage("");
+    setError(false);
+    if (!email.trim()) { setError(true); setMessage("Enter your email address first, then choose Forgot password."); return; }
+    if (!supabase) { setError(true); setMessage("Password recovery is temporarily unavailable."); return; }
+    setBusy(true);
+    try {
+      const redirectTo = new URL("/auth/callback?next=%2Freset-password", window.location.origin).toString();
+      const { error: authError } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo });
+      if (authError) throw authError;
+      setMessage("If an account exists for that address, a recovery email has been sent. Check your inbox and spam folder.");
+    } catch (caught) {
+      setError(true);
+      setMessage(friendlyAuthError(caught instanceof Error ? caught.message : ""));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="auth-form" aria-label="Log in to JoyHeart" onSubmit={submit}>
+      <label htmlFor="login-email">Email address</label>
+      <input id="login-email" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(event) => setEmail(event.target.value)} required maxLength={254} />
+      <label htmlFor="login-password">Password</label>
+      <input id="login-password" type="password" autoComplete="current-password" placeholder="Enter your password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+      <div className="auth-form-meta"><span className="auth-muted">Secure member access</span><button type="button" className="auth-text-button" onClick={forgotPassword} disabled={busy}>Forgot password?</button></div>
+      <button className="button button-primary auth-submit" type="submit" disabled={busy}>{busy ? "Signing in…" : "Log in"}</button>
+      {message && <Notice error={error}>{message}</Notice>}
+      {canResend && <button type="button" className="auth-text-button" onClick={resendVerification} disabled={busy}>Resend verification email</button>}
+    </form>
+  );
+}
+
+export function ResetPasswordForm({ recoveryVerified = false }: { recoveryVerified?: boolean }) {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [message, setMessage] = useState("Checking your recovery link…");
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!supabase) { setError(true); setMessage("Password recovery is temporarily unavailable."); return; }
+    if (recoveryVerified) {
+      setReady(true);
+      setError(false);
+      setMessage("Your recovery link is valid. Choose a new password below.");
+      return;
+    }
+    let active = true;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!active) return;
+      if (event === "PASSWORD_RECOVERY" && session) {
+        setReady(true);
+        setError(false);
+        setMessage("Your recovery link is valid. Choose a new password below.");
+      }
+    });
+    void supabase.auth.getSession().then(({ data, error: sessionError }) => {
+      if (!active) return;
+      if (sessionError) { setError(true); setMessage("We could not verify this recovery session. Request a new password-reset email."); return; }
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const query = new URLSearchParams(window.location.search);
+      if (hash.get("error") || query.get("error")) {
+        setError(true);
+        setMessage("This recovery link is invalid or has expired. Request a new password-reset email.");
+      } else {
+        setError(true);
+        setMessage("Open the password-reset link from your email on this device. When it expires, request a new one.");
+      }
+    });
+    return () => { active = false; subscription.unsubscribe(); };
+  }, []);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(false);
+    if (!supabase || !ready) { setError(true); setMessage("A valid password-reset link is required before changing your password."); return; }
+    if (password.length < 12 || password !== confirm) { setError(true); setMessage(password.length < 12 ? "Use at least 12 characters." : "The passwords do not match."); return; }
+    setBusy(true);
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({ password });
+      if (updateError) throw updateError;
+      setPassword("");
+      setConfirm("");
+      setReady(false);
+      const { error: signOutError } = await supabase.auth.signOut({ scope: "local" });
+      setMessage(signOutError
+        ? "Your password was updated. Please sign out and log in again with your new password."
+        : "Your password has been updated. Please log in with your new password.");
+    } catch (caught) {
+      setError(true);
+      setMessage(friendlyAuthError(caught instanceof Error ? caught.message : ""));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="auth-form" onSubmit={submit}>
+      {message && <Notice error={error}>{message}</Notice>}
+      {ready && <>
+        <label htmlFor="new-password">New password</label>
+        <input id="new-password" type="password" autoComplete="new-password" minLength={12} maxLength={128} required value={password} onChange={(event) => setPassword(event.target.value)} />
+        <label htmlFor="confirm-new-password">Confirm new password</label>
+        <input id="confirm-new-password" type="password" autoComplete="new-password" minLength={12} maxLength={128} required value={confirm} onChange={(event) => setConfirm(event.target.value)} />
+        <button className="button button-primary auth-submit" disabled={busy} type="submit">{busy ? "Updating…" : "Update password"}</button>
+      </>}
+      {!ready && <p className="auth-switch"><a href="/login">Return to log in to request a new link</a></p>}
+    </form>
+  );
+}
