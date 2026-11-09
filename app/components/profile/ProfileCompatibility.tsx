@@ -46,13 +46,24 @@ export default function ProfileCompatibility() {
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
     async function load() {
-      if (!supabase) { if (active) setLoading(false); return; }
+      if (!supabase) {
+        if (active) {
+          setError(true);
+          setNotice("Private profile settings are temporarily unavailable. Please try again.");
+          setLoading(false);
+        }
+        return;
+      }
+      try {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user || !active) { if (active) setLoading(false); return; }
+      if (authError) throw authError;
+      if (!user) throw new Error("Please sign in again to load your private settings.");
+      if (!active) return;
       const [prefResult, answerResult] = await Promise.all([
         supabase.from("member_discovery_preferences").select("preferred_age_min,preferred_age_max,preferred_countries,preferred_languages,relationship_intentions,discovery_enabled").eq("user_id", user.id).maybeSingle(),
         supabase.from("member_personality_answers").select("answers").eq("user_id", user.id).maybeSingle(),
@@ -69,14 +80,21 @@ export default function ProfileCompatibility() {
         if (validateAnswers(stored)) setAnswers(stored);
       }
       if (prefResult.error || answerResult.error) {
-        setError(true);
-        setNotice("We couldn't load all your private settings. Please refresh and try again.");
+        throw new Error("We couldn't load all your private settings. Please try again.");
       }
       setLoading(false);
+      } catch (loadError) {
+        if (active) {
+          setError(true);
+          setNotice(loadError instanceof Error ? loadError.message : "We couldn't load your private settings. Please try again.");
+          setLoading(false);
+        }
+      }
     }
+    setLoading(true);
     void load();
     return () => { active = false; };
-  }, []);
+  }, [attempt]);
 
   function toggleIntention(value: string) {
     setPreferences((current) => ({
@@ -131,7 +149,12 @@ export default function ProfileCompatibility() {
         <h2>Help us understand what feels right to you.</h2>
         <p>These answers help guide better matches. Your detailed answers and filters are private to your account.</p>
       </header>
-      {loading ? <p className="profile-field-hint">Loading your private settings…</p> : (
+      {loading ? <p className="profile-field-hint" role="status">Loading your private settings…</p> : error && notice ? (
+        <div className="profile-form-notice error" role="alert">
+          <p>{notice}</p>
+          <button className="button button-secondary" type="button" onClick={() => { setNotice(""); setError(false); setAttempt((value) => value + 1); }}>Try again</button>
+        </div>
+      ) : (
         <>
           <div className="profile-form-section">
             <div className="profile-section-title"><span>06</span><div><h2>Personality and connection</h2><p>There are no right or wrong answers. Choose what feels most like you.</p></div></div>
@@ -162,7 +185,7 @@ export default function ProfileCompatibility() {
             <label htmlFor="pref-languages">Languages you'd like to share <small>Optional, comma separated</small></label>
             <input id="pref-languages" value={languages} onChange={(e) => setLanguages(e.target.value)} maxLength={400} placeholder="English, Swahili, French" />
             <p className="profile-field-hint">These preferences are private and do not reveal your location or contact details.</p>
-            <label className="profile-visibility-toggle"><input type="checkbox" checked={preferences.discovery_enabled} onChange={(e) => setPreferences((p) => ({ ...p, discovery_enabled: e.target.checked }))} /><span><strong>Allow my profile to appear in discovery</strong><small>Turn this off whenever you want to pause discovery.</small></span></label>
+            <label className="profile-visibility-toggle"><input type="checkbox" checked={preferences.discovery_enabled} onChange={(e) => setPreferences((p) => ({ ...p, discovery_enabled: e.target.checked }))} /><span><strong>Allow my profile to appear in discovery when it launches</strong><small>Discovery is currently closed to everyone while safety checks are completed. This preference will be enforced by the server before member recommendations launch.</small></span></label>
             <h3 className="profile-preference-subtitle">Relationship intentions you'd like to meet</h3>
             <div className="profile-intention-options">
               {intentions.map((value) => <label className={preferences.relationship_intentions.includes(value) ? "profile-choice selected" : "profile-choice"} key={value}><input type="checkbox" checked={preferences.relationship_intentions.includes(value)} onChange={() => toggleIntention(value)} /><span>{value}</span></label>)}
