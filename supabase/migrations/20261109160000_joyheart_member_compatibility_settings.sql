@@ -1,6 +1,6 @@
 -- JoyHeart Milestone 4: private discovery preferences and personality answers.
--- These records are owner-readable only. Writes must go through the validated,
--- authenticated, atomic RPC below; clients cannot bypass its validation.
+-- These records are owner-readable and owner-writable only. Database triggers
+-- enforce allowed values for both direct writes and the atomic RPC below.
 
 create table if not exists public.member_discovery_preferences (
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -68,7 +68,7 @@ create or replace function public.joyheart_validate_member_profile_settings()
 returns trigger
 language plpgsql
 set search_path = ''
-as $
+as $joyheart$
 declare
   v_item text;
   v_key text;
@@ -115,7 +115,7 @@ begin
   end if;
   return new;
 end;
-$;
+$joyheart$;
 
 revoke all on function public.joyheart_validate_member_profile_settings() from public, anon, authenticated;
 
