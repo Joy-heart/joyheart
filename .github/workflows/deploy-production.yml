@@ -1,0 +1,68 @@
+name: JoyHeart production deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_production_deployment:
+        description: "I approve deploying the current main branch to the live JoyHeart Worker"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: joyheart-production-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy existing JoyHeart Worker
+    if: github.ref == 'refs/heads/main' && inputs.confirm_production_deployment == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Initialize existing Cloudflare project configuration
+        run: npm run setup:cloudflare
+
+      - name: Preserve validated Vite version
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          const path = "package.json";
+          const pkg = JSON.parse(fs.readFileSync(path, "utf8"));
+          pkg.devDependencies ??= {};
+          pkg.devDependencies.vite = "^8.3.3";
+          fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + "\n");
+          NODE
+          npm install
+
+      - name: Verify deployment credentials are present
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "Missing repository variable CLOUDFLARE_ACCOUNT_ID"; exit 1; }
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo "Missing repository secret CLOUDFLARE_API_TOKEN"; exit 1; }
+
+      - name: Deploy to the existing joyheart Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npm run deploy
