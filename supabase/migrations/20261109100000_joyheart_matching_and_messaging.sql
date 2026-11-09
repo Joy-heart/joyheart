@@ -300,7 +300,7 @@ begin
 end;
 $$;
 
-create or replace function private.joyheart_send_message(p_conversation_id uuid, p_body text)
+create or replace function private.joyheart_send_message(p_conversation_id uuid, p_body text, p_reply_to_message_id uuid default null)
 returns uuid
 language plpgsql
 security definer
@@ -337,8 +337,13 @@ begin
       )
   ) then raise exception 'Conversation is unavailable'; end if;
 
-  insert into public.messages(conversation_id, sender_id, body)
-  values (p_conversation_id, v_actor, btrim(p_body))
+  if p_reply_to_message_id is not null and not exists (
+    select 1 from public.messages replied
+    where replied.id = p_reply_to_message_id and replied.conversation_id = p_conversation_id
+  ) then raise exception 'The replied-to message is unavailable'; end if;
+
+  insert into public.messages(conversation_id, sender_id, body, reply_to_message_id)
+  values (p_conversation_id, v_actor, btrim(p_body), p_reply_to_message_id)
   returning id into v_message_id;
 
   update public.conversations
@@ -489,6 +494,17 @@ begin
   update public.messages set deleted_at=now(), body='Message deleted' where id=p_message_id;
 end; $;
 
+
+-- Enable database change events for live conversation updates when Realtime is available.
+do $
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'messages') then
+    alter publication supabase_realtime add table public.messages;
+  end if;
+end;
+$;
+
 -- Public RPC wrappers are invoker functions. Privileged logic lives in
 -- the non-exposed private schema and independently validates auth.uid().
 create or replace function public.joyheart_record_interaction(p_target_id uuid, p_action text)
@@ -500,9 +516,9 @@ create or replace function public.joyheart_unmatch_member(p_match_id uuid)
 returns void language sql security invoker set search_path = ''
 as $$ select private.joyheart_unmatch_member(p_match_id); $$;
 
-create or replace function public.joyheart_send_message(p_conversation_id uuid, p_body text)
+create or replace function public.joyheart_send_message(p_conversation_id uuid, p_body text, p_reply_to_message_id uuid default null)
 returns uuid language sql security invoker set search_path = ''
-as $$ select private.joyheart_send_message(p_conversation_id, p_body); $$;
+as $$ select private.joyheart_send_message(p_conversation_id, p_body, p_reply_to_message_id); $$;
 
 create or replace function public.joyheart_mark_conversation_read(p_conversation_id uuid)
 returns integer language sql security invoker set search_path = ''
@@ -524,26 +540,26 @@ create or replace function public.joyheart_delete_message(p_message_id uuid)
 returns void language sql security invoker set search_path = '' as $ select private.joyheart_delete_message(p_message_id); $;
 
 revoke all on function private.joyheart_edit_message(uuid,text) from public, anon;\nrevoke all on function private.joyheart_delete_message(uuid) from public, anon;\ngrant execute on function private.joyheart_edit_message(uuid,text) to authenticated;\ngrant execute on function private.joyheart_delete_message(uuid) to authenticated;\nrevoke all on function public.joyheart_edit_message(uuid,text) from public, anon;\nrevoke all on function public.joyheart_delete_message(uuid) from public, anon;\ngrant execute on function public.joyheart_edit_message(uuid,text) to authenticated;\ngrant execute on function public.joyheart_delete_message(uuid) to authenticated;\n\nrevoke all on function private.joyheart_record_interaction(uuid, text) from public, anon;
-revoke all on function private.joyheart_send_message(uuid, text) from public, anon;
+revoke all on function private.joyheart_send_message(uuid, text, uuid) from public, anon;
 revoke all on function private.joyheart_unmatch_member(uuid) from public, anon;
 revoke all on function private.joyheart_block_member(uuid) from public, anon;
 revoke all on function private.joyheart_mark_conversation_read(uuid) from public, anon;
 revoke all on function private.joyheart_report_member(uuid, text, uuid, uuid) from public, anon;
 grant execute on function private.joyheart_record_interaction(uuid, text) to authenticated;
-grant execute on function private.joyheart_send_message(uuid, text) to authenticated;
+grant execute on function private.joyheart_send_message(uuid, text, uuid) to authenticated;
 grant execute on function private.joyheart_unmatch_member(uuid) to authenticated;
 grant execute on function private.joyheart_block_member(uuid) to authenticated;
 grant execute on function private.joyheart_mark_conversation_read(uuid) to authenticated;
 grant execute on function private.joyheart_report_member(uuid, text, uuid, uuid) to authenticated;
 
 revoke all on function public.joyheart_record_interaction(uuid, text) from public, anon;
-revoke all on function public.joyheart_send_message(uuid, text) from public, anon;
+revoke all on function public.joyheart_send_message(uuid, text, uuid) from public, anon;
 revoke all on function public.joyheart_unmatch_member(uuid) from public, anon;
 revoke all on function public.joyheart_block_member(uuid) from public, anon;
 revoke all on function public.joyheart_mark_conversation_read(uuid) from public, anon;
 revoke all on function public.joyheart_report_member(uuid, text, uuid, uuid) from public, anon;
 grant execute on function public.joyheart_record_interaction(uuid, text) to authenticated;
-grant execute on function public.joyheart_send_message(uuid, text) to authenticated;
+grant execute on function public.joyheart_send_message(uuid, text, uuid) to authenticated;
 grant execute on function public.joyheart_unmatch_member(uuid) to authenticated;
 grant execute on function public.joyheart_block_member(uuid) to authenticated;
 grant execute on function public.joyheart_mark_conversation_read(uuid) to authenticated;
