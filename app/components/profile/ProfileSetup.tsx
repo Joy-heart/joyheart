@@ -170,7 +170,32 @@ export default function ProfileSetup({ initialProfile }: { initialProfile: Profi
           </div>
 
           <div className="profile-form-section">
-            <div className="profile-section-title"><span>02</span><div><h2>What are you looking for?</h2><p>Choose the intention that feels right for you.</p></div></div>
+            <div className="profile-section-title"><span>02</span><div><h2>About your match preferences</h2><p>These details help us show compatible people.</p></div></div>
+            <div className="profile-form-grid">
+              <div>
+                <label htmlFor="profile-gender">I identify as <em>Required</em></label>
+                <select id="profile-gender" value={gender} onChange={(event) => setGender(event.target.value)} required>
+                  <option value="">Choose an option</option>
+                  <option value="Woman">Woman</option>
+                  <option value="Man">Man</option>
+                  <option value="Non-binary">Non-binary</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="profile-seeking">I would like to meet <em>Required</em></label>
+                <select id="profile-seeking" value={seeking} onChange={(event) => setSeeking(event.target.value)} required>
+                  <option value="">Choose an option</option>
+                  <option value="Men">Men</option>
+                  <option value="Women">Women</option>
+                  <option value="Everyone">Everyone</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="profile-form-section">
+            <div className="profile-section-title"><span>03</span><div><h2>What are you looking for?</h2><p>Choose the intention that feels right for you.</p></div></div>
             <div className="profile-intention-options">
               {intentionOptions.map((option) => (
                 <label className={intention === option ? "profile-choice selected" : "profile-choice"} key={option}>
