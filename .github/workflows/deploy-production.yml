@@ -37,23 +37,14 @@ jobs:
           node-version: "22"
           cache: npm
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install locked dependencies
+        run: npm ci
 
-      - name: Initialize existing Cloudflare project configuration
-        run: npm run setup:cloudflare
+      - name: Validate Vinext compatibility
+        run: npm run check:compatibility
 
-      - name: Preserve validated Vite version
-        run: |
-          node --input-type=module <<'NODE'
-          import fs from "node:fs";
-          const path = "package.json";
-          const pkg = JSON.parse(fs.readFileSync(path, "utf8"));
-          pkg.devDependencies ??= {};
-          pkg.devDependencies.vite = "^8.3.3";
-          fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + "\n");
-          NODE
-          npm install
+      - name: Build application
+        run: npm run build
 
       - name: Verify deployment credentials are present
         env:
