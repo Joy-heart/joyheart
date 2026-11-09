@@ -481,7 +481,7 @@ begin
   if v_conversation is null then raise exception 'This message can no longer be edited'; end if;
   if not exists (select 1 from public.conversations c join public.profile_matches m on m.id=c.match_id where c.id=v_conversation and m.status='active' and v_actor in (m.member_low,m.member_high)) then raise exception 'Conversation is unavailable'; end if;
   update public.messages set body=btrim(p_body), edited_at=now() where id=p_message_id;
-end; $;
+end; $$;
 
 create or replace function private.joyheart_delete_message(p_message_id uuid)
 returns void language plpgsql security definer set search_path = '' as $
@@ -492,7 +492,7 @@ begin
   if v_conversation is null then raise exception 'This message can no longer be deleted'; end if;
   if not exists (select 1 from public.conversations c join public.profile_matches m on m.id=c.match_id where c.id=v_conversation and m.status='active' and v_actor in (m.member_low,m.member_high)) then raise exception 'Conversation is unavailable'; end if;
   update public.messages set deleted_at=now() where id=p_message_id;
-end; $;
+end; $$;
 
 
 -- Enable database change events for live conversation updates when Realtime is available.
@@ -503,7 +503,7 @@ begin
     alter publication supabase_realtime add table public.messages;
   end if;
 end;
-$;
+$$;
 
 -- Public RPC wrappers are invoker functions. Privileged logic lives in
 -- the non-exposed private schema and independently validates auth.uid().
