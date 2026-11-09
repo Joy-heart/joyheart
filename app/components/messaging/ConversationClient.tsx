@@ -11,7 +11,8 @@ export default function ConversationClient({ conversationId, matchId, currentUse
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [reportReason, setReportReason] = useState("");
-  const [reportOpen, setReportOpen] = useState(false);\n  const [conversationClosed, setConversationClosed] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [conversationClosed, setConversationClosed] = useState(false);
 
   useEffect(() => {
     if (!supabase) return;
@@ -36,6 +37,15 @@ export default function ConversationClient({ conversationId, matchId, currentUse
     setBusy(false);
   }
 
+  async function unmatchMember() {
+    if (!supabase || !window.confirm("Unmatch this member? You will no longer be able to message each other, and this match cannot be reopened.")) return;
+    setBusy(true);
+    const { error } = await supabase.rpc("joyheart_unmatch_member", { p_match_id: matchId });
+    setBusy(false);
+    if (error) setNotice("We could not end this match. Please try again.");
+    else { setConversationClosed(true); setBody(""); setNotice("You have unmatched. This conversation is now closed."); }
+  }
+
   async function submitReport(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!supabase || reportReason.trim().length < 3) return;
@@ -47,7 +57,8 @@ export default function ConversationClient({ conversationId, matchId, currentUse
   async function blockMember() {
     if (!supabase || !window.confirm("Block this member? They will no longer be able to message you.")) return;
     const { error } = await supabase.rpc("joyheart_block_member", { p_target_id: otherMemberId });
-    if (error) setNotice("We could not block this member. Please try again.");\n    else { setConversationClosed(true); setBody(""); setNotice("This member has been blocked. This conversation is now closed."); }
+    if (error) setNotice("We could not block this member. Please try again.");
+    else { setConversationClosed(true); setBody(""); setNotice("This member has been blocked. This conversation is now closed."); }
   }
 
   return <section className="member-panel chat-layout">
@@ -58,8 +69,8 @@ export default function ConversationClient({ conversationId, matchId, currentUse
     {!conversationClosed && <form className="chat-compose" onSubmit={sendMessage}>
       <textarea aria-label="Your message" maxLength={4000} placeholder="Write a thoughtful message…" value={body} onChange={(event) => setBody(event.target.value)} />
       <button className="member-action" type="submit" disabled={busy || !body.trim()}>{busy ? "Sending…" : "Send message"}</button>
-    </form>
-    <div style={{display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}><button type="button" className="member-action secondary" onClick={blockMember}>Block member</button><button type="button" className="member-action secondary" onClick={() => setReportOpen((open) => !open)}>Report member</button></div>
+    </form>}
+    {!conversationClosed && <div style={{display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}><button type="button" className="member-action secondary" onClick={unmatchMember} disabled={busy}>Unmatch</button><button type="button" className="member-action secondary" onClick={blockMember} disabled={busy}>Block member</button><button type="button" className="member-action secondary" onClick={() => setReportOpen((open) => !open)}>Report member</button></div>}
     {reportOpen && !conversationClosed && <form onSubmit={submitReport} style={{display:"grid",gap:10}}><label htmlFor="report-reason">Why are you reporting this member?</label><textarea id="report-reason" value={reportReason} onChange={(event) => setReportReason(event.target.value)} minLength={3} maxLength={1000} required placeholder="Tell us what happened…" /><button className="member-action" type="submit" disabled={reportReason.trim().length < 3}>Send private report</button></form>}
     <p style={{color:"var(--joy-muted)",fontSize:".85rem",margin:0}}>Keep personal information private. Blocking or unmatching closes this conversation. Reports are private and reviewed by the JoyHeart team.</p>
   </section>;
