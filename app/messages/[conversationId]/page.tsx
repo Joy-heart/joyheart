@@ -25,6 +25,6 @@ export default async function ConversationPage({ params }: { params: Promise<{ c
 
   return <main className="member-area">
     <div className="member-heading"><div><Link href="/matches" className="member-action secondary">← Matches</Link><h1 style={{marginTop:16}}>{profile?.display_name || "Your match"}</h1><p>A private conversation for the two of you.</p></div></div>
-    {error ? <div className="member-panel"><div className="member-alert">Messages are not available yet. The matching and messaging database foundation still needs approval and installation.</div></div> : <ConversationClient conversationId={conversationId} matchId={conversation.match_id} currentUserId={user.id} initialMessages={(messages ?? []) as ChatMessage[]} otherMemberId={otherId} />}
+    {error ? <div className="member-panel"><div className="member-alert">Messages are temporarily unavailable. Please refresh the page or return to your matches and try again.</div></div> : <ConversationClient conversationId={conversationId} matchId={conversation.match_id} currentUserId={user.id} initialMessages={(messages ?? []) as ChatMessage[]} otherMemberId={otherId} />}
   </main>;
 }
