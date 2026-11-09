@@ -1,7 +1,11 @@
 import { bindings, defineConfig, defineWorker } from "cf/config";
+import { createWorkersCacheConfig } from "@vinext/cloudflare/cache/config";
+
+const cache = await createWorkersCacheConfig();
 
 export default defineConfig({
   worker: defineWorker({
+    ...cache,
     name: "joyheart",
     entrypoint: "vinext/server/fetch-handler",
     compatibilityDate: "2026-11-08",
@@ -12,7 +16,12 @@ export default defineConfig({
       runWorkerFirst: ["/*", "!/_next/static/*", "!/*/_next/static/*"],
     },
     env: {
+      ...cache.env,
       ASSETS: bindings.assets(),
+      VINEXT_KV_CACHE: bindings.kv(),
+    },
+    exports: {
+      ...cache.exports,
     },
   }),
 });

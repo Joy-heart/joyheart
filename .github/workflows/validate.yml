@@ -33,27 +33,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: npm
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Generate Cloudflare configuration with caching disabled
-        run: npm run setup:cloudflare
-
-      - name: Preserve patched Vite version after Cloudflare initialization
-        run: |
-          node --input-type=module <<'NODE'
-          import fs from "node:fs";
-          const path = "package.json";
-          const pkg = JSON.parse(fs.readFileSync(path, "utf8"));
-          pkg.devDependencies ??= {};
-          pkg.devDependencies.vite = "^8.3.3";
-          fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + "\n");
-          NODE
-          npm install
-
-      - name: Keep generated Cloudflare types included by TypeScript
-        run: node -e "const fs=require('fs');const p='tsconfig.json';const c=JSON.parse(fs.readFileSync(p,'utf8'));c.exclude=(c.exclude||[]).filter(x=>x!=='.cloudflare');fs.writeFileSync(p,JSON.stringify(c,null,2)+'\\n')"
+      - name: Install locked dependencies
+        run: npm ci
 
       - name: Record dependency security audit
         run: npm audit --json > npm-audit.json || true
