@@ -22,8 +22,16 @@ const questions = [
   { key: "pace", title: "What pace feels right when getting to know someone?", options: ["Slow and intentional", "Steady with regular communication", "Open to seeing how it develops"] },
 ];
 
-function splitList(value: string) {
-  return [...new Set(value.split(",").map((part) => part.trim()).filter(Boolean))].slice(0, 30);
+function splitList(value: string, limit: number) {
+  return [...new Set(value.split(",").map((part) => part.trim()).filter(Boolean))].slice(0, limit);
+}
+
+function validateAnswers(value: Record<string, string>) {
+  for (const [key, answer] of Object.entries(value)) {
+    const question = questions.find((item) => item.key === key);
+    if (!question || !question.options.includes(answer)) return false;
+  }
+  return true;
 }
 
 export default function ProfileCompatibility() {
@@ -43,8 +51,8 @@ export default function ProfileCompatibility() {
     let active = true;
     async function load() {
       if (!supabase) { if (active) setLoading(false); return; }
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !active) { setLoading(false); return; }
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user || !active) { if (active) setLoading(false); return; }
       const [prefResult, answerResult] = await Promise.all([
         supabase.from("member_discovery_preferences").select("preferred_age_min,preferred_age_max,preferred_countries,preferred_languages,relationship_intentions,discovery_enabled").eq("user_id", user.id).maybeSingle(),
         supabase.from("member_personality_answers").select("answers").eq("user_id", user.id).maybeSingle(),
@@ -56,8 +64,14 @@ export default function ProfileCompatibility() {
         setCountries(p.preferred_countries.join(", "));
         setLanguages(p.preferred_languages.join(", "));
       }
-      if (answerResult.data?.answers && typeof answerResult.data.answers === "object") setAnswers(answerResult.data.answers as Record<string, string>);
-      if (prefResult.error || answerResult.error) { setError(true); setNotice("We couldn't load all your private settings. You can retry by refreshing this page."); }
+      if (answerResult.data?.answers && typeof answerResult.data.answers === "object" && !Array.isArray(answerResult.data.answers)) {
+        const stored = answerResult.data.answers as Record<string, string>;
+        if (validateAnswers(stored)) setAnswers(stored);
+      }
+      if (prefResult.error || answerResult.error) {
+        setError(true);
+        setNotice("We couldn't load all your private settings. Please refresh and try again.");
+      }
       setLoading(false);
     }
     void load();
@@ -79,14 +93,30 @@ export default function ProfileCompatibility() {
     try {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError || !user?.email_confirmed_at) throw new Error("Please verify your email and sign in again.");
-      const next = { ...preferences, preferred_countries: splitList(countries), preferred_languages: splitList(languages) };
-      if (next.preferred_age_min < 18 || next.preferred_age_max > 120 || next.preferred_age_min > next.preferred_age_max) throw new Error("Choose a valid age range. The minimum age is 18.");
-      const [p, a] = await Promise.all([
-        supabase.from("member_discovery_preferences").upsert({ user_id: user.id, ...next }, { onConflict: "user_id" }),
-        supabase.from("member_personality_answers").upsert({ user_id: user.id, answers }, { onConflict: "user_id" }),
-      ]);
-      if (p.error) throw p.error;
-      if (a.error) throw a.error;
+      const next = {
+        ...preferences,
+        preferred_countries: splitList(countries, 30),
+        preferred_languages: splitList(languages, 20),
+      };
+      if (!Number.isInteger(next.preferred_age_min) || !Number.isInteger(next.preferred_age_max)
+        || next.preferred_age_min < 18 || next.preferred_age_max > 120
+        || next.preferred_age_min > next.preferred_age_max) {
+        throw new Error("Choose a valid age range. The minimum age is 18 and the maximum is 120.");
+      }
+      if (next.preferred_countries.some((item) => item.length > 80)
+        || next.preferred_languages.some((item) => item.length > 80)) {
+        throw new Error("Each country or language entry must be 80 characters or fewer.");
+      }
+      if (next.relationship_intentions.length > 12
+        || next.relationship_intentions.some((item) => !intentions.includes(item))) {
+        throw new Error("Please choose valid relationship intentions.");
+      }
+      if (!validateAnswers(answers)) throw new Error("Please choose an answer from the available options for each personality question.");
+      const { error: saveError } = await supabase.rpc("joyheart_save_member_compatibility_settings", {
+        p_preferences: next,
+        p_answers: answers,
+      });
+      if (saveError) throw saveError;
       setNotice("Your personality answers and discovery preferences have been saved privately.");
     } catch (e) {
       setError(true);
