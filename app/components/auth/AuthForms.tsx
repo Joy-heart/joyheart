@@ -45,7 +45,7 @@ export function SignupForm() {
     setError(false);
     if (!supabase) { setError(true); setMessage("Registration is temporarily unavailable. Please try again later."); return; }
     if (name.trim().length < 2 || name.trim().length > 80) { setError(true); setMessage("Enter a name between 2 and 80 characters."); return; }
-    if (!dateOfBirth || !/^\\d{4}-\\d{2}-\\d{2}$/.test(dateOfBirth)) { setError(true); setMessage("Enter your date of birth to confirm your age eligibility."); return; }
+    if (!dateOfBirth || !/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) { setError(true); setMessage("Enter your date of birth to confirm your age eligibility."); return; }
     const birthDate = new Date(`${dateOfBirth}T00:00:00.000Z`);
     const today = new Date();
     const cutoff = new Date(Date.UTC(today.getUTCFullYear() - 18, today.getUTCMonth(), today.getUTCDate()));
@@ -82,7 +82,10 @@ export function SignupForm() {
     <form className="auth-form" aria-label="Create a JoyHeart account" onSubmit={submit}>
       <label htmlFor="signup-name">Your name</label>
       <input id="signup-name" type="text" autoComplete="name" placeholder="How should we call you?" value={name} onChange={(event) => setName(event.target.value)} required minLength={2} maxLength={80} />
-      <label htmlFor="signup-date-of-birth">Date of birth</label>\n      <input id="signup-date-of-birth" type="date" autoComplete="bday" value={dateOfBirth} onChange={(event) => setDateOfBirth(event.target.value)} required max={new Date(Date.UTC(new Date().getUTCFullYear() - 18, new Date().getUTCMonth(), new Date().getUTCDate())).toISOString().slice(0, 10)} aria-describedby="signup-dob-note" />\n      <small id="signup-dob-note">You must be at least 18. Your exact birth date is private and will not appear on your profile.</small>\n      <label htmlFor="signup-email">Email address</label>
+      <label htmlFor="signup-date-of-birth">Date of birth</label>
+      <input id="signup-date-of-birth" type="date" autoComplete="bday" value={dateOfBirth} onChange={(event) => setDateOfBirth(event.target.value)} required max={new Date(Date.UTC(new Date().getUTCFullYear() - 18, new Date().getUTCMonth(), new Date().getUTCDate())).toISOString().slice(0, 10)} aria-describedby="signup-dob-note" />
+      <small id="signup-dob-note">You must be at least 18. Your exact birth date is private and will not appear on your profile.</small>
+      <label htmlFor="signup-email">Email address</label>
       <input id="signup-email" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(event) => setEmail(event.target.value)} required maxLength={254} />
       <label htmlFor="signup-password">Create a password</label>
       <input id="signup-password" type="password" autoComplete="new-password" placeholder="At least 12 characters" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={12} maxLength={128} />
