@@ -188,7 +188,7 @@ export default function ProfileSetup({ initialProfile }: { initialProfile: Profi
                   <option value="">Choose an option</option>
                   <option value="Men">Men</option>
                   <option value="Women">Women</option>
-                  <option value="Everyone">Everyone</option>
+                  <option value="Everyone">Everyone (all gender identities)</option>
                 </select>
               </div>
             </div>
