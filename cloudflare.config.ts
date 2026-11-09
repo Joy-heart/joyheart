@@ -19,6 +19,8 @@ export default defineConfig({
       ...cache.env,
       ASSETS: bindings.assets(),
       VINEXT_KV_CACHE: bindings.kv(),
+      SUPABASE_URL: bindings.text("https://quiyoobztyzebocqttoa.supabase.co"),
+      SUPABASE_ANON_KEY: bindings.text("sb_publishable_nE5yis-UPI-F-w_1ctfVpQ_uVQuAe_p"),
     },
     exports: {
       ...cache.exports,
