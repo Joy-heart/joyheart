@@ -1376,3 +1376,6 @@ a:focus-visible {
 .chat-compose { display:flex; gap:10px; align-items:flex-end; }
 .chat-compose textarea { flex:1; min-height:54px; resize:vertical; border:1px solid var(--joy-border); border-radius:15px; padding:14px; font:inherit; }
 @media(max-width:640px) { .member-area{width:calc(100% - 28px);margin:24px auto 56px}.member-heading{align-items:flex-start;flex-direction:column}.member-list-item{align-items:flex-start;flex-direction:column;width:100%}.chat-bubble{max-width:90%}.chat-compose{flex-direction:column}.chat-compose button{width:100%} }
+
+
+.chat-message-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}.chat-message-actions button,.chat-compose-context button{border:0;border-radius:999px;padding:5px 9px;background:rgba(255,255,255,.18);color:inherit;font:inherit;font-size:.72rem;font-weight:700;cursor:pointer}.chat-bubble:not(.mine) .chat-message-actions button{background:#fff;color:var(--joy-burgundy)}.chat-reply-preview{margin-bottom:8px;padding:7px 10px;border-left:3px solid var(--joy-gold);border-radius:6px;background:rgba(255,255,255,.18);font-size:.82rem;opacity:.9}.chat-compose-context{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:10px;background:#f7e8eb;color:var(--joy-burgundy);font-size:.82rem}
