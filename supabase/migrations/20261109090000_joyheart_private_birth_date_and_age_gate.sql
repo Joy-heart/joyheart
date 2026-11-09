@@ -1,9 +1,9 @@
 -- JoyHeart: private date of birth and server-enforced 18+ signup gate.
 -- REVIEW ONLY: do not run until this migration and signup flow have been reviewed.
 --
--- The BEFORE INSERT trigger validates the date, stores it in profile_private,
--- and removes it from raw_user_meta_data before the auth.users row is written.
--- This prevents the exact birth date being retained in ordinary Auth metadata.
+-- PostgreSQL cannot insert the private row in a BEFORE INSERT trigger because
+-- profile_private references the not-yet-inserted auth.users row. Validate
+-- before insert, then copy and scrub metadata in an AFTER INSERT trigger.
 
 create table if not exists public.profile_private (
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -18,7 +18,7 @@ alter table public.profile_private force row level security;
 revoke all on table public.profile_private from anon, authenticated;
 grant all on table public.profile_private to postgres, service_role;
 
-create or replace function public.joyheart_validate_and_store_signup_birth_date()
+create or replace function public.joyheart_validate_signup_age()
 returns trigger
 language plpgsql
 security definer
@@ -29,50 +29,63 @@ declare
 begin
   if new.raw_user_meta_data is null
      or not (new.raw_user_meta_data ? 'date_of_birth') then
-    raise exception 'DATE_OF_BIRTH_REQUIRED'
-      using errcode = '22023';
+    raise exception 'DATE_OF_BIRTH_REQUIRED' using errcode = '22023';
   end if;
 
   if (new.raw_user_meta_data ->> 'date_of_birth') !~ '^\d{4}-\d{2}-\d{2}$' then
-    raise exception 'DATE_OF_BIRTH_INVALID'
-      using errcode = '22023';
+    raise exception 'DATE_OF_BIRTH_INVALID' using errcode = '22023';
   end if;
 
   begin
     birth_date := (new.raw_user_meta_data ->> 'date_of_birth')::date;
   exception when others then
-    raise exception 'DATE_OF_BIRTH_INVALID'
-      using errcode = '22023';
+    raise exception 'DATE_OF_BIRTH_INVALID' using errcode = '22023';
   end;
 
   if birth_date > current_date then
-    raise exception 'DATE_OF_BIRTH_INVALID'
-      using errcode = '22023';
+    raise exception 'DATE_OF_BIRTH_INVALID' using errcode = '22023';
   end if;
 
   if birth_date > (current_date - interval '18 years')::date then
-    raise exception 'JOYHEART_MINIMUM_AGE_18'
-      using errcode = '22023';
+    raise exception 'JOYHEART_MINIMUM_AGE_18' using errcode = '22023';
   end if;
 
-  insert into public.profile_private (user_id, date_of_birth)
-  values (new.id, birth_date)
-  on conflict (user_id) do nothing;
-
-  new.raw_user_meta_data := new.raw_user_meta_data - 'date_of_birth';
   return new;
 end;
 $$;
 
-revoke all on function public.joyheart_validate_and_store_signup_birth_date() from public, anon, authenticated;
+create or replace function public.joyheart_store_and_scrub_signup_birth_date()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.profile_private (user_id, date_of_birth)
+  values (new.id, (new.raw_user_meta_data ->> 'date_of_birth')::date)
+  on conflict (user_id) do nothing;
+
+  update auth.users
+  set raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) - 'date_of_birth'
+  where id = new.id;
+
+  return new;
+end;
+$$;
+
+revoke all on function public.joyheart_validate_signup_age() from public, anon, authenticated;
+revoke all on function public.joyheart_store_and_scrub_signup_birth_date() from public, anon, authenticated;
 
 drop trigger if exists joyheart_validate_signup_age on auth.users;
-drop trigger if exists joyheart_store_private_birth_date on auth.users;
-drop trigger if exists joyheart_validate_and_store_signup_birth_date on auth.users;
-
-create trigger joyheart_validate_and_store_signup_birth_date
+create trigger joyheart_validate_signup_age
 before insert on auth.users
-for each row execute function public.joyheart_validate_and_store_signup_birth_date();
+for each row execute function public.joyheart_validate_signup_age();
+
+drop trigger if exists joyheart_store_private_birth_date on auth.users;
+drop trigger if exists joyheart_store_and_scrub_signup_birth_date on auth.users;
+create trigger joyheart_store_and_scrub_signup_birth_date
+after insert on auth.users
+for each row execute function public.joyheart_store_and_scrub_signup_birth_date();
 
 comment on table public.profile_private is
-  'Restricted private member data. Exact date of birth is never exposed in public profiles or Auth user metadata.';
+  'Restricted private member data. Exact date of birth is never exposed in public profiles or retained in Auth user metadata.';
