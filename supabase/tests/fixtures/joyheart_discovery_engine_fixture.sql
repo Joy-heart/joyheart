@@ -60,6 +60,8 @@ grant select, update on public.profiles to public;
 grant select, update on public.profiles to anon with grant option;
 grant select, update on public.profiles to joyheart_profiles_legacy_access with grant option;
 grant select (gender,seeking,publication_status,is_visible), update (publication_status,is_visible) on public.profiles to joyheart_profiles_legacy_access with grant option;
+-- Explicitly test the ACLs directly granted to authenticated as distinct from inherited grants.
+grant select (gender), update (publication_status) on public.profiles to authenticated with grant option;
 grant select on public.member_discovery_preferences,public.member_personality_answers,
  public.profile_blocks,public.profile_interactions,public.profile_matches,public.profile_photos,public.profile_private to authenticated;
 
