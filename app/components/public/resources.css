@@ -17,3 +17,21 @@
 
 .jh-journal-image-credit{position:absolute;right:10px;bottom:9px;padding:5px 8px;border:1px solid rgba(255,255,255,.55);border-radius:999px;background:rgba(35,20,28,.58);color:#fff;font-size:.68rem;text-decoration:none;backdrop-filter:blur(8px)}
 .jh-journal-image-credit:hover{text-decoration:underline;text-underline-offset:2px}
+
+
+/* Individual SEO journal articles */
+.jh-journal-read-link{display:inline-flex;align-items:center;gap:9px;margin-top:auto;padding-top:18px;color:var(--joy-burgundy);font-weight:850;text-decoration:none}
+.jh-journal-read-link:hover{text-decoration:underline;text-underline-offset:4px}
+.jh-article-page{padding-bottom:70px}
+.jh-article-page .jh-resource-hero{max-width:1000px}
+.jh-article-page .jh-resource-hero h1{max-width:850px}
+.jh-article-read-time{display:inline-block;margin-top:12px;color:var(--joy-burgundy);font-size:.82rem;font-weight:800}
+.jh-article-content{width:min(780px,100%);margin:35px auto 0;padding:clamp(22px,5vw,48px);border:1px solid var(--joy-border);border-radius:22px;background:#fff;box-shadow:0 10px 28px rgba(58,25,40,.04)}
+.jh-article-content section+section{margin-top:30px;padding-top:25px;border-top:1px solid var(--joy-border)}
+.jh-article-content h2{margin:0 0 12px;color:var(--joy-burgundy);font:500 clamp(1.35rem,3vw,1.75rem)/1.25 Georgia,serif}
+.jh-article-content p{margin:0 0 14px;color:var(--joy-muted);font-size:1rem;line-height:1.9}
+.jh-article-content p:last-child{margin-bottom:0}
+.jh-article-navigation{width:min(780px,100%);display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;margin:24px auto 0}
+.jh-article-navigation a{color:var(--joy-burgundy);font-weight:800;text-decoration:none}
+.jh-article-navigation a:hover{text-decoration:underline;text-underline-offset:4px}
+@media(max-width:600px){.jh-article-content{padding:22px 18px}.jh-article-navigation{flex-direction:column}}

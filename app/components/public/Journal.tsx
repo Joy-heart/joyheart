@@ -77,7 +77,57 @@ const articles = [
       "Mention the activities, values or everyday moments that matter to you. Be honest about your relationship intentions and respectful about the people you hope to meet.",
       "Leave out sensitive information such as your address, financial details, identity numbers and private contact information. You can share more as trust develops."
     ]
-  }
+  },
+  {
+    slug: "find-a-serious-relationship-online",
+    category: "Dating with intention",
+    read: "7 min read",
+    title: "How to Find a Serious Relationship Online",
+    summary: "A practical guide to dating with intention, communicating clearly and recognising when someone is looking for the same kind of commitment.",
+    image: "",
+    imageAlt: "",
+    body: []
+  },
+  {
+    slug: "dating-profile-tips-first-impression",
+    category: "Profiles and connection",
+    read: "6 min read",
+    title: "Best Dating Profile Tips: How to Make a Great First Impression",
+    summary: "Make your dating profile more inviting with authentic photos, a clear bio and details that help compatible people start a conversation.",
+    image: "",
+    imageAlt: "",
+    body: []
+  },
+  {
+    slug: "know-if-someone-is-genuinely-interested",
+    category: "Healthy relationships",
+    read: "6 min read",
+    title: "How to Know If Someone Is Genuinely Interested in You",
+    summary: "Learn to recognise healthy signs of interest without rushing to conclusions or confusing intensity with genuine connection.",
+    image: "",
+    imageAlt: "",
+    body: []
+  },
+  {
+    slug: "long-distance-relationship-trust-connection",
+    category: "Healthy relationships",
+    read: "7 min read",
+    title: "Long-Distance Relationships: How to Build Trust and Stay Connected",
+    summary: "Distance can make dating more challenging. Honest communication, realistic expectations and shared plans can help couples stay connected.",
+    image: "",
+    imageAlt: "",
+    body: []
+  },
+  {
+    slug: "online-dating-red-flags",
+    category: "Online safety",
+    read: "7 min read",
+    title: "Red Flags in Online Dating: What You Should Never Ignore",
+    summary: "Know the warning signs of manipulation and romance scams, and learn practical steps to protect your privacy and wellbeing.",
+    image: "",
+    imageAlt: "",
+    body: []
+  },
 ];
 
 const categories = ["All articles", ...Array.from(new Set(articles.map((article) => article.category)))];
@@ -145,7 +195,7 @@ export default function Journal() {
       <section className="jh-journal-grid" id="jh-journal-results" aria-label="Journal articles" data-result-count={filtered.length}>
         {filtered.map((article) => (
           <article className="jh-journal-card" key={article.title}>
-            <div className="jh-journal-image">
+            {article.image ? <div className="jh-journal-image">
               <img
                 src={article.image}
                 alt={article.imageAlt}
@@ -155,7 +205,7 @@ export default function Journal() {
                   event.currentTarget.hidden = true;
                 }}
               />
-            </div>
+            </div> : null}
             <div className="jh-journal-card-content">
               <div className="jh-journal-card-top">
                 <span>{article.category}</span>
@@ -163,12 +213,16 @@ export default function Journal() {
               </div>
               <h2>{article.title}</h2>
               <p>{article.summary}</p>
-              <details>
-                <summary>Read article <span aria-hidden="true">＋</span></summary>
-                <div className="jh-article-body">
-                  {article.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-                </div>
-              </details>
+              {"slug" in article && article.slug ? (
+                <a className="jh-journal-read-link" href={`/blog/${article.slug}`}>Read article <span aria-hidden="true">→</span></a>
+              ) : (
+                <details>
+                  <summary>Read article <span aria-hidden="true">＋</span></summary>
+                  <div className="jh-article-body">
+                    {article.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+                  </div>
+                </details>
+              )}
             </div>
           </article>
         ))}
