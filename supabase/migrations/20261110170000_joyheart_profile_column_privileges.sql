@@ -35,7 +35,7 @@ declare column_name text;
 begin
  if exists(select 1 from pg_catalog.pg_roles where rolname='joyheart_profiles_legacy_access') then
   revoke select, update on public.profiles from joyheart_profiles_legacy_access cascade;
-  for column_name in select column_name from information_schema.columns where table_schema='public' and table_name='profiles' loop
+  for column_name in select cols.column_name from information_schema.columns cols where cols.table_schema='public' and cols.table_name='profiles' loop
    execute format('revoke select (%1$I), update (%1$I) on public.profiles from joyheart_profiles_legacy_access cascade',column_name);
   end loop;
  end if;
