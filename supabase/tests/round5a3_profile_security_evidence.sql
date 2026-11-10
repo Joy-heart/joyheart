@@ -31,7 +31,7 @@ with profile_columns as (
   'owner',p.proowner::regrole::text,'security_definer',p.prosecdef,'configuration',p.proconfig,
   'definition',pg_get_functiondef(p.oid),
   'authenticated_execute',has_function_privilege('authenticated',p.oid,'EXECUTE'),
-  'anon_execute',has_function_privilege('anon',p.oid,'EXECUTE'),
+  'anon_execute',has_function_privilege('anon',p.oid,'EXECUTE')
  ) as value
  from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid=p.pronamespace
  where p.oid='public.joyheart_get_own_profile_private_settings()'::regprocedure
