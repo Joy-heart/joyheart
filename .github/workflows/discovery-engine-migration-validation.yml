@@ -22,6 +22,9 @@ on:
       - "supabase/tests/joyheart_discovery_engine_smoke.sql"
       - "supabase/tests/joyheart_profile_column_security.sql"
       - "supabase/tests/fixtures/joyheart_discovery_engine_fixture.sql"
+      - "supabase/review/round-5a1-secure-profile-permission-recovery.sql"
+      - "supabase/review/round-2-profile-security-rollback.sql"
+      - "supabase/tests/joyheart_profile_legacy_acl_preflight.sql"
       - ".github/workflows/discovery-engine-migration-validation.yml"
 
 permissions:
