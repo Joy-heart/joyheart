@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(61);
+select extensions.plan(66);
 
 select extensions.has_table('public', 'profile_interactions', 'private member likes and passes table exists');
 select extensions.has_table('public', 'profile_blocks', 'member blocks table exists');
@@ -75,6 +75,13 @@ select extensions.ok(not has_function_privilege('authenticated', 'private.joyhea
 select extensions.ok(to_regprocedure('private.joyheart_discover_candidates(integer)') is not null, 'private candidate ranking implementation exists');
 select extensions.ok(has_function_privilege('authenticated', 'private.joyheart_discover_candidates(integer)', 'EXECUTE'), 'authenticated members can invoke the protected candidate implementation');
 select extensions.ok(has_function_privilege('authenticated', 'public.joyheart_discover_candidates(integer)', 'EXECUTE') and not has_function_privilege('anon', 'public.joyheart_discover_candidates(integer)', 'EXECUTE'), 'candidate discovery RPC is authenticated-only');
+
+
+select extensions.ok(to_regclass('private.joyheart_feature_flags') is not null, 'private discovery launch flag table exists');
+select extensions.ok(not private.joyheart_discovery_is_open(), 'global discovery launch gate defaults to closed');
+select extensions.ok(not has_function_privilege('authenticated', 'private.joyheart_discovery_is_open()', 'EXECUTE'), 'members cannot inspect or change the global discovery gate');
+select extensions.ok((select prosecdef from pg_proc where oid = 'private.joyheart_record_interaction(uuid,text)'::regprocedure), 'like and pass implementation remains protected by security definer');
+select extensions.ok(not has_function_privilege('anon', 'public.joyheart_discover_candidates(integer)', 'EXECUTE'), 'anonymous users cannot call candidate ranking');
 
 select * from extensions.finish();
 rollback;
