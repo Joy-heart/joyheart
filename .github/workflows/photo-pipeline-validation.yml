@@ -61,10 +61,12 @@ jobs:
 
       - name: Run photo lifecycle, RLS, Storage and delivery security assertions
         run: |
+          set -euo pipefail
           mkdir -p artifacts
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
             -f supabase/tests/joyheart_photo_pipeline_security.sql \
-            | tee artifacts/photo-pipeline-postgres17-evidence.txt
+            > artifacts/photo-pipeline-postgres17-evidence.txt 2>&1
+          cat artifacts/photo-pipeline-postgres17-evidence.txt
 
       - name: Preserve PostgreSQL 17 evidence
         if: always()

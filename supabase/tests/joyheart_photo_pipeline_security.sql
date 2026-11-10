@@ -253,6 +253,7 @@ select set_config('request.jwt.claim.role', 'authenticated', false);
 select set_config('request.jwt.claim.sub', :'staff_id', false);
 
 select public.joyheart_review_profile_photo(:'registered_photo_id'::uuid, 'approved', null);
+reset role;
 do $$
 declare n integer;
 begin
@@ -260,7 +261,13 @@ begin
   where id = current_setting('joyheart.test.registered_photo_id')::uuid and moderation_status = 'approved'
     and reviewed_by = '33333333-3333-4333-8333-333333333333' and reviewed_at is not null;
   if n <> 1 then raise exception 'Approval did not set status, reviewer and timestamp'; end if;
+end $$;
 
+set role authenticated;
+select set_config('request.jwt.claim.role', 'authenticated', false);
+select set_config('request.jwt.claim.sub', :'staff_id', false);
+do $$
+begin
   begin
     perform public.joyheart_review_profile_photo('cccccccc-cccc-4ccc-8ccc-cccccccccccc', null, null);
     raise exception 'Null review decision was accepted';
