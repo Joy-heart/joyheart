@@ -21,6 +21,12 @@ grant update (
   relationship_intention, interests, explore_interests
 ) on table public.profiles to authenticated;
 
-revoke all on function public.set_profile_updated_at() from public, anon, authenticated;
+do $revoke_trigger_execute$
+begin
+  if to_regprocedure('public.set_profile_updated_at()') is not null then
+    execute 'revoke all on function public.set_profile_updated_at() from public, anon, authenticated';
+  end if;
+end;
+$revoke_trigger_execute$;
 
 commit;
