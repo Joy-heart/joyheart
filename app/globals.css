@@ -1463,3 +1463,64 @@ a:focus-visible {
   .profile-photo-thumbnail { width: 68px; height: 68px; flex-basis: 68px; }
   .profile-photo-list button { margin-left: auto; }
 }
+
+
+/* Responsive member compatibility preferences form */
+.profile-compatibility .profile-form-section { min-width: 0; }
+.profile-compatibility .profile-form-grid,
+.profile-compatibility .profile-preference-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.profile-compatibility .profile-form-grid > div,
+.profile-compatibility .profile-preference-field { min-width: 0; }
+.profile-compatibility .profile-form-grid label,
+.profile-compatibility .profile-preference-field label {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--joy-charcoal);
+  font-size: .88rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+.profile-compatibility .profile-form-grid input,
+.profile-compatibility .profile-preference-field input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 49px;
+  padding: 12px 14px;
+  border: 1px solid var(--joy-border);
+  border-radius: 12px;
+  color: var(--joy-charcoal);
+  background: #fffdfc;
+  font: inherit;
+  font-size: .92rem;
+}
+.profile-compatibility .profile-form-grid input:focus,
+.profile-compatibility .profile-preference-field input:focus {
+  outline: 3px solid rgba(217,130,145,.22);
+  border-color: var(--joy-rose);
+}
+.profile-compatibility .profile-preference-field label small {
+  display: block;
+  margin: 4px 0 0;
+  color: var(--joy-muted);
+  font-size: .74rem;
+  font-weight: 500;
+}
+.profile-compatibility .profile-field-hint { line-height: 1.55; }
+.profile-compatibility .profile-visibility-toggle { margin: 20px 0 0; }
+.profile-compatibility .profile-preference-subtitle { margin-top: 24px; }
+.profile-compatibility .profile-intention-options { min-width: 0; }
+.profile-compatibility .profile-save-button { min-height: 50px; }
+@media (max-width: 640px) {
+  .profile-compatibility .profile-form-grid,
+  .profile-compatibility .profile-preference-fields { grid-template-columns: minmax(0, 1fr); gap: 13px; }
+  .profile-compatibility .profile-section-title { gap: 11px; }
+  .profile-compatibility .profile-section-title h2 { font-size: 1.3rem; }
+  .profile-compatibility .profile-visibility-toggle { padding: 14px; }
+  .profile-compatibility .profile-intention-options { grid-template-columns: minmax(0, 1fr); }
+}
