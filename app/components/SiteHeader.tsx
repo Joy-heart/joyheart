@@ -4,9 +4,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/app/lib/supabase/client";
 
 const navigation = [
-  { label: "Our approach", href: "/#our-approach" },
-  { label: "Why JoyHeart", href: "/#values" },
-  { label: "Safety", href: "/#safety" },
+  { label: "Home", href: "/" },
+  { label: "About", href: "/about" },
+  { label: "How it works", href: "/how-it-works" },
+  { label: "Discover", href: "/how-it-works#discovery" },
+  { label: "Membership", href: "/membership" },
+  { label: "Safety", href: "/safety" },
+  { label: "Blog", href: "/blog" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export default function SiteHeader() {
