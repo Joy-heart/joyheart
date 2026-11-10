@@ -1623,3 +1623,38 @@ a:focus-visible {
 .public-page-cta h2 { margin: 0; color: var(--joy-burgundy); font: 500 1.6rem Georgia,serif; }
 @media(max-width:1100px){.nav-links{gap:10px;font-size:.76rem}.footer-main{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.public-page{padding:18px 14px 60px}.public-page-hero{padding:42px 22px;border-radius:22px}.public-content-section{grid-template-columns:34px 1fr;gap:10px}.public-page-cta{align-items:flex-start;flex-direction:column}.footer-main{grid-template-columns:1fr 1fr}}
+
+
+/* Homepage sections */
+.public-home-section { width:min(1120px,calc(100% - 48px)); margin:84px auto; }
+.intro-section { max-width:820px; text-align:center; }
+.public-home-section h2,.home-final-cta h2 { margin:0 0 18px; color:var(--joy-charcoal); font:500 clamp(2.1rem,4.5vw,3.55rem)/1.08 Georgia,"Times New Roman",serif; letter-spacing:-.045em; }
+.public-home-section > p:not(.public-eyebrow),.discovery-preview p,.safety-home p,.membership-preview p { color:var(--joy-muted); font-size:1rem; line-height:1.85; }
+.intro-section > p:not(.public-eyebrow) { max-width:760px; margin:0 auto 20px; }
+.text-link { display:inline-block; margin-top:12px; color:var(--joy-burgundy); font-weight:800; }
+.home-step-grid,.home-benefit-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+.home-step-card { padding:28px; border:1px solid var(--joy-border); border-radius:22px; background:#fff; }
+.home-step-card > span { color:var(--joy-rose); font:italic 1.6rem Georgia,serif; }
+.home-step-card h3 { margin:20px 0 10px; color:var(--joy-burgundy); font:500 1.45rem Georgia,serif; }
+.home-step-card p { margin:0; color:var(--joy-muted); line-height:1.75; }
+.center-action { margin-top:24px; text-align:center; }
+.home-benefits { padding:64px 48px; border-radius:30px; background:#fff2ef; }
+.discovery-preview,.safety-home,.membership-preview { display:grid; grid-template-columns:1.1fr .9fr; align-items:center; gap:56px; padding:48px; border:1px solid var(--joy-border); border-radius:28px; background:#fff; }
+.example-profile { min-height:270px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:30px; border:1px solid rgba(100,29,59,.12); border-radius:24px; background:radial-gradient(circle at 50% 10%,#f7dfe1,transparent 48%),#fff9f6; text-align:center; }
+.example-profile-mark { width:78px; height:78px; display:grid; place-items:center; border-radius:50%; color:var(--joy-burgundy); background:#f4d4d8; font-size:2.7rem; }
+.example-profile p,.example-profile small { margin:0; color:var(--joy-muted); font-size:.8rem; }
+.example-profile strong { color:var(--joy-burgundy); font:500 1.4rem Georgia,serif; }
+.global-section,.story-section,.blog-preview { text-align:center; }
+.global-section > p:not(.public-eyebrow),.story-section > p,.blog-preview > p { max-width:760px; margin:0 auto; }
+.region-pills { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:26px; }
+.region-pills span,.safety-points span { padding:11px 16px; border:1px solid var(--joy-border); border-radius:999px; color:var(--joy-burgundy); background:#fff; font-size:.85rem; font-weight:700; }
+.safety-points { display:grid; gap:12px; }
+.safety-points span { border-radius:14px; }
+.home-faq-list { max-width:850px; margin:0 auto; }
+.home-faq-list details { padding:18px 4px; border-bottom:1px solid var(--joy-border); }
+.home-faq-list summary { color:var(--joy-charcoal); font-weight:750; cursor:pointer; }
+.home-faq-list details p { margin:12px 0 0; color:var(--joy-muted); line-height:1.75; }
+.home-final-cta { margin:90px auto 0; padding:72px 24px; background:linear-gradient(135deg,#f8e5e6,#fff5ef); text-align:center; }
+.home-final-cta h2 { max-width:760px; margin:0 auto 28px; color:var(--joy-burgundy); }
+@media(max-width:900px){.site-header>.nav-links,.site-header>.nav-actions{display:none}.mobile-nav{display:block}.footer-main{grid-template-columns:repeat(2,minmax(0,1fr))}.discovery-preview,.safety-home,.membership-preview{grid-template-columns:1fr;gap:28px}.home-benefits{padding:44px 28px}}
+@media(max-width:640px){.public-home-section{width:calc(100% - 32px);margin:58px auto}.home-step-grid,.home-benefit-grid{grid-template-columns:1fr}.discovery-preview,.safety-home,.membership-preview{padding:28px 22px}.home-benefits{padding:38px 18px}.home-final-cta{margin-top:60px;padding:56px 20px}}
