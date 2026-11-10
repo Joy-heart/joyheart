@@ -7,6 +7,9 @@ begin;
 -- Remove broad table-level read and write grants from ordinary members.
 revoke select, update on table public.profiles from public, anon, authenticated;
 
+-- Trigger functions are not client APIs. Keep their execution privilege private.
+revoke all on function public.set_profile_updated_at() from public, anon, authenticated;
+
 -- Direct reads are limited to approved profile presentation fields.
 -- RLS continues to decide which rows are visible.
 grant select (
