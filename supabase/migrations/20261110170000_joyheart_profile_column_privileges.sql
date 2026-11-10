@@ -28,6 +28,20 @@ begin
 end;
 $revoke_profile_column_grants$;
 
+-- Remove grants only from this JoyHeart-owned legacy role. Other inherited
+-- access is not silently altered; effective privilege checks below fail closed.
+do $revoke_joyheart_legacy$
+declare column_name text;
+begin
+ if exists(select 1 from pg_catalog.pg_roles where rolname='joyheart_profiles_legacy_access') then
+  revoke select, update on public.profiles from joyheart_profiles_legacy_access cascade;
+  for column_name in select column_name from information_schema.columns where table_schema='public' and table_name='profiles' loop
+   execute format('revoke select (%1$I), update (%1$I) on public.profiles from joyheart_profiles_legacy_access cascade',column_name);
+  end loop;
+ end if;
+end
+$revoke_joyheart_legacy$;
+
 -- Trigger functions are not client APIs. Keep their execution privilege private.
 do $revoke_trigger_execute$
 begin
@@ -51,6 +65,30 @@ grant update (
   display_name, country, city, bio, gender, seeking,
   relationship_intention, interests, explore_interests
 ) on table public.profiles to authenticated;
+
+-- Detect any remaining effective access inherited through unrecognised roles.
+do $effective_privilege_check$
+declare c record;
+ s text[]:=array['user_id','display_name','age','country','city','relationship_intention','interests','bio','created_at','updated_at'];
+ u text[]:=array['display_name','country','city','bio','gender','seeking','relationship_intention','interests','explore_interests'];
+begin
+ if has_table_privilege('anon','public.profiles','SELECT') or has_table_privilege('anon','public.profiles','UPDATE')
+ or has_table_privilege('authenticated','public.profiles','SELECT') or has_table_privilege('authenticated','public.profiles','UPDATE') then
+  raise exception 'JOYHEART_PROFILE_TABLE_PRIVILEGE_REMAINS';
+ end if;
+ for c in select column_name from information_schema.columns where table_schema='public' and table_name='profiles' loop
+  if has_column_privilege('anon','public.profiles',c.column_name,'SELECT') or has_column_privilege('anon','public.profiles',c.column_name,'UPDATE') then
+   raise exception 'JOYHEART_ANON_COLUMN_PRIVILEGE_REMAINS: %',c.column_name;
+  end if;
+  if has_column_privilege('authenticated','public.profiles',c.column_name,'SELECT') and not(c.column_name=any(s)) then
+   raise exception 'JOYHEART_UNEXPECTED_EFFECTIVE_SELECT: %',c.column_name;
+  end if;
+  if has_column_privilege('authenticated','public.profiles',c.column_name,'UPDATE') and not(c.column_name=any(u)) then
+   raise exception 'JOYHEART_UNEXPECTED_EFFECTIVE_UPDATE: %',c.column_name;
+  end if;
+ end loop;
+end
+$effective_privilege_check$;
 
 -- Private editor data is returned only for auth.uid(); there is no target ID.
 create or replace function public.joyheart_get_own_profile_private_settings()
