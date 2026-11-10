@@ -28,5 +28,5 @@ An existing administrator can add a moderator with the same SQL pattern, changin
 - Staff cannot review their own photos.
 - Only pending photos can be reviewed.
 - Rejections require a reason of no more than 500 characters.
-- The original storage bucket remains private.
+- The joyheart-profile-photos bucket is private, WebP-only and limited to 5 MiB.
 - The migration files are review-only until explicitly approved for the live project.

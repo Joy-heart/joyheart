@@ -79,7 +79,7 @@ export default function PhotoModerationQueue({ initialPhotos }: { initialPhotos:
             {photos.map((photo) => (
               <article className="staff-review-card" key={photo.id}>
                 {photo.imageUrl
-                  ? <img src={photo.imageUrl} alt="Member-submitted profile photo awaiting moderation" />
+                  ? <img src={photo.imageUrl} alt="Member-submitted profile photo awaiting moderation" referrerPolicy="no-referrer" />
                   : <div className="staff-review-image-error">Private image preview unavailable. Refresh the queue to request a new preview.</div>}
                 <div className="staff-review-card-details">
                   <p>Member reference: <strong>{photo.memberReference}</strong></p>

@@ -76,6 +76,7 @@ export default function DiscoveryFeed() {
       </div></div> :
       <div className="discovery-grid">{items.map((candidate) => <article className="discovery-card" key={candidate.candidate_id}>
         <div className="discovery-card-top"><span className="discovery-score">{candidate.compatibility_score}% compatibility</span><span className="discovery-age">{candidate.age}</span></div>
+        <img className="discovery-card-photo" src={`/api/profile-photos/member/${encodeURIComponent(candidate.candidate_id)}`} alt={`${candidate.display_name}'s approved profile photo`} loading="lazy" referrerPolicy="no-referrer" onError={(event) => { event.currentTarget.style.opacity = "0"; }} />
         <div className="discovery-card-content">
           <h2>{candidate.display_name}</h2>
           <p className="discovery-location">{[candidate.city, candidate.country].filter(Boolean).join(", ")}</p>
