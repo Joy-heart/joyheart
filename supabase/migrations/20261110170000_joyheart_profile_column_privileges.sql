@@ -1,30 +1,28 @@
--- JOYHEART ROUND 2: restrict direct profile reads to approved presentation columns.
--- REVIEW ONLY: this file is proposed and MUST NOT be applied to production without approval.
--- Existing row-level security policies are deliberately preserved unchanged.
+-- JOYHEART ROUND 3: column-scoped profile read and write privileges.
+-- REVIEW ONLY: do not apply to production without explicit approval.
+-- Existing row-level policies and triggers are preserved.
 
 begin;
 
--- A table-level SELECT grant exposes every column on every row admitted by RLS.
--- Remove only that broad SELECT grant; INSERT and UPDATE grants remain unchanged.
-revoke select on table public.profiles from authenticated;
+-- Remove broad table-level read and write grants from ordinary members.
+revoke select, update on table public.profiles from public, anon, authenticated;
 
--- Members may directly read only the fields used for public profile presentation,
--- discovery cards, and active-match profile pages. RLS still controls which rows.
+-- Direct reads are limited to approved profile presentation fields.
+-- RLS continues to decide which rows are visible.
 grant select (
-  user_id,
-  display_name,
-  age,
-  country,
-  city,
-  relationship_intention,
-  interests,
-  bio,
-  created_at,
-  updated_at
+  user_id, display_name, age, country, city,
+  relationship_intention, interests, bio, created_at, updated_at
 ) on table public.profiles to authenticated;
 
--- Private profile editor data is returned only for the current authenticated owner.
--- This function does not accept a user id, so callers cannot ask for another member.
+-- Preserve legitimate owner editing, including private preference fields
+-- written by the profile editor. Never grant UPDATE on user_id, age,
+-- publication_status, is_visible, created_at, or updated_at.
+grant update (
+  display_name, country, city, bio, gender, seeking,
+  relationship_intention, interests, explore_interests
+) on table public.profiles to authenticated;
+
+-- Private editor data is returned only for auth.uid(); there is no target ID.
 create or replace function public.joyheart_get_own_profile_private_settings()
 returns table (
   gender text,
@@ -49,6 +47,6 @@ revoke all on function public.joyheart_get_own_profile_private_settings() from p
 grant execute on function public.joyheart_get_own_profile_private_settings() to authenticated;
 
 comment on function public.joyheart_get_own_profile_private_settings() is
-  'Returns private profile editor fields for auth.uid() only. Does not accept a target member id.';
+  'Returns private profile editor fields for auth.uid() only. No arbitrary member ID is accepted.';
 
 commit;
