@@ -1,0 +1,55 @@
+name: JoyHeart discovery engine migration validation
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261110100000_joyheart_private_discovery_ranking.sql"
+      - "supabase/tests/joyheart_discovery_engine_smoke.sql"
+      - "supabase/tests/fixtures/joyheart_discovery_engine_fixture.sql"
+      - ".github/workflows/discovery-engine-migration-validation.yml"
+  push:
+    branches:
+      - "feat/**"
+    paths:
+      - "supabase/migrations/20261110100000_joyheart_private_discovery_ranking.sql"
+      - "supabase/tests/joyheart_discovery_engine_smoke.sql"
+      - "supabase/tests/fixtures/joyheart_discovery_engine_fixture.sql"
+      - ".github/workflows/discovery-engine-migration-validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-discovery-engine:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: Prepare isolated JoyHeart schema fixture
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/tests/fixtures/joyheart_discovery_engine_fixture.sql
+      - name: Apply discovery engine migration
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/migrations/20261110100000_joyheart_private_discovery_ranking.sql
+      - name: Verify closed launch gate and RPC permissions
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/tests/joyheart_discovery_engine_smoke.sql
