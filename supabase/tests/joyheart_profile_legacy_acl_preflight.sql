@@ -14,6 +14,7 @@ begin
     or not has_column_privilege('authenticated','public.profiles','publication_status','UPDATE') then
   raise exception 'Fixture missing inherited column-level legacy grants';
  end if;
+ if not has_column_privilege('authenticated','public.profiles','publication_status','UPDATE') then raise exception 'Fixture missing direct authenticated legacy column grant'; end if;
  if not exists(
    select 1 from pg_catalog.pg_auth_members m
    join pg_catalog.pg_roles parent on parent.oid=m.roleid
