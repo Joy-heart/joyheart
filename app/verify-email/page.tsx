@@ -1,0 +1,3 @@
+import Link from "next/link";
+export const metadata = { title: "Verify your email", description: "Learn how to verify your JoyHeart account email address." };
+export default function VerifyEmailPage() { return <main className="public-page"><header className="public-page-hero"><p className="public-eyebrow">Account verification</p><h1>Check your email.</h1><p>After registration, JoyHeart sends a verification link to the email address you provided. Open that message and follow its link to verify your account. If you cannot find it, check your spam folder.</p><p>Need another link? Enter your email on the login page and choose the verification resend option.</p><Link className="button button-primary" href="/login?reason=verify">Continue to login</Link></header></main>; }
