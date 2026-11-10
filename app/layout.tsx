@@ -4,6 +4,7 @@ import SiteHeader from "./components/SiteHeader";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://joyheart.app"),
   title: {
     default: "JoyHeart — Where Hearts Find Happiness",
     template: "%s | JoyHeart",

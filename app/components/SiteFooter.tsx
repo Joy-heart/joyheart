@@ -1,10 +1,8 @@
-const footerLinks = [
-  { label: "Our approach", href: "/#our-approach" },
-  { label: "Why JoyHeart", href: "/#values" },
-  { label: "Safety", href: "/#safety" },
-  { label: "Report a concern", href: "/report" },
-  { label: "Log in", href: "/login" },
-  { label: "Join JoyHeart", href: "/signup" },
+const footerGroups = [
+  { title: "Company", links: [{ label: "About us", href: "/about" }, { label: "Our mission", href: "/about/mission" }, { label: "How it works", href: "/how-it-works" }, { label: "Success stories", href: "/success-stories" }] },
+  { title: "Explore", links: [{ label: "Discover", href: "/how-it-works#discovery" }, { label: "Membership", href: "/membership" }, { label: "Premium features", href: "/premium" }, { label: "Blog", href: "/blog" }] },
+  { title: "Support", links: [{ label: "Help centre", href: "/help" }, { label: "FAQ", href: "/faq" }, { label: "Contact", href: "/contact" }, { label: "Safety centre", href: "/safety" }, { label: "Report a concern", href: "/report" }] },
+  { title: "Legal", links: [{ label: "Privacy policy", href: "/privacy-policy" }, { label: "Terms of service", href: "/terms" }, { label: "Cookie policy", href: "/cookies" }, { label: "Community guidelines", href: "/community-guidelines" }, { label: "Account deletion", href: "/account-deletion" }] },
 ];
 
 export default function SiteFooter() {
@@ -30,29 +28,17 @@ export default function SiteFooter() {
           </p>
         </div>
 
-        <div className="footer-navigation">
-          <h2>Explore</h2>
-          <nav aria-label="Footer navigation">
-            {footerLinks.map((item) => (
-              <a href={item.href} key={item.label}>
-                {item.label}
-              </a>
-            ))}
+        {footerGroups.map((group) => <div className="footer-navigation" key={group.title}>
+          <h2>{group.title}</h2>
+          <nav aria-label={group.title}>
+            {group.links.map((item) => <a href={item.href} key={item.label}>{item.label}</a>)}
           </nav>
-        </div>
-
-        <div className="footer-safety">
-          <h2>Connection with care</h2>
-          <p>
-            Take your time, protect your personal information, and get to know
-            people at a pace that feels right.
-          </p>
-        </div>
+        </div>)}
       </div>
 
       <div className="footer-bottom">
         <span>© {new Date().getFullYear()} JoyHeart. All rights reserved.</span>
-        <span>Where Hearts Find Happiness.</span>
+        <span>For adults aged 18 and over · Where Hearts Find Happiness.</span>
       </div>
     </footer>
   );
