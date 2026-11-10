@@ -264,3 +264,37 @@ export const additionalJournalArticles: JournalArticle[] = [
 export function getAdditionalJournalArticle(slug: string) {
   return additionalJournalArticles.find((article) => article.slug === slug);
 }
+
+
+export type JournalCategory = {
+  slug: string;
+  name: string;
+  articles: JournalArticle[];
+};
+
+export function journalCategorySlug(category: string) {
+  return category
+    .normalize("NFD")
+    .replace(/[\\u0300-\\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function getJournalCategories(): JournalCategory[] {
+  const categories = new Map<string, JournalCategory>();
+  for (const article of additionalJournalArticles) {
+    const slug = journalCategorySlug(article.category);
+    if (!slug) continue;
+    const current = categories.get(slug);
+    if (current) current.articles.push(article);
+    else categories.set(slug, { slug, name: article.category, articles: [article] });
+  }
+  return [...categories.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function getJournalCategory(slug: string) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return undefined;
+  return getJournalCategories().find((category) => category.slug === slug);
+}
