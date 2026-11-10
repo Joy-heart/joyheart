@@ -5,6 +5,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://joyheart.app"),
+  alternates: { canonical: "/" },
   title: {
     default: "JoyHeart — Where Hearts Find Happiness",
     template: "%s | JoyHeart",
@@ -25,13 +26,14 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     type: "website",
+    url: "https://joyheart.app",
     siteName: "JoyHeart",
     title: "JoyHeart — Where Hearts Find Happiness",
     description:
       "Meet people with intention and discover meaningful connections across the world.",
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "JoyHeart — Where Hearts Find Happiness",
     description:
       "Meet people with intention and discover meaningful connections across the world.",
