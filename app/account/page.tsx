@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/app/lib/supabase/server";
 import ProfileSetup from "@/app/components/profile/ProfileSetup";
+import ProfileCompatibility from "@/app/components/profile/ProfileCompatibility";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -21,5 +22,5 @@ export default async function AccountPage() {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  return <ProfileSetup initialProfile={data ?? null} />;
+  return <><ProfileSetup initialProfile={data ?? null} /><div className="profile-setup-page"><section className="profile-setup-shell"><ProfileCompatibility /></section></div></>;
 }
