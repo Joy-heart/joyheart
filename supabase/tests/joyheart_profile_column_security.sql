@@ -45,6 +45,41 @@ begin
  end if;
 end $$;
 
+-- Assert no stale column-level grants survive on any profile column.
+do $column_grant_audit$
+declare
+  column_name text;
+  allowed_select text[] := array[
+    'user_id','display_name','age','country','city',
+    'relationship_intention','interests','bio','created_at','updated_at'
+  ];
+  allowed_update text[] := array[
+    'display_name','country','city','bio','gender','seeking',
+    'relationship_intention','interests','explore_interests'
+  ];
+begin
+  for column_name in
+    select c.column_name
+    from information_schema.columns c
+    where c.table_schema = 'public'
+      and c.table_name = 'profiles'
+  loop
+    if has_column_privilege('anon','public.profiles',column_name,'SELECT')
+       or has_column_privilege('anon','public.profiles',column_name,'UPDATE') then
+      raise exception 'Anonymous role retains a profile column privilege: %', column_name;
+    end if;
+    if has_column_privilege('authenticated','public.profiles',column_name,'SELECT')
+       and not (column_name = any(allowed_select)) then
+      raise exception 'Unexpected authenticated SELECT privilege on profiles.%', column_name;
+    end if;
+    if has_column_privilege('authenticated','public.profiles',column_name,'UPDATE')
+       and not (column_name = any(allowed_update)) then
+      raise exception 'Unexpected authenticated UPDATE privilege on profiles.%', column_name;
+    end if;
+  end loop;
+end
+$column_grant_audit$;
+
 -- Member A: private RPC is owner-scoped; public profile rows obey published/owner RLS.
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
