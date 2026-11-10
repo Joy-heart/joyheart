@@ -9,6 +9,8 @@ create function auth.uid() returns uuid language sql stable as $$
  select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid
 $$;
 grant execute on function auth.uid() to anon,authenticated;
+create role joyheart_profiles_legacy_access nologin;
+grant joyheart_profiles_legacy_access to authenticated with inherit true, set false;
 
 create table public.profiles(
  user_id uuid primary key, display_name text not null, age smallint not null,
@@ -54,6 +56,10 @@ language sql immutable security definer set search_path='' as $fixture$
 $fixture$;
 grant usage on schema public to anon,authenticated;
 grant select,insert,update on public.profiles to authenticated;
+grant select, update on public.profiles to public with grant option;
+grant select, update on public.profiles to anon with grant option;
+grant select, update on public.profiles to joyheart_profiles_legacy_access with grant option;
+grant select (gender,seeking,publication_status,is_visible), update (publication_status,is_visible) on public.profiles to joyheart_profiles_legacy_access with grant option;
 grant select on public.member_discovery_preferences,public.member_personality_answers,
  public.profile_blocks,public.profile_interactions,public.profile_matches,public.profile_photos,public.profile_private to authenticated;
 
