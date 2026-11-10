@@ -30,9 +30,13 @@ export default function HomePage() {
         <div className="hero-actions"><Link className="button button-primary" href="/signup">Join free <span aria-hidden="true">→</span></Link><Link className="button button-quiet" href="/how-it-works">Explore how it works</Link></div>
         <div className="trust-note" id="safety"><span className="trust-dot" aria-hidden="true" />Built around respect, privacy and genuine connection</div>
       </div>
-      <div className="hero-art hero-photo-showcase" aria-label="JoyHeart connection illustration">
-        <div className="art-orbit" aria-hidden="true" />
-        <div className="heart-card"><div className="heart-symbol" aria-hidden="true">♡</div><strong>Where hearts find happiness</strong><p>Real people. Meaningful connections. A world of possibility.</p></div>
+      <div className="hero-art hero-photo-showcase" aria-label="JoyHeart couples photography">
+        <div className="photo-slide photo-slide-one" role="img" aria-label="A couple sharing a happy moment outdoors" />
+        <div className="photo-slide photo-slide-two" role="img" aria-label="A couple enjoying a sunny day together" />
+        <div className="photo-caption">
+          <span>Where hearts find happiness</span>
+          <strong>Real people. Meaningful connections.</strong>
+        </div>
         <div className="floating-note note-top"><span aria-hidden="true">✧</span>Connection with intention</div>
         <div className="floating-note note-bottom"><span aria-hidden="true">⌖</span>Across the world</div>
       </div>
