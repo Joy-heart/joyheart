@@ -1572,7 +1572,7 @@ a:focus-visible {
 .staff-review-eyebrow { margin:0 0 8px; color:var(--joy-rose); font-size:.75rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
 .staff-review-shell h1 { margin:0; color:var(--joy-burgundy); font:600 clamp(2rem,4vw,3rem) Georgia,serif; }
 .staff-review-intro { max-width:680px; margin:10px 0 0; color:var(--joy-muted); line-height:1.65; }
-.staff-review-refresh,.staff-review-actions button { min-height:44px; padding:10px 16px; border:1px solid var(--joy-border); border-radius:12px; background:var(--joy-surface); color:var(--joy-burgundy); font:700 .88rem inherit; cursor:pointer; }
+.staff-review-refresh,.staff-review-actions button { min-height:44px; padding:10px 16px; border:1px solid var(--joy-border); border-radius:12px; background:var(--joy-surface); color:var(--joy-burgundy); font-family:inherit; font-size:.88rem; font-weight:700; cursor:pointer; }
 .staff-review-refresh:hover,.staff-review-actions button:hover { border-color:var(--joy-rose); }
 .staff-review-count { margin:18px 0; color:var(--joy-charcoal); font-weight:750; }
 .staff-review-notice { margin:14px 0; padding:12px 15px; border-radius:12px; background:#edf7f0; color:#245c3b; }
