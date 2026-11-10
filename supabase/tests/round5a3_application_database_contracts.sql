@@ -19,8 +19,11 @@ insert into public.profiles(
 do $profile_create$
 declare row_count integer;
 begin
- select count(*) into row_count from public.profiles where user_id=auth.uid() and publication_status='draft' and is_visible=false;
+ select count(*) into row_count from public.profiles where user_id=auth.uid();
  if row_count<>1 then raise exception 'PROFILE_CREATE_CONTRACT_FAILED'; end if;
+ if (select publication_status from public.joyheart_get_own_profile_private_settings())<>'draft' then
+  raise exception 'PROFILE_CREATE_MUST_REMAIN_PRIVATE_DRAFT';
+ end if;
 end
 $profile_create$;
 
