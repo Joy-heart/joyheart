@@ -66,3 +66,13 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/tests/joyheart_profile_column_security.sql
+      - name: Apply secure profile permission recovery
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/review/round-5a1-secure-profile-permission-recovery.sql
+      - name: Verify recovery idempotency
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/review/round-5a1-secure-profile-permission-recovery.sql
+          psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/tests/joyheart_profile_column_security.sql
