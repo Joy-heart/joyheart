@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";\nimport { journalCategorySlug } from "@/app/lib/additional-journal-articles";
+import { useState } from "react";
+import { journalCategorySlug } from "@/app/lib/additional-journal-articles";
 
 const articles = [
   {
