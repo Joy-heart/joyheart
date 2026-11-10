@@ -16,6 +16,10 @@ on:
       - "supabase/tests/round5a3_capture_rollback_guard_state.sql"
       - "supabase/tests/round5a3_verify_rollback_guard_state.sql"
       - "supabase/tests/round5a3_application_database_contracts.sql"
+      - "supabase/migrations/20261110190000_joyheart_secure_photo_pipeline.sql"
+      - "supabase/tests/joyheart_photo_pipeline_security.sql"
+      - "supabase/tests/fixtures/joyheart_photo_pipeline_fixture.sql"
+      - ".github/workflows/photo-pipeline-validation.yml"
       - ".github/workflows/discovery-engine-migration-validation.yml"
   push:
     branches:
@@ -35,7 +39,10 @@ on:
       - "supabase/tests/round5a3_capture_rollback_guard_state.sql"
       - "supabase/tests/round5a3_verify_rollback_guard_state.sql"
       - "supabase/tests/round5a3_application_database_contracts.sql"
-      - ".github/workflows/discovery-engine-migration-validation.yml"
+      - "supabase/migrations/20261110190000_joyheart_secure_photo_pipeline.sql"
+      - "supabase/tests/joyheart_photo_pipeline_security.sql"
+      - "supabase/tests/fixtures/joyheart_photo_pipeline_fixture.sql"
+      - ".github/workflows/photo-pipeline-validation.yml"
       - ".github/workflows/discovery-engine-migration-validation.yml"
 
 permissions:
