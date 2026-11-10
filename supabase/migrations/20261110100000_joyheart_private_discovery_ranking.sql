@@ -137,7 +137,7 @@ begin
    least(100,
     least(30,shared_interests*5)
     +least(30,shared_answers*5)
-    +case when lower(country)=lower(actor_country) then 15 else 0 end
+    +case when lower(x.country)=lower(x.actor_country) then 15 else 0 end
     +case when actor_intention=relationship_intention then 15 else 0 end
     +case when nullif(btrim(bio),'') is not null then 5 else 0 end
     +case when cardinality(coalesce(interests,'{}'::text[]))>=3 then 5 else 0 end
