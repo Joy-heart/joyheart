@@ -19,6 +19,12 @@ export default defineConfig({
       ...cache.env,
       ASSETS: bindings.assets(),
       VINEXT_KV_CACHE: bindings.kv(),
+
+      // The application browser and server Supabase clients read these
+      // NEXT_PUBLIC_* names. Keep the existing Worker aliases as well so
+      // any Worker-side integrations using them remain compatible.
+      NEXT_PUBLIC_SUPABASE_URL: bindings.text("https://quiyoobztyzebocqttoa.supabase.co"),
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: bindings.text("sb_publishable_nE5yis-UPI-F-w_1ctfVpQ_uVQuAe_p"),
       SUPABASE_URL: bindings.text("https://quiyoobztyzebocqttoa.supabase.co"),
       SUPABASE_ANON_KEY: bindings.text("sb_publishable_nE5yis-UPI-F-w_1ctfVpQ_uVQuAe_p"),
     },
