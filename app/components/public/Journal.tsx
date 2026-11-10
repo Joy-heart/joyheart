@@ -86,8 +86,6 @@ const articles = [
     imageAlt: "A couple sharing a quiet, affectionate moment",
     title: "How to Find a Serious Relationship Online",
     summary: "A practical guide to dating with intention, communicating clearly and recognising when someone is looking for the same kind of commitment.",
-    image: "",
-    imageAlt: "",
     body: []
   },
   {
@@ -98,8 +96,6 @@ const articles = [
     imageAlt: "A confident person posing outdoors in natural light",
     title: "Best Dating Profile Tips: How to Make a Great First Impression",
     summary: "Make your dating profile more inviting with authentic photos, a clear bio and details that help compatible people start a conversation.",
-    image: "",
-    imageAlt: "",
     body: []
   },
   {
@@ -110,8 +106,6 @@ const articles = [
     imageAlt: "A couple holding hands while spending time together",
     title: "How to Know If Someone Is Genuinely Interested in You",
     summary: "Learn to recognise healthy signs of interest without rushing to conclusions or confusing intensity with genuine connection.",
-    image: "",
-    imageAlt: "",
     body: []
   },
   {
@@ -122,8 +116,6 @@ const articles = [
     imageAlt: "Two people sharing a joyful moment together",
     title: "Long-Distance Relationships: How to Build Trust and Stay Connected",
     summary: "Distance can make dating more challenging. Honest communication, realistic expectations and shared plans can help couples stay connected.",
-    image: "",
-    imageAlt: "",
     body: []
   },
   {
@@ -134,8 +126,6 @@ const articles = [
     imageAlt: "A person using a laptop while browsing online",
     title: "Red Flags in Online Dating: What You Should Never Ignore",
     summary: "Know the warning signs of manipulation and romance scams, and learn practical steps to protect your privacy and wellbeing.",
-    image: "",
-    imageAlt: "",
     body: []
   },
 ];
