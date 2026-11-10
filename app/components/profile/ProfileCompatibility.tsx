@@ -37,7 +37,7 @@ function validateAnswers(value: Record<string, string>) {
 export default function ProfileCompatibility() {
   const [preferences, setPreferences] = useState<Preferences>({
     preferred_age_min: 18, preferred_age_max: 99, preferred_countries: [],
-    preferred_languages: [], relationship_intentions: [], discovery_enabled: true,
+    preferred_languages: [], relationship_intentions: [], discovery_enabled: false,
   });
   const [countries, setCountries] = useState("");
   const [languages, setLanguages] = useState("");
