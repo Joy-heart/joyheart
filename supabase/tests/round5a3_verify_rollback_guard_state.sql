@@ -6,7 +6,7 @@ begin
   select payload into before_state from round5a3_guard_snapshot.state where kind=kind_name;
   if kind_name='rpc' then
    select jsonb_build_object('definition',pg_get_functiondef(p.oid),'owner',p.proowner,
-    'acl',p.proacl,'proconfig',p.proconfig,'security_definer',p.prosecdef)
+    'authenticated_execute',has_function_privilege('authenticated',p.oid,'EXECUTE'),'anon_execute',has_function_privilege('anon',p.oid,'EXECUTE'),'proconfig',p.proconfig,'security_definer',p.prosecdef)
    into after_state from pg_catalog.pg_proc p where p.oid='public.joyheart_get_own_profile_private_settings()'::regprocedure;
   elsif kind_name='matrix' then
    with cols as (select a.attname from pg_catalog.pg_attribute a where a.attrelid='public.profiles'::regclass and a.attnum>0 and not a.attisdropped),
@@ -17,10 +17,8 @@ begin
    into after_state from roles cross join cols;
   elsif kind_name='public_acl' then
    select jsonb_agg(jsonb_build_object('column',a.attname,'select',
-    exists(select 1 from aclexplode(coalesce(cl.relacl,acldefault('r',cl.relowner))) x where x.grantee=0 and x.privilege_type='SELECT')
-    or exists(select 1 from aclexplode(coalesce(a.attacl,'{}'::aclitem[])) x where x.grantee=0 and x.privilege_type='SELECT'),
-    'update',exists(select 1 from aclexplode(coalesce(cl.relacl,acldefault('r',cl.relowner))) x where x.grantee=0 and x.privilege_type='UPDATE')
-    or exists(select 1 from aclexplode(coalesce(a.attacl,'{}'::aclitem[])) x where x.grantee=0 and x.privilege_type='UPDATE'))
+    exists(select 1 from unnest(coalesce(cl.relacl,acldefault('r',cl.relowner))) acl_entry(acl) where split_part(acl::text,'=',1)='' and position('r' in split_part(split_part(acl::text,'=',2),'/',1))>0) or exists(select 1 from unnest(coalesce(a.attacl,'{}'::aclitem[])) acl_entry(acl) where split_part(acl::text,'=',1)='' and position('r' in split_part(split_part(acl::text,'=',2),'/',1))>0),
+    'update',exists(select 1 from unnest(coalesce(cl.relacl,acldefault('r',cl.relowner))) acl_entry(acl) where split_part(acl::text,'=',1)='' and position('w' in split_part(split_part(acl::text,'=',2),'/',1))>0) or exists(select 1 from unnest(coalesce(a.attacl,'{}'::aclitem[])) acl_entry(acl) where split_part(acl::text,'=',1)='' and position('w' in split_part(split_part(acl::text,'=',2),'/',1))>0))
     order by a.attname) into after_state
    from pg_catalog.pg_attribute a join pg_catalog.pg_class cl on cl.oid=a.attrelid
    where a.attrelid='public.profiles'::regclass and a.attnum>0 and not a.attisdropped;
