@@ -51,6 +51,5 @@ export default async function MatchesPage() {
       <p className="safety-report-hint">You can remove a like here if it has not become a match. Existing matches are managed separately.</p>
       {likedPeople.length === 0 ? <p>You have no pending outgoing likes.</p> : <div className="member-list">{likedPeople.map((item) => <article className="member-list-item" key={item.target_id}><div><strong>{item.profile?.display_name || "JoyHeart member"}</strong><small>{[item.profile?.city,item.profile?.country].filter(Boolean).join(", ")}</small></div><UnlikeButton memberId={item.target_id} /></article>)}</div>}
     </section>
-    </section>
   </main>;
 }
