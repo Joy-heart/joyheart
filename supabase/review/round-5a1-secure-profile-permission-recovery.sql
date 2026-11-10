@@ -46,4 +46,21 @@ begin
  end loop;
 end
 $effective_check$;
+-- Fail closed if an unknown inherited role still exposes profile columns.
+do $effective_inherited_check$
+declare col record;
+ s text[]:=array['user_id','display_name','age','country','city','relationship_intention','interests','bio','created_at','updated_at'];
+ u text[]:=array['display_name','country','city','bio','gender','seeking','relationship_intention','interests','explore_interests'];
+begin
+ if has_table_privilege('anon','public.profiles','SELECT') or has_table_privilege('anon','public.profiles','UPDATE')
+ or has_table_privilege('authenticated','public.profiles','SELECT') or has_table_privilege('authenticated','public.profiles','UPDATE') then
+  raise exception 'INHERITED_TABLE_PRIVILEGE_REMAINS';
+ end if;
+ for col in select column_name from information_schema.columns where table_schema='public' and table_name='profiles' loop
+  if has_column_privilege('anon','public.profiles',col.column_name,'SELECT') or has_column_privilege('anon','public.profiles',col.column_name,'UPDATE') then raise exception 'ANON_EFFECTIVE_PRIVILEGE_REMAINS: %',col.column_name; end if;
+  if has_column_privilege('authenticated','public.profiles',col.column_name,'SELECT') and not(col.column_name=any(s)) then raise exception 'INHERITED_UNEXPECTED_SELECT: %',col.column_name; end if;
+  if has_column_privilege('authenticated','public.profiles',col.column_name,'UPDATE') and not(col.column_name=any(u)) then raise exception 'INHERITED_UNEXPECTED_UPDATE: %',col.column_name; end if;
+ end loop;
+end
+$effective_inherited_check$;
 commit;
