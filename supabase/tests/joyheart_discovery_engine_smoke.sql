@@ -77,5 +77,5 @@ begin
   raise exception 'A new mutual match should create exactly one conversation';
  end if;
 end;
-$;
+$$;
 rollback;
