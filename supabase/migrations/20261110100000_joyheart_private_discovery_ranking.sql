@@ -8,7 +8,7 @@ create table if not exists private.joyheart_feature_flags (
 revoke all on private.joyheart_feature_flags from public, anon, authenticated;
 insert into private.joyheart_feature_flags(flag_key,enabled)
 values ('member_discovery',false)
-on conflict (flag_key) do update set enabled = false, updated_at = pg_catalog.now();
+on conflict (flag_key) do nothing;
 
 create or replace function private.joyheart_discovery_is_open()
 returns boolean language sql stable security definer set search_path = '' as $$
