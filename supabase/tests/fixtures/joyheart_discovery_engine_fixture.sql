@@ -93,6 +93,19 @@ $guard$;
 create trigger joyheart_profiles_guard_write before insert or update on public.profiles
 for each row execute function public.joyheart_guard_profile_write();
 
+-- Mirror the production updated_at trigger. The profile privilege migration
+-- revokes direct EXECUTE, but PostgreSQL trigger invocation must still work.
+create function public.set_profile_updated_at() returns trigger
+language plpgsql set search_path='' as $timestamp$
+begin
+ new.updated_at := pg_catalog.now();
+ return new;
+end;
+$timestamp$;
+grant execute on function public.set_profile_updated_at() to public, authenticated;
+create trigger set_profiles_updated_at before update on public.profiles
+for each row execute function public.set_profile_updated_at();
+
 alter table public.profile_private enable row level security;
 create policy profile_private_deny_all on public.profile_private
  for all to authenticated using (false) with check (false);
