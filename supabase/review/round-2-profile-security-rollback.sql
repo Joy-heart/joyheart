@@ -12,6 +12,27 @@ drop function if exists public.joyheart_get_own_profile_private_settings();
 
 -- Reassert the least-privilege grants instead of restoring broad table grants.
 revoke select, update on table public.profiles from public, anon, authenticated;
+
+-- Also clear any older column-level grants. Table-level REVOKE does not
+-- remove independently granted column privileges, which may survive from
+-- earlier migrations or default privilege changes.
+do $revoke_profile_column_grants$
+declare
+  column_name text;
+begin
+  for column_name in
+    select c.column_name
+    from information_schema.columns c
+    where c.table_schema = 'public'
+      and c.table_name = 'profiles'
+  loop
+    execute format(
+      'revoke select (%1$I), update (%1$I) on table public.profiles from public, anon, authenticated',
+      column_name
+    );
+  end loop;
+end;
+$revoke_profile_column_grants$;
 grant select (
   user_id, display_name, age, country, city,
   relationship_intention, interests, bio, created_at, updated_at
