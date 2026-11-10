@@ -155,9 +155,6 @@ export default function Journal() {
                   event.currentTarget.hidden = true;
                 }}
               />
-              <a className="jh-journal-image-credit" href={article.imageCreditUrl} target="_blank" rel="noreferrer">
-                Photo: {article.imageCredit}
-              </a>
             </div>
             <div className="jh-journal-card-content">
               <div className="jh-journal-card-top">
@@ -196,10 +193,6 @@ export default function Journal() {
         <p>Explore JoyHeart's practical safety guidance before taking your next step.</p>
         <a className="button button-primary" href="/safety">Visit the Safety Centre</a>
       </footer>
-
-      <p className="jh-image-license">
-        Journal photography: Pexels free stock photos, used under the <a href="https://www.pexels.com/license/" target="_blank" rel="noreferrer">Pexels License</a>.
-      </p>
     </main>
   );
 }
