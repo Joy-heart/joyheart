@@ -1453,3 +1453,13 @@ a:focus-visible {
 .profile-visibility-toggle strong { color: var(--joy-charcoal); font-size: .88rem; }
 .profile-visibility-toggle small { color: var(--joy-muted); font-size: .78rem; line-height: 1.5; }
 @media (max-width: 600px) { .profile-personality-question { padding: 14px; } }
+
+
+/* Private member photo previews */
+.profile-photo-list li { min-width: 0; }
+.profile-photo-thumbnail { width: 76px; height: 76px; flex: 0 0 76px; display: block; object-fit: cover; border: 1px solid var(--joy-border); border-radius: 11px; background: #f8edef; }
+@media (max-width: 520px) {
+  .profile-photo-list li { align-items: flex-start; flex-wrap: wrap; }
+  .profile-photo-thumbnail { width: 68px; height: 68px; flex-basis: 68px; }
+  .profile-photo-list button { margin-left: auto; }
+}
