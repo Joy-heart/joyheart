@@ -83,6 +83,9 @@ select set_config('request.jwt.claim.sub', :'member_a', false);
 do $$
 declare n integer;
 begin
+  select count(*) into n from public.profile_photos where user_id = '11111111-1111-4111-8111-111111111111';
+  if n <> 1 then raise exception 'Member cannot read their own photo metadata'; end if;
+
   select count(*) into n from public.profile_photos where user_id = '22222222-2222-4222-8222-222222222222';
   if n <> 0 then raise exception 'Member read another member photo metadata'; end if;
 
@@ -215,8 +218,8 @@ begin
   if n <> 2 then raise exception 'Staff pending queue did not return only the two pending photos'; end if;
 
   select count(*) into n from public.profile_photos
-  where user_id = '22222222-2222-4222-8222-222222222222' and moderation_status = 'rejected';
-  if n <> 0 then raise exception 'Staff could read rejected photo metadata'; end if;
+  where user_id = '22222222-2222-4222-8222-222222222222' and moderation_status in ('approved','rejected','removed');
+  if n <> 0 then raise exception 'Staff could read non-pending photo metadata through a legacy RLS policy'; end if;
 
   select count(*) into n from storage.objects
   where name = '22222222-2222-4222-8222-222222222222/cccccccc-cccc-4ccc-8ccc-cccccccccccc.webp';
@@ -341,7 +344,7 @@ begin
   );
   if n <> 1 then raise exception 'Active match did not restore photo access after profile was made visible'; end if;
 
-  update public.profile_matches set status = 'ended';
+  update public.profile_matches set status = 'unmatched';
   select count(*) into n from public.joyheart_get_member_primary_photo(
     '22222222-2222-4222-8222-222222222222', '11111111-1111-4111-8111-111111111111'
   );

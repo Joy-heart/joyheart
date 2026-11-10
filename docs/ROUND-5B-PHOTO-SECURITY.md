@@ -21,7 +21,7 @@ The service-role key is server-only. When deployment is explicitly approved, con
 - Upload validation completes before the server writes a private WebP object.
 - A server-only RPC registers the object as pending, records source/output sizes, dimensions and a SHA-256 digest, and writes a submission audit event.
 - Active staff must be authenticated, email-verified, not deleted or banned, and assigned an active public.staff_roles row.
-- Staff can inspect only other members' pending photos. Staff cannot review their own photos. Rejections require a non-empty reason of at most 500 characters.
+- Staff can inspect only other members' pending photos. The migration explicitly removes the earlier permissive `profile_photos_owner_or_staff_read` policy before adding separate owner-only and pending-staff policies; PostgreSQL combines permissive policies with OR, so leaving the old policy would expose all photo metadata to staff. Members retain read access to their own photo rows. Staff cannot review their own photos. Rejections require a non-empty reason of at most 500 characters.
 - Review and removal actions are server-controlled. Members cannot change moderation status directly.
 - The moderation event table is not writable or deletable by application roles. Security-definer RPCs append submission, approval, rejection and removal events.
 

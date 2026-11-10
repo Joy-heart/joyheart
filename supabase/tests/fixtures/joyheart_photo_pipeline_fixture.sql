@@ -90,15 +90,22 @@ alter table public.staff_roles enable row level security;
 alter table public.staff_roles force row level security;
 
 create table public.profile_blocks (
+  id uuid primary key default gen_random_uuid(),
   blocker_id uuid not null references auth.users(id),
   blocked_id uuid not null references auth.users(id),
-  primary key (blocker_id, blocked_id)
+  created_at timestamptz not null default now(),
+  constraint profile_blocks_no_self check (blocker_id <> blocked_id),
+  constraint profile_blocks_pair_unique unique (blocker_id, blocked_id)
 );
 create table public.profile_matches (
+  id uuid primary key default gen_random_uuid(),
   member_low uuid not null references auth.users(id),
   member_high uuid not null references auth.users(id),
-  status text not null,
-  primary key (member_low, member_high)
+  status text not null default 'active' check (status in ('active', 'unmatched', 'blocked')),
+  created_at timestamptz not null default now(),
+  ended_at timestamptz,
+  constraint profile_matches_ordered_pair check (member_low < member_high),
+  constraint profile_matches_pair_unique unique (member_low, member_high)
 );
 create table storage.buckets (
   id text primary key,
@@ -175,14 +182,17 @@ grant all on public.staff_roles to service_role;
 grant all on public.profile_blocks to service_role;
 grant all on public.profile_matches to service_role;
 
-create policy profile_photos_owner_read on public.profile_photos
-  for select to authenticated using (user_id = (select auth.uid()));
+-- Reproduce the legacy production policy from the prior staff-hardening migration.
+-- Round 5B must explicitly remove it because permissive RLS policies OR together.
+create policy profile_photos_owner_or_staff_read on public.profile_photos
+  for select to authenticated using (
+    user_id = (select auth.uid())
+    or (public.joyheart_is_active_staff() and user_id <> (select auth.uid()))
+  );
 create policy profile_photos_owner_insert_pending on public.profile_photos
   for insert to authenticated with check (user_id = (select auth.uid()) and moderation_status = 'pending');
 create policy profile_photos_owner_delete on public.profile_photos
   for delete to authenticated using (user_id = (select auth.uid()));
-create policy profile_photos_staff_review_queue on public.profile_photos
-  for select to authenticated using (public.joyheart_is_active_staff() and user_id <> (select auth.uid()));
 
 create policy joyheart_photo_owner_upload on storage.objects
   for insert to authenticated with check (

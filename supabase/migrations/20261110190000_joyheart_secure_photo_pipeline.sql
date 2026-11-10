@@ -189,8 +189,18 @@ create policy "joyheart_photo_staff_review_read"
 -- query storage.objects or enumerate approved object paths directly.
 drop policy if exists "joyheart_photo_approved_delivery_read" on storage.objects;
 
--- Staff can inspect metadata only while a photo is pending moderation.
+-- Replace the earlier broad owner-or-staff metadata policy. PostgreSQL combines
+-- permissive policies with OR, so leaving that legacy policy in place would let
+-- staff read approved/rejected/removed metadata despite the pending-only policy.
+-- Restore a separate owner-only read policy for the member photo list.
+drop policy if exists "profile_photos_owner_or_staff_read" on public.profile_photos;
+drop policy if exists "profile_photos_owner_read" on public.profile_photos;
 drop policy if exists "profile_photos_staff_review_queue" on public.profile_photos;
+create policy "profile_photos_owner_read"
+  on public.profile_photos for select to authenticated
+  using (user_id = (select auth.uid()));
+
+-- Staff can inspect metadata only while a photo is pending moderation.
 create policy "profile_photos_staff_review_queue"
   on public.profile_photos for select to authenticated
   using (
