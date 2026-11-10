@@ -18,8 +18,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     description: article.description,
     alternates: { canonical },
     keywords: [article.category, "JoyHeart", "online dating", "meaningful relationships", ...article.title.toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 3)],
-    openGraph: { type: "article", url: canonical, siteName: "JoyHeart", title: article.title, description: article.description },
-    twitter: { card: "summary", title: article.title, description: article.description },
+    openGraph: { type: "article", url: canonical, siteName: "JoyHeart", title: article.title, description: article.description, images: [{ url: article.image, alt: article.imageAlt }] },
+    twitter: { card: "summary_large_image", title: article.title, description: article.description, images: [article.image] },
   };
 }
 
@@ -48,6 +48,7 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
         <p>{article.intro}</p>
         <span className="jh-article-read-time">{article.read}</span>
       </header>
+      <figure className="jh-article-hero-image"><img src={article.image} alt={article.imageAlt} fetchPriority="high" /><figcaption>{article.imageAlt}</figcaption></figure>
       <article className="jh-article-content">
         {article.sections.map(([heading, paragraphs]) => (
           <section key={heading}>
