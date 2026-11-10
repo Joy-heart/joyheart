@@ -361,13 +361,21 @@ select set_config('request.jwt.claim.role', 'authenticated', false);
 select set_config('request.jwt.claim.sub', :'member_b', false);
 select public.joyheart_remove_profile_photo('dddddddd-dddd-4ddd-8ddd-dddddddddddd');
 select public.joyheart_remove_profile_photo('dddddddd-dddd-4ddd-8ddd-dddddddddddd');
+reset role;
 do $$
 declare n integer;
 begin
   select count(*) into n from public.profile_photo_moderation_events
   where photo_id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd' and event_type = 'removed';
   if n <> 1 then raise exception 'Idempotent removal created duplicate audit events'; end if;
+end $$;
 
+set role authenticated;
+select set_config('request.jwt.claim.role', 'authenticated', false);
+select set_config('request.jwt.claim.sub', :'member_b', false);
+do $$
+declare n integer;
+begin
   select count(*) into n from storage.objects
   where name = '22222222-2222-4222-8222-222222222222/dddddddd-dddd-4ddd-8ddd-dddddddddddd.webp';
   if n <> 0 then raise exception 'Removed photo remained readable to its owner'; end if;
