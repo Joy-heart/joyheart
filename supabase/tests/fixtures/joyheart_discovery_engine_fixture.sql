@@ -56,7 +56,7 @@ language sql immutable security definer set search_path='' as $fixture$
 $fixture$;
 grant usage on schema public to anon,authenticated;
 grant select,insert,update on public.profiles to authenticated;
-grant select, update on public.profiles to public with grant option;
+grant select, update on public.profiles to public;
 grant select, update on public.profiles to anon with grant option;
 grant select, update on public.profiles to joyheart_profiles_legacy_access with grant option;
 grant select (gender,seeking,publication_status,is_visible), update (publication_status,is_visible) on public.profiles to joyheart_profiles_legacy_access with grant option;
