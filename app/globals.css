@@ -1436,3 +1436,20 @@ a:focus-visible {
   .explore-save-row { align-items: stretch; flex-direction: column; }
   .explore-save-row button { width: 100%; }
 }
+
+
+/* Milestone 4 — private compatibility and personality settings */
+.profile-compatibility { margin-top: 34px; padding-top: 30px; border-top: 1px solid var(--joy-border); }
+.profile-compatibility-heading { max-width: 720px; margin-bottom: 24px; }
+.profile-compatibility-heading h2 { margin: 0; color: var(--joy-charcoal); font: 500 clamp(1.8rem,4vw,2.5rem) Georgia,serif; }
+.profile-compatibility-heading > p:last-child { color: var(--joy-muted); line-height: 1.7; }
+.profile-personality-list { display: grid; gap: 18px; }
+.profile-personality-question { min-width: 0; margin: 0; padding: 18px; border: 1px solid var(--joy-border); border-radius: 16px; }
+.profile-personality-question legend { padding: 0 7px; color: var(--joy-charcoal); font-weight: 750; line-height: 1.5; }
+.profile-preference-subtitle { margin: 22px 0 12px; color: var(--joy-charcoal); font-size: .95rem; }
+.profile-visibility-toggle { display: flex; align-items: flex-start; gap: 12px; margin-top: 20px; padding: 16px; border: 1px solid var(--joy-border); border-radius: 14px; background: #fffaf8; cursor: pointer; }
+.profile-visibility-toggle input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--joy-burgundy); }
+.profile-visibility-toggle span { display: grid; gap: 4px; }
+.profile-visibility-toggle strong { color: var(--joy-charcoal); font-size: .88rem; }
+.profile-visibility-toggle small { color: var(--joy-muted); font-size: .78rem; line-height: 1.5; }
+@media (max-width: 600px) { .profile-personality-question { padding: 14px; } }
