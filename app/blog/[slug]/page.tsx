@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { additionalJournalArticles, getAdditionalJournalArticle } from "@/app/lib/additional-journal-articles";
+import { additionalJournalArticles, getAdditionalJournalArticle, journalCategorySlug } from "@/app/lib/additional-journal-articles";
 
 const siteUrl = "https://joyheart.app";
 
@@ -43,7 +43,7 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
     <main className="jh-resource-page jh-article-page">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
       <header className="jh-resource-hero">
-        <p className="public-eyebrow">The JoyHeart journal · {article.category}</p>
+        <p className="public-eyebrow">The JoyHeart journal · <a href={`/blog/category/${journalCategorySlug(article.category)}`}>{article.category}</a></p>
         <h1>{article.title}</h1>
         <p>{article.intro}</p>
         <span className="jh-article-read-time">{article.read}</span>
