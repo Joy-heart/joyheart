@@ -30,7 +30,7 @@ create table public.profile_matches(id uuid primary key default gen_random_uuid(
 create table public.conversations(id uuid primary key default gen_random_uuid(),match_id uuid not null unique);
 
 create function private.joyheart_is_match_eligible(p_user_id uuid) returns boolean
-language sql stable security definer set search_path='' as $
+language sql stable security definer set search_path='' as $fixture$
  select exists(
   select 1 from auth.users u join public.profiles p on p.user_id=u.id
   join public.profile_private pp on pp.user_id=u.id
@@ -41,15 +41,15 @@ language sql stable security definer set search_path='' as $
    and p.publication_status='published'
    and exists(select 1 from public.profile_photos ph where ph.user_id=u.id and ph.moderation_status='approved')
  )
-$;
+$fixture$;
 create function private.joyheart_preference_accepts(p_seeking text,p_gender text) returns boolean
-language sql immutable security definer set search_path='' as $
+language sql immutable security definer set search_path='' as $fixture$
  select case lower(btrim(coalesce(p_seeking,'')))
   when 'everyone' then lower(btrim(coalesce(p_gender,''))) in ('man','woman','non-binary','prefer not to say')
   when 'men' then lower(btrim(coalesce(p_gender,'')))='man'
   when 'women' then lower(btrim(coalesce(p_gender,'')))='woman'
   else false end
-$;
+$fixture$;
 grant usage on schema public to anon,authenticated;
 grant select on public.profiles,public.member_discovery_preferences,public.member_personality_answers,
  public.profile_blocks,public.profile_interactions,public.profile_matches,public.profile_photos,public.profile_private to authenticated;
