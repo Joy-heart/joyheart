@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 const articles = [
   {
@@ -90,20 +90,13 @@ export default function Journal() {
   const [category, setCategory] = useState("All articles");
   const [query, setQuery] = useState("");
 
-  const filtered = useMemo(() => {
-    const terms = normalize(query).split(/\s+/).filter(Boolean);
-    return articles.filter((article) => {
-      const categoryMatches = category === "All articles" || article.category === category;
-      const searchableText = normalize([
-        article.title,
-        article.summary,
-        article.category,
-        ...article.body
-      ].join(" "));
-      const queryMatches = terms.length === 0 || terms.every((term) => searchableText.includes(term));
-      return categoryMatches && queryMatches;
-    });
-  }, [category, query]);
+  const searchTerms = normalize(query).split(/\s+/).filter(Boolean);
+  const filtered = articles.filter((article) => {
+    const categoryMatches = category === "All articles" || article.category === category;
+    const searchableText = normalize([article.title, article.summary, article.category, ...article.body].join(" "));
+    const searchMatches = searchTerms.length === 0 || searchTerms.every((term) => searchableText.includes(term));
+    return categoryMatches && searchMatches;
+  });
 
   return (
     <main className="jh-resource-page">
@@ -136,13 +129,20 @@ export default function Journal() {
             </button>
           ))}
         </div>
-        <p className="jh-faq-count" aria-live="polite">
-          Showing {filtered.length} of {articles.length} {filtered.length === 1 ? "article" : "articles"}
-          {query.trim() ? ` for “${query.trim()}”` : ""}
-        </p>
+        <output
+          key={category + ":" + normalize(query) + ":" + filtered.length}
+          className="jh-faq-count"
+          aria-live="polite"
+          aria-atomic="true"
+          data-result-count={filtered.length}
+        >
+          {filtered.length} {filtered.length === 1 ? "article" : "articles"} found
+          {query.trim() ? " for “" + query.trim() + "”" : ""}
+          {category !== "All articles" ? " in " + category : ""}
+        </output>
       </section>
 
-      <section className="jh-journal-grid" id="jh-journal-results" aria-label="Journal articles">
+      <section className="jh-journal-grid" id="jh-journal-results" aria-label="Journal articles" data-result-count={filtered.length}>
         {filtered.map((article) => (
           <article className="jh-journal-card" key={article.title}>
             <div className="jh-journal-image">
