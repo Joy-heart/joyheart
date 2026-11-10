@@ -77,8 +77,7 @@ const articles = [
       "Mention the activities, values or everyday moments that matter to you. Be honest about your relationship intentions and respectful about the people you hope to meet.",
       "Leave out sensitive information such as your address, financial details, identity numbers and private contact information. You can share more as trust develops."
     ]
-  }
-
+  },
   {
     slug: "find-a-serious-relationship-online",
     category: "Dating with intention",
