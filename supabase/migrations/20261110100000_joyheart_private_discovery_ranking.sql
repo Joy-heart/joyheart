@@ -85,7 +85,7 @@ begin
      end if;
    else
      insert into public.conversations(match_id) values(v_match_id)
-     on conflict(match_id) do nothing;
+     on conflict do nothing;
    end if;
  end if;
  return query select v_interaction_id,v_match_id,v_match_id is not null;
