@@ -14,14 +14,13 @@ export default function MemberReportForm({
   messageId: string | null;
 }) {
   const router = useRouter();
-  const [memberId, setMemberId] = useState(reportedMemberId);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const target = memberId.trim();
+    const target = reportedMemberId.trim();
     const detail = reason.trim();
     if (!supabase || !target || detail.length < 3 || busy) return;
     setBusy(true);
@@ -75,7 +74,7 @@ export default function MemberReportForm({
         <p className="safety-report-hint">Reports are reviewed privately. Submitting a report does not automatically notify the reported member.</p>
         {notice && <p className="member-alert" role="status">{notice}</p>}
         <div className="safety-report-actions">
-          <button className="member-action" type="submit" disabled={busy || !memberId.trim() || reason.trim().length < 3}>{busy ? "Sending…" : "Send private report"}</button>
+          <button className="member-action" type="submit" disabled={busy || !reportedMemberId.trim() || reason.trim().length < 3}>{busy ? "Sending…" : "Send private report"}</button>
           <button className="member-action secondary" type="button" onClick={() => router.back()}>Cancel</button>
         </div>
       </form>
