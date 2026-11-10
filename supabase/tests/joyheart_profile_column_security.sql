@@ -229,3 +229,26 @@ from pg_catalog.pg_trigger t join pg_catalog.pg_proc p on p.oid=t.tgfoid
 where t.tgrelid='public.profiles'::regclass and not t.tgisinternal
 order by t.tgname;
 
+
+-- CI machine-readable effective ACL and catalog evidence.
+-- PUBLIC is queried through role name "public" (PostgreSQL special grantee).
+with roles(role_name) as (
+ values ('public'),('anon'),('authenticated'),('joyheart_profiles_legacy_access')
+), cols as (
+ select a.attname column_name from pg_catalog.pg_attribute a
+ where a.attrelid='public.profiles'::regclass and a.attnum>0 and not a.attisdropped
+)
+select r.role_name,c.column_name,
+ has_column_privilege(r.role_name,'public.profiles',c.column_name,'SELECT') can_select,
+ has_column_privilege(r.role_name,'public.profiles',c.column_name,'UPDATE') can_update
+from roles r cross join cols c order by r.role_name,c.column_name;
+select 'RLS' evidence, policyname,roles,cmd,qual,with_check
+from pg_catalog.pg_policies where schemaname='public' and tablename='profiles' order by policyname;
+select 'RPC' evidence,p.proowner::regrole owner,p.prosecdef,p.proconfig,
+ has_function_privilege('authenticated',p.oid,'EXECUTE') authenticated_execute,
+ has_function_privilege('anon',p.oid,'EXECUTE') anon_execute
+from pg_catalog.pg_proc p where p.oid='public.joyheart_get_own_profile_private_settings()'::regprocedure;
+select 'TRIGGER' evidence,t.tgname,t.tgenabled,p.proname,
+ has_function_privilege('authenticated',p.oid,'EXECUTE') authenticated_direct_execute
+from pg_catalog.pg_trigger t join pg_catalog.pg_proc p on p.oid=t.tgfoid
+where t.tgrelid='public.profiles'::regclass and not t.tgisinternal order by t.tgname;
