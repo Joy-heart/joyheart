@@ -99,9 +99,9 @@ grant execute on function private.joyheart_record_interaction(uuid,text) to auth
 -- Keep the public RPC wrapper aligned with the hardened private implementation.
 create or replace function public.joyheart_record_interaction(p_target_id uuid,p_action text)
 returns table(interaction_id uuid,match_id uuid,matched boolean)
-language sql security invoker set search_path = '' as $
+language sql security invoker set search_path = '' as $wrapper$
  select * from private.joyheart_record_interaction(p_target_id,p_action);
-$;
+$wrapper$;
 revoke all on function public.joyheart_record_interaction(uuid,text) from public,anon;
 grant execute on function public.joyheart_record_interaction(uuid,text) to authenticated;
 
