@@ -25,9 +25,10 @@ create table public.profile_photos(user_id uuid not null,moderation_status text 
 create table public.member_discovery_preferences(
  user_id uuid primary key, preferred_age_min smallint not null, preferred_age_max smallint not null,
  preferred_countries text[] not null default '{}', preferred_languages text[] not null default '{}',
- relationship_intentions text[] not null default '{}', discovery_enabled boolean not null default false
+ relationship_intentions text[] not null default '{}', discovery_enabled boolean not null default false,
+ updated_at timestamptz not null default now()
 );
-create table public.member_personality_answers(user_id uuid primary key,answers jsonb not null default '{}');
+create table public.member_personality_answers(user_id uuid primary key,answers jsonb not null default '{}',updated_at timestamptz not null default now());
 create table public.profile_interactions(id uuid primary key default gen_random_uuid(),actor_id uuid not null,target_id uuid not null,action text not null,updated_at timestamptz default now(),unique(actor_id,target_id));
 create table public.profile_blocks(blocker_id uuid not null,blocked_id uuid not null,unique(blocker_id,blocked_id));
 create table public.profile_matches(id uuid primary key default gen_random_uuid(),member_low uuid not null,member_high uuid not null,status text not null default 'active',unique(member_low,member_high));
