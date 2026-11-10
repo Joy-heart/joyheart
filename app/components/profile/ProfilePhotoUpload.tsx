@@ -12,6 +12,8 @@ type PhotoRow = {
   created_at: string;
 };
 
+type PhotoPreview = PhotoRow & { previewUrl: string | null };
+
 const BUCKET = "joyheart-profile-photos";
 const MAX_BYTES = 5 * 1024 * 1024;
 const MAX_PHOTOS = 5;
@@ -23,7 +25,7 @@ function formatSize(bytes: number) {
 }
 
 export default function ProfilePhotoUpload({ profileReady }: { profileReady: boolean }) {
-  const [photos, setPhotos] = useState<PhotoRow[]>([]);
+  const [photos, setPhotos] = useState<PhotoPreview[]>([]);
   const [loading, setLoading] = useState(profileReady);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
@@ -32,12 +34,27 @@ export default function ProfilePhotoUpload({ profileReady }: { profileReady: boo
   const refresh = useCallback(async () => {
     if (!supabase || !profileReady) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from("profile_photos")
-      .select("id,storage_path,mime_type,file_size_bytes,moderation_status,created_at")
-      .order("created_at", { ascending: false });
-    if (!error) setPhotos((data ?? []) as PhotoRow[]);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from("profile_photos")
+        .select("id,storage_path,mime_type,file_size_bytes,moderation_status,created_at")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+
+      const rows = (data ?? []) as PhotoRow[];
+      const previews = await Promise.all(rows.map(async (photo) => {
+        const { data: signed, error: signedError } = await supabase.storage
+          .from(BUCKET)
+          .createSignedUrl(photo.storage_path, 10 * 60);
+        return { ...photo, previewUrl: signedError ? null : signed?.signedUrl ?? null };
+      }));
+      setPhotos(previews);
+    } catch {
+      setFailed(true);
+      setNotice("We could not load your private photo previews. Please refresh and try again.");
+    } finally {
+      setLoading(false);
+    }
   }, [profileReady]);
 
   useEffect(() => { void refresh(); }, [refresh]);
@@ -130,7 +147,7 @@ export default function ProfilePhotoUpload({ profileReady }: { profileReady: boo
     }
   }
 
-  async function removePhoto(photo: PhotoRow) {
+  async function removePhoto(photo: PhotoPreview) {
     if (!supabase || busy) return;
     setBusy(true);
     setNotice("");
@@ -164,13 +181,17 @@ export default function ProfilePhotoUpload({ profileReady }: { profileReady: boo
         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={upload} disabled={!profileReady || busy || photos.length >= MAX_PHOTOS} />
         <span aria-hidden="true">＋</span>{busy ? "Working…" : "Choose a photo"}
       </label>
-      <p className="profile-photo-help">Your original photo stays in private storage. It will not appear to other members until it passes moderation.</p>
+      <p className="profile-photo-help">Your original photo stays in private storage. Only you and authorised safety reviewers can access it before approval.</p>
       {loading && <p className="profile-photo-help">Loading your photos…</p>}
       {photos.length > 0 && (
         <ul className="profile-photo-list">
           {photos.map((photo) => (
             <li key={photo.id}>
-              <div className="profile-photo-file-icon" aria-hidden="true">▧</div>
+              {photo.previewUrl ? (
+                <img className="profile-photo-thumbnail" src={photo.previewUrl} alt="Your uploaded profile photo" />
+              ) : (
+                <div className="profile-photo-file-icon" aria-hidden="true">▧</div>
+              )}
               <div className="profile-photo-file-details">
                 <strong>{photo.storage_path.split("/").pop()}</strong>
                 <span>{formatSize(photo.file_size_bytes)} · {photo.moderation_status === "pending" ? "Waiting for review" : photo.moderation_status}</span>
