@@ -2,6 +2,8 @@ export type JournalArticle = {
   slug: string;
   category: string;
   read: string;
+  image: string;
+  imageAlt: string;
   title: string;
   description: string;
   summary: string;
@@ -14,6 +16,8 @@ export const additionalJournalArticles: JournalArticle[] = [
     "slug": "find-a-serious-relationship-online",
     "category": "Dating with intention",
     "read": "7 min read",
+    "image": "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1400&q=85",
+    "imageAlt": "A couple sharing a quiet, affectionate moment",
     "title": "How to Find a Serious Relationship Online",
     "description": "Learn how to find a serious relationship online by choosing the right dating intentions, building an honest profile and recognising consistent effort.",
     "summary": "A practical guide to dating with intention, communicating clearly and recognising when someone is looking for the same kind of commitment.",
@@ -60,6 +64,8 @@ export const additionalJournalArticles: JournalArticle[] = [
     "slug": "dating-profile-tips-first-impression",
     "category": "Profiles and connection",
     "read": "6 min read",
+    "image": "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1400&q=85",
+    "imageAlt": "A confident person posing outdoors in natural light",
     "title": "Best Dating Profile Tips: How to Make a Great First Impression",
     "description": "Create a better dating profile with practical tips for choosing photos, writing an authentic bio, sharing your intentions and starting genuine conversations.",
     "summary": "Make your dating profile more inviting with authentic photos, a clear bio and details that help compatible people start a conversation.",
@@ -106,6 +112,8 @@ export const additionalJournalArticles: JournalArticle[] = [
     "slug": "know-if-someone-is-genuinely-interested",
     "category": "Healthy relationships",
     "read": "6 min read",
+    "image": "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1400&q=85",
+    "imageAlt": "A couple holding hands while spending time together",
     "title": "How to Know If Someone Is Genuinely Interested in You",
     "description": "Explore healthy signs of genuine dating interest, including consistent communication, curiosity, respect for boundaries and actions that match words.",
     "summary": "Learn to recognise healthy signs of interest without rushing to conclusions or confusing intensity with genuine connection.",
@@ -152,6 +160,8 @@ export const additionalJournalArticles: JournalArticle[] = [
     "slug": "long-distance-relationship-trust-connection",
     "category": "Healthy relationships",
     "read": "7 min read",
+    "image": "https://images.unsplash.com/photo-1511988617509-a57c8a288659?auto=format&fit=crop&w=1400&q=85",
+    "imageAlt": "Two people sharing a joyful moment together",
     "title": "Long-Distance Relationships: How to Build Trust and Stay Connected",
     "description": "Practical long-distance relationship advice for communication, trust, shared routines, planning visits and staying safe while dating across countries.",
     "summary": "Distance can make dating more challenging. Honest communication, realistic expectations and shared plans can help couples stay connected.",
@@ -198,6 +208,8 @@ export const additionalJournalArticles: JournalArticle[] = [
     "slug": "online-dating-red-flags",
     "category": "Online safety",
     "read": "7 min read",
+    "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1400&q=85",
+    "imageAlt": "A person using a laptop while browsing online",
     "title": "Red Flags in Online Dating: What You Should Never Ignore",
     "description": "Learn common online dating warning signs, including requests for money, rushed intimacy, secrecy, identity inconsistencies and pressure to leave the platform.",
     "summary": "Know the warning signs of manipulation and romance scams, and learn practical steps to protect your privacy and wellbeing.",
