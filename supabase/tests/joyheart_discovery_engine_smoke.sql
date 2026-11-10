@@ -65,6 +65,17 @@ begin
  if private.joyheart_can_discover_pair('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002') then
   raise exception 'A block in either direction must exclude the pair';
  end if;
+ delete from public.profile_blocks where blocker_id='00000000-0000-0000-0000-000000000002' and blocked_id='00000000-0000-0000-0000-000000000001';
+ perform set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',true);
+ perform * from public.joyheart_record_interaction('00000000-0000-0000-0000-000000000002','like');
+ perform set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',true);
+ perform * from public.joyheart_record_interaction('00000000-0000-0000-0000-000000000001','like');
+ if (select count(*) from public.profile_matches where status='active')<>1 then
+  raise exception 'Reciprocal likes should create exactly one active match';
+ end if;
+ if (select count(*) from public.conversations)<>1 then
+  raise exception 'A new mutual match should create exactly one conversation';
+ end if;
 end;
-$$;
+$;
 rollback;
