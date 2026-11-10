@@ -7,6 +7,27 @@ begin;
 -- Remove broad table-level read and write grants from ordinary members.
 revoke select, update on table public.profiles from public, anon, authenticated;
 
+-- Also clear any older column-level grants. Table-level REVOKE does not
+-- remove independently granted column privileges, which may survive from
+-- earlier migrations or default privilege changes.
+do $revoke_profile_column_grants$
+declare
+  column_name text;
+begin
+  for column_name in
+    select c.column_name
+    from information_schema.columns c
+    where c.table_schema = 'public'
+      and c.table_name = 'profiles'
+  loop
+    execute format(
+      'revoke select (%1$I), update (%1$I) on table public.profiles from public, anon, authenticated',
+      column_name
+    );
+  end loop;
+end;
+$revoke_profile_column_grants$;
+
 -- Trigger functions are not client APIs. Keep their execution privilege private.
 do $revoke_trigger_execute$
 begin
