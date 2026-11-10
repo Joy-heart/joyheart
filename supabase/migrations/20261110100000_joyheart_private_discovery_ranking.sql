@@ -95,6 +95,16 @@ alter function private.joyheart_record_interaction(uuid,text) owner to postgres;
 revoke all on function private.joyheart_record_interaction(uuid,text) from public,anon;
 grant execute on function private.joyheart_record_interaction(uuid,text) to authenticated;
 
+
+-- Keep the public RPC wrapper aligned with the hardened private implementation.
+create or replace function public.joyheart_record_interaction(p_target_id uuid,p_action text)
+returns table(interaction_id uuid,match_id uuid,matched boolean)
+language sql security invoker set search_path = '' as $
+ select * from private.joyheart_record_interaction(p_target_id,p_action);
+$;
+revoke all on function public.joyheart_record_interaction(uuid,text) from public,anon;
+grant execute on function public.joyheart_record_interaction(uuid,text) to authenticated;
+
 create or replace function private.joyheart_discover_candidates(p_limit integer default 20)
 returns table(candidate_id uuid,display_name text,age smallint,country text,city text,bio text,interests text[],relationship_intention text,compatibility_score integer,compatibility_reasons text[])
 language plpgsql stable security definer set search_path = '' as $$
