@@ -180,10 +180,16 @@ export default function ProfileCompatibility() {
               <div><label htmlFor="pref-age-min">Minimum age</label><input id="pref-age-min" type="number" min="18" max="120" value={preferences.preferred_age_min} onChange={(e) => setPreferences((p) => ({ ...p, preferred_age_min: Number(e.target.value) }))} /></div>
               <div><label htmlFor="pref-age-max">Maximum age</label><input id="pref-age-max" type="number" min="18" max="120" value={preferences.preferred_age_max} onChange={(e) => setPreferences((p) => ({ ...p, preferred_age_max: Number(e.target.value) }))} /></div>
             </div>
-            <label htmlFor="pref-countries">Preferred countries <small>Optional, comma separated</small></label>
-            <input id="pref-countries" value={countries} onChange={(e) => setCountries(e.target.value)} maxLength={600} placeholder="Kenya, Uganda, United Kingdom" />
-            <label htmlFor="pref-languages">Languages you'd like to share <small>Optional, comma separated</small></label>
-            <input id="pref-languages" value={languages} onChange={(e) => setLanguages(e.target.value)} maxLength={400} placeholder="English, Swahili, French" />
+            <div className="profile-preference-fields">
+              <div className="profile-preference-field">
+                <label htmlFor="pref-countries">Preferred countries <small>Optional · separate with commas</small></label>
+                <input id="pref-countries" value={countries} onChange={(e) => setCountries(e.target.value)} maxLength={600} placeholder="Kenya, Uganda, United Kingdom" />
+              </div>
+              <div className="profile-preference-field">
+                <label htmlFor="pref-languages">Languages you'd like to share <small>Optional · separate with commas</small></label>
+                <input id="pref-languages" value={languages} onChange={(e) => setLanguages(e.target.value)} maxLength={400} placeholder="English, Swahili, French" />
+              </div>
+            </div>
             <p className="profile-field-hint">These preferences are private and do not reveal your location or contact details.</p>
             <label className="profile-visibility-toggle"><input type="checkbox" checked={preferences.discovery_enabled} onChange={(e) => setPreferences((p) => ({ ...p, discovery_enabled: e.target.checked }))} /><span><strong>Allow my profile to appear in discovery when it launches</strong><small>Discovery is currently closed to everyone while safety checks are completed. This preference will be enforced by the server before member recommendations launch.</small></span></label>
             <h3 className="profile-preference-subtitle">Relationship intentions you'd like to meet</h3>
