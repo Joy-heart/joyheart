@@ -16,11 +16,25 @@ export default async function AccountPage() {
   if (userError || !user) redirect("/login?next=%2Faccount");
   if (!user.email_confirmed_at) redirect("/login?reason=verify&next=%2Faccount");
 
-  const { data } = await supabase
-    .from("profiles")
-    .select("display_name,country,city,bio,gender,seeking,relationship_intention,interests,explore_interests,publication_status")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  // Public presentation columns are read under the normal profiles RLS policy.
+  // Private matching/editor fields come from an owner-only RPC with no target id.
+  const [profileResult, privateResult] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("display_name,country,city,bio,relationship_intention,interests")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase.rpc("joyheart_get_own_profile_private_settings"),
+  ]);
 
-  return <><ProfileSetup initialProfile={data ?? null} /><div className="profile-setup-page"><section className="profile-setup-shell"><ProfileCompatibility /></section></div></>;
+  if (profileResult.error || privateResult.error) {
+    throw new Error("Your private profile settings could not be loaded safely.");
+  }
+
+  const privateSettings = Array.isArray(privateResult.data) ? privateResult.data[0] : privateResult.data;
+  const initialProfile = profileResult.data && privateSettings
+    ? { ...profileResult.data, ...privateSettings }
+    : null;
+
+  return <><ProfileSetup initialProfile={initialProfile} /><div className="profile-setup-page"><section className="profile-setup-shell"><ProfileCompatibility /></section></div></>;
 }
