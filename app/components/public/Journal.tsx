@@ -8,8 +8,10 @@ const articles = [
     read: "5 min read",
     title: "A thoughtful first message makes room for a real conversation",
     summary: "A good opening is personal, kind and easy to answer. It shows curiosity without putting pressure on someone to respond.",
-    image: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=85",
-    imageAlt: "A couple sharing a quiet, affectionate moment outdoors",
+    image: "https://images.pexels.com/photos/5911182/pexels-photo-5911182.jpeg?auto=compress&cs=tinysrgb&h=627&fit=crop&w=1200",
+    imageAlt: "A couple sharing a warm conversation during a cafe date",
+    imageCredit: "Katerina Holmes / Pexels",
+    imageCreditUrl: "https://www.pexels.com/photo/young-couple-talking-while-having-date-in-cafe-5911182/", 
     body: [
       "Start with something you genuinely noticed in the person's profile. A shared interest, a place they mentioned or a book they enjoy gives the conversation a natural beginning.",
       "Ask one open question rather than sending a list. Give the other person room to share as much or as little as they feel comfortable sharing.",
@@ -21,8 +23,10 @@ const articles = [
     read: "6 min read",
     title: "Recognising the warning signs of a romance scam",
     summary: "Pressure, secrecy and requests for money are reasons to pause. Learn how to protect your information while getting to know someone online.",
-    image: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1200&q=85",
-    imageAlt: "Two people walking together and holding hands",
+    image: "https://images.pexels.com/photos/38675509/pexels-photo-38675509.jpeg?auto=compress&cs=tinysrgb&h=627&fit=crop&w=1200",
+    imageAlt: "A close-up of a couple holding hands outdoors",
+    imageCredit: "Dulce Panebra / Pexels",
+    imageCreditUrl: "https://www.pexels.com/photo/romantic-couple-holding-hands-outdoors-38675509/", 
     body: [
       "Romance scammers may build trust quickly before introducing an emergency, investment opportunity or urgent financial request. They may ask for money, gift cards, cryptocurrency, identity documents or account access.",
       "Be especially cautious when someone repeatedly avoids reasonable questions, refuses to meet or verify their identity in a safe way, asks you to keep the relationship secret, or tries to move you away from platform reporting tools.",
@@ -34,8 +38,10 @@ const articles = [
     read: "4 min read",
     title: "Let a new connection grow at a comfortable pace",
     summary: "There is no single timetable for trust. Clear boundaries and honest communication help both people feel respected.",
-    image: "https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=1200&q=85",
-    imageAlt: "A couple enjoying time together in a warm outdoor setting",
+    image: "https://images.pexels.com/photos/6579098/pexels-photo-6579098.jpeg?auto=compress&cs=tinysrgb&h=627&fit=crop&w=1200",
+    imageAlt: "A couple walking together in a park with their dog",
+    imageCredit: "Andres Ayrton / Pexels",
+    imageCreditUrl: "https://www.pexels.com/photo/positive-black-couple-walking-in-park-with-dog-6579098/", 
     body: [
       "It is natural to feel excited when you meet someone interesting. Still, trust is built through consistent actions over time, not promises made in the first few conversations.",
       "Share information gradually. You can be warm and interested while keeping your home address, workplace details, financial information and identity documents private.",
@@ -47,8 +53,10 @@ const articles = [
     read: "5 min read",
     title: "Planning a safer first meeting",
     summary: "A little preparation can help you feel more confident when you decide to meet someone in person.",
-    image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=1200&q=85",
-    imageAlt: "Two people spending time together outdoors in daylight",
+    image: "https://images.pexels.com/photos/7339317/pexels-photo-7339317.jpeg?auto=compress&cs=tinysrgb&h=627&fit=crop&w=1200",
+    imageAlt: "Two people getting to know each other over a cafe date",
+    imageCredit: "cottonbro studio / Pexels",
+    imageCreditUrl: "https://www.pexels.com/photo/two-people-meeting-for-the-first-time-in-a-cafe-7339317/", 
     body: [
       "Choose a public place where you feel comfortable, and arrange your own transport so you can leave whenever you wish. Consider meeting during the day for a first meeting.",
       "Tell a trusted person where you are going and when you expect to be back. Keep your phone charged and avoid sharing financial details or leaving drinks unattended.",
@@ -60,8 +68,10 @@ const articles = [
     read: "4 min read",
     title: "Create a profile that sounds like you",
     summary: "A sincere profile gives people a better sense of your personality, interests and the kind of relationship you hope to build.",
-    image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=85",
-    imageAlt: "An intimate celebration with elegant romantic details",
+    image: "https://images.pexels.com/photos/5083564/pexels-photo-5083564.jpeg?auto=compress&cs=tinysrgb&h=627&fit=crop&w=1200",
+    imageAlt: "A couple sharing a romantic date in a restaurant",
+    imageCredit: "Jep Gambardella / Pexels",
+    imageCreditUrl: "https://www.pexels.com/photo/a-couple-on-a-date-in-a-restaurant-5083564/", 
     body: [
       "Use a recent photograph that clearly represents you and write a biography in your own voice. A few specific details are more memorable than a long list of generic adjectives.",
       "Mention the activities, values or everyday moments that matter to you. Be honest about your relationship intentions and respectful about the people you hope to meet.",
@@ -145,6 +155,9 @@ export default function Journal() {
                   event.currentTarget.hidden = true;
                 }}
               />
+              <a className="jh-journal-image-credit" href={article.imageCreditUrl} target="_blank" rel="noreferrer">
+                Photo: {article.imageCredit}
+              </a>
             </div>
             <div className="jh-journal-card-content">
               <div className="jh-journal-card-top">
@@ -185,7 +198,7 @@ export default function Journal() {
       </footer>
 
       <p className="jh-image-license">
-        Journal photography: Unsplash images used under the <a href="https://unsplash.com/license" target="_blank" rel="noreferrer">Unsplash License</a>.
+        Journal photography: Pexels free stock photos, used under the <a href="https://www.pexels.com/license/" target="_blank" rel="noreferrer">Pexels License</a>.
       </p>
     </main>
   );
