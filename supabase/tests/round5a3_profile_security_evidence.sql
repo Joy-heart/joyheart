@@ -15,16 +15,10 @@ with profile_columns as (
 ), public_matrix as (
  select 'PUBLIC'::text as role_name,c.column_name,
         (
-          exists(select 1 from aclexplode(coalesce(cl.relacl,acldefault('r',cl.relowner))) x
-                 where x.grantee=0 and x.privilege_type='SELECT')
-          or exists(select 1 from aclexplode(coalesce(a.attacl,'{}'::aclitem[])) x
-                    where x.grantee=0 and x.privilege_type='SELECT')
+          exists(select 1 from unnest(coalesce(cl.relacl,acldefault('r',cl.relowner))) acl_entry(acl) where split_part(acl::text,'=',1)='' and position('r' in split_part(split_part(acl::text,'=',2),'/',1))>0) or exists(select 1 from unnest(coalesce(a.attacl,'{}'::aclitem[])) acl_entry(acl) where split_part(acl::text,'=',1)='' and position('r' in split_part(split_part(acl::text,'=',2),'/',1))>0)
         ) as can_select,
         (
-          exists(select 1 from aclexplode(coalesce(cl.relacl,acldefault('r',cl.relowner))) x
-                 where x.grantee=0 and x.privilege_type='UPDATE')
-          or exists(select 1 from aclexplode(coalesce(a.attacl,'{}'::aclitem[])) x
-                    where x.grantee=0 and x.privilege_type='UPDATE')
+          exists(select 1 from unnest(coalesce(cl.relacl,acldefault('r',cl.relowner))) acl_entry(acl) where split_part(acl::text,'=',1)='' and position('w' in split_part(split_part(acl::text,'=',2),'/',1))>0) or exists(select 1 from unnest(coalesce(a.attacl,'{}'::aclitem[])) acl_entry(acl) where split_part(acl::text,'=',1)='' and position('w' in split_part(split_part(acl::text,'=',2),'/',1))>0)
         ) as can_update,c.attnum
  from profile_columns c
  join pg_catalog.pg_attribute a on a.attrelid='public.profiles'::regclass and a.attname=c.column_name and a.attnum=c.attnum
@@ -38,7 +32,6 @@ with profile_columns as (
   'definition',pg_get_functiondef(p.oid),
   'authenticated_execute',has_function_privilege('authenticated',p.oid,'EXECUTE'),
   'anon_execute',has_function_privilege('anon',p.oid,'EXECUTE'),
-  'acl',coalesce(p.proacl::text[],'{}'::text[])
  ) as value
  from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid=p.pronamespace
  where p.oid='public.joyheart_get_own_profile_private_settings()'::regprocedure
