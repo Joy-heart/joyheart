@@ -8,7 +8,13 @@ begin;
 revoke select, update on table public.profiles from public, anon, authenticated;
 
 -- Trigger functions are not client APIs. Keep their execution privilege private.
-revoke all on function public.set_profile_updated_at() from public, anon, authenticated;
+do $revoke_trigger_execute$
+begin
+  if to_regprocedure('public.set_profile_updated_at()') is not null then
+    execute 'revoke all on function public.set_profile_updated_at() from public, anon, authenticated';
+  end if;
+end;
+$revoke_trigger_execute$;
 
 -- Direct reads are limited to approved profile presentation fields.
 -- RLS continues to decide which rows are visible.
