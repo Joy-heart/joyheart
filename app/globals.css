@@ -1541,3 +1541,25 @@ a:focus-visible {
 .safety-report-form input:focus,.safety-report-form textarea:focus { outline: 3px solid rgba(217,130,145,.22); border-color: var(--joy-rose); }
 .safety-report-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
 .safety-report-actions button:disabled { opacity: .55; cursor: wait; }
+
+
+/* Private member discovery experience */
+.discovery-feed { width:100%; }
+.discovery-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr)); gap:18px; }
+.discovery-card { overflow:hidden; border:1px solid var(--joy-border); border-radius:22px; background:var(--joy-surface); box-shadow:0 12px 36px rgba(75,25,45,.06); }
+.discovery-card-top { display:flex; justify-content:space-between; align-items:center; padding:18px 20px; background:linear-gradient(120deg,#f8e8eb,#fff8f4); color:var(--joy-burgundy); }
+.discovery-score { font-size:.78rem; font-weight:800; letter-spacing:.03em; }
+.discovery-age { display:grid; place-items:center; width:34px; height:34px; border-radius:50%; background:#fff; font-weight:800; }
+.discovery-card-content { padding:20px; }
+.discovery-card-content h2 { margin:0 0 4px; color:var(--joy-burgundy); font:600 1.65rem Georgia,serif; }
+.discovery-location,.discovery-intention { margin:4px 0; color:var(--joy-muted); font-size:.88rem; }
+.discovery-intention { color:var(--joy-charcoal); font-weight:650; }
+.discovery-bio { margin:14px 0; line-height:1.65; color:var(--joy-charcoal); }
+.discovery-interests { display:flex; flex-wrap:wrap; gap:7px; margin:14px 0; }
+.discovery-interests span { padding:6px 10px; border-radius:999px; background:#f8edf0; color:var(--joy-burgundy); font-size:.78rem; }
+.discovery-reasons { margin-top:16px; padding:14px; border-radius:14px; background:var(--joy-page,#fff8f4); color:var(--joy-charcoal); font-size:.85rem; }
+.discovery-reasons ul { margin:8px 0 0; padding-left:19px; color:var(--joy-muted); line-height:1.6; }
+.discovery-actions { display:flex; gap:10px; padding:0 20px 20px; }
+.discovery-actions button { flex:1; }
+.discovery-actions button:disabled { opacity:.55; cursor:wait; }
+@media(max-width:560px) { .discovery-card { border-radius:17px; } .discovery-card-content { padding:16px; } .discovery-actions { padding:0 16px 16px; } }
