@@ -2,6 +2,7 @@ const footerLinks = [
   { label: "Our approach", href: "/#our-approach" },
   { label: "Why JoyHeart", href: "/#values" },
   { label: "Safety", href: "/#safety" },
+  { label: "Report a concern", href: "/report" },
   { label: "Log in", href: "/login" },
   { label: "Join JoyHeart", href: "/signup" },
 ];
