@@ -99,6 +99,8 @@ begin
 end
 $complete_matrix$;
 
+-- Member B must not retrieve Member A's private settings through the RPC.
+-- Query parameter is intentionally absent; the function binds auth.uid().
 -- Member A: private RPC is owner-scoped; public profile rows obey published/owner RLS.
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
