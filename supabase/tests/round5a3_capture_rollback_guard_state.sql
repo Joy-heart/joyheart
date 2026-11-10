@@ -4,7 +4,7 @@ create table round5a3_guard_snapshot.state(kind text primary key,payload jsonb n
 insert into round5a3_guard_snapshot.state values
 ('rpc',(
  select jsonb_build_object('definition',pg_get_functiondef(p.oid),'owner',p.proowner,
-  'acl',p.proacl,'proconfig',p.proconfig,'security_definer',p.prosecdef)
+  'acl',p.proacl::text,'proconfig',p.proconfig,'security_definer',p.prosecdef)
  from pg_catalog.pg_proc p where p.oid='public.joyheart_get_own_profile_private_settings()'::regprocedure
 )),
 ('matrix',(
