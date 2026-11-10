@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - "supabase/migrations/20261110100000_joyheart_private_discovery_ranking.sql"
-      - "supabase/tests/joyheart_discovery_engine_smoke.sql"
+      - "supabase/tests/joyheart_discovery_engine_smoke.sql"\n      - "supabase/tests/joyheart_profile_column_security.sql"\n      - "supabase/migrations/20261110170000_joyheart_profile_column_privileges.sql"
       - "supabase/tests/fixtures/joyheart_discovery_engine_fixture.sql"
       - ".github/workflows/discovery-engine-migration-validation.yml"
   push:
@@ -49,7 +49,7 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/migrations/20261110100000_joyheart_private_discovery_ranking.sql
-      - name: Verify closed launch gate and RPC permissions
+      - name: Apply proposed profile column privilege migration\n        env:\n          PGPASSWORD: postgres\n        run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/migrations/20261110170000_joyheart_profile_column_privileges.sql\n      - name: Verify closed launch gate and RPC permissions
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/tests/joyheart_discovery_engine_smoke.sql
