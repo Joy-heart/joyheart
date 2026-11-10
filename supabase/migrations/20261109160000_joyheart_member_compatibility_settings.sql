@@ -9,7 +9,7 @@ create table if not exists public.member_discovery_preferences (
   preferred_countries text[] not null default '{}',
   preferred_languages text[] not null default '{}',
   relationship_intentions text[] not null default '{}',
-  discovery_enabled boolean not null default true,
+  discovery_enabled boolean not null default false,
   updated_at timestamptz not null default now(),
   constraint member_preferences_age_range check (
     preferred_age_min >= 18 and preferred_age_max <= 120
