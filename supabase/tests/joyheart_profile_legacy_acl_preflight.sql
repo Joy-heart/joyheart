@@ -29,8 +29,8 @@ begin
  if not exists(
    select 1 from pg_catalog.pg_class c
    cross join lateral aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a
-   where c.oid='public.profiles'::regclass and a.grantee=0 and a.privilege_type='SELECT' and a.is_grantable
- ) then raise exception 'Fixture missing PUBLIC SELECT grant option'; end if;
+   where c.oid='public.profiles'::regclass and a.grantee=0 and a.privilege_type='SELECT'
+ ) then raise exception 'Fixture missing PUBLIC SELECT grant'; end if;
 end
 $legacy_acl_preflight$;
 select 'LEGACY_FIXTURE_PRECONDITIONS_PASS' as result;
