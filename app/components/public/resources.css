@@ -14,3 +14,6 @@
 .jh-image-license a{color:var(--joy-burgundy);text-decoration:underline;text-underline-offset:3px}
 @media(max-width:700px){.jh-journal-card-content{padding:20px}.jh-journal-image{aspect-ratio:16/10}.jh-image-license{text-align:center}}
 @media(prefers-reduced-motion:reduce){.jh-journal-image img{transition:none}.jh-journal-card:hover .jh-journal-image img{transform:none}}
+
+.jh-journal-image-credit{position:absolute;right:10px;bottom:9px;padding:5px 8px;border:1px solid rgba(255,255,255,.55);border-radius:999px;background:rgba(35,20,28,.58);color:#fff;font-size:.68rem;text-decoration:none;backdrop-filter:blur(8px)}
+.jh-journal-image-credit:hover{text-decoration:underline;text-underline-offset:2px}
