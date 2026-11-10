@@ -80,6 +80,25 @@ begin
 end
 $column_grant_audit$;
 
+-- Verify effective permissions for every profile column, including inherited grants.
+do $complete_matrix$
+declare c record;
+ s text[]:=array['user_id','display_name','age','country','city','relationship_intention','interests','bio','created_at','updated_at'];
+ u text[]:=array['display_name','country','city','bio','gender','seeking','relationship_intention','interests','explore_interests'];
+begin
+ if has_table_privilege('anon','public.profiles','SELECT') or has_table_privilege('anon','public.profiles','UPDATE')
+ or has_table_privilege('authenticated','public.profiles','SELECT') or has_table_privilege('authenticated','public.profiles','UPDATE') then
+  raise exception 'Unexpected table-level profile privilege';
+ end if;
+ for c in select column_name from information_schema.columns where table_schema='public' and table_name='profiles' loop
+  if has_column_privilege('anon','public.profiles',c.column_name,'SELECT') or has_column_privilege('anon','public.profiles',c.column_name,'UPDATE') then raise exception 'anon access: %',c.column_name; end if;
+  if has_column_privilege('authenticated','public.profiles',c.column_name,'SELECT') and not(c.column_name=any(s)) then raise exception 'unexpected effective SELECT: %',c.column_name; end if;
+  if has_column_privilege('authenticated','public.profiles',c.column_name,'UPDATE') and not(c.column_name=any(u)) then raise exception 'unexpected effective UPDATE: %',c.column_name; end if;
+  if has_column_privilege('joyheart_profiles_legacy_access','public.profiles',c.column_name,'SELECT') or has_column_privilege('joyheart_profiles_legacy_access','public.profiles',c.column_name,'UPDATE') then raise exception 'legacy role access remains: %',c.column_name; end if;
+ end loop;
+end
+$complete_matrix$;
+
 -- Member A: private RPC is owner-scoped; public profile rows obey published/owner RLS.
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
