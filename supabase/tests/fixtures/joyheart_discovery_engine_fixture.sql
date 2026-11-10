@@ -53,11 +53,3 @@ $fixture$;
 grant usage on schema public to anon,authenticated;
 grant select on public.profiles,public.member_discovery_preferences,public.member_personality_answers,
  public.profile_blocks,public.profile_interactions,public.profile_matches,public.profile_photos,public.profile_private to authenticated;
-
-create function public.joyheart_record_interaction(p_target_id uuid,p_action text)
-returns table(interaction_id uuid,match_id uuid,matched boolean)
-language sql security invoker set search_path='' as $$
- select * from private.joyheart_record_interaction(p_target_id,p_action)
-$$;
-revoke all on function public.joyheart_record_interaction(uuid,text) from public,anon;
-grant execute on function public.joyheart_record_interaction(uuid,text) to authenticated;
