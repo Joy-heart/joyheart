@@ -188,3 +188,44 @@ begin
 end $$;
 reset role;
 rollback;
+
+-- MACHINE_READABLE_EFFECTIVE_PRIVILEGE_MATRIX
+
+-- Emit machine-readable matrix and catalog evidence into the CI job log.
+-- Emit the exact effective profile privilege matrix for CI artifact/log evidence.
+-- Isolated PostgreSQL 17 test fixture only.
+with roles(role_name) as (
+ values ('anon'),('authenticated'),('joyheart_profiles_legacy_access')
+), cols as (
+ select a.attname as column_name
+ from pg_catalog.pg_attribute a
+ where a.attrelid='public.profiles'::regclass and a.attnum>0 and not a.attisdropped
+), matrix as (
+ select r.role_name,c.column_name,
+   has_column_privilege(r.role_name,'public.profiles',c.column_name,'SELECT') as can_select,
+   has_column_privilege(r.role_name,'public.profiles',c.column_name,'UPDATE') as can_update
+ from roles r cross join cols c
+)
+select role_name,column_name,can_select,can_update
+from matrix order by role_name,column_name;
+select 'PUBLIC' as role_name, a.attname as column_name,
+ has_column_privilege('public','public.profiles',a.attname,'SELECT') as can_select,
+ has_column_privilege('public','public.profiles',a.attname,'UPDATE') as can_update
+from pg_catalog.pg_attribute a
+where a.attrelid='public.profiles'::regclass and a.attnum>0 and not a.attisdropped
+order by a.attname;
+select 'POLICY' as evidence, policyname, roles, cmd, qual, with_check
+from pg_catalog.pg_policies where schemaname='public' and tablename='profiles'
+order by policyname;
+select 'RPC' as evidence, p.proowner::regrole::text as owner, p.prosecdef as security_definer,
+       p.proconfig as configuration,
+       has_function_privilege('authenticated',p.oid,'EXECUTE') as authenticated_execute,
+       has_function_privilege('anon',p.oid,'EXECUTE') as anon_execute
+from pg_catalog.pg_proc p
+where p.oid='public.joyheart_get_own_profile_private_settings()'::regprocedure;
+select 'TRIGGER' as evidence, t.tgname, t.tgenabled, p.proname,
+       has_function_privilege('authenticated',p.oid,'EXECUTE') as authenticated_direct_execute
+from pg_catalog.pg_trigger t join pg_catalog.pg_proc p on p.oid=t.tgfoid
+where t.tgrelid='public.profiles'::regclass and not t.tgisinternal
+order by t.tgname;
+
