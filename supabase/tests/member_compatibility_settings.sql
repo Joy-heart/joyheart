@@ -66,6 +66,22 @@ BEGIN
 END;
 $test$;
 
+-- Discovery must remain opt-in for every new member.
+INSERT INTO public.member_discovery_preferences (user_id)
+VALUES ('22222222-2222-4222-8222-222222222222');
+DO $test$
+DECLARE
+  v_enabled boolean;
+BEGIN
+  SELECT discovery_enabled INTO v_enabled
+  FROM public.member_discovery_preferences
+  WHERE user_id = '22222222-2222-4222-8222-222222222222';
+  IF v_enabled IS DISTINCT FROM false THEN
+    RAISE EXCEPTION 'Discovery must default to disabled until a member opts in';
+  END IF;
+END;
+$test$;
+
 -- Invalid age ranges must be rejected by the RPC.
 DO $test$
 BEGIN
