@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/app/lib/supabase/client";
 
 export type ChatMessage = {
@@ -11,13 +12,11 @@ export type ChatMessage = {
 const MESSAGE_FIELDS = "id,sender_id,body,created_at,read_at,reply_to_message_id,edited_at,deleted_at";
 
 export default function ConversationClient({ conversationId, matchId, currentUserId, otherMemberId, initialMessages }: { conversationId: string; matchId: string; currentUserId: string; otherMemberId: string; initialMessages: ChatMessage[] }) {
+  const router = useRouter();
   const [messages, setMessages] = useState(initialMessages);
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
-  const [reportReason, setReportReason] = useState("");
-  const [reportOpen, setReportOpen] = useState(false);
-  const [reportMessageId, setReportMessageId] = useState<string | null>(null);
   const [conversationClosed, setConversationClosed] = useState(false);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const [editing, setEditing] = useState<ChatMessage | null>(null);
@@ -93,14 +92,6 @@ export default function ConversationClient({ conversationId, matchId, currentUse
     else { setConversationClosed(true); setBody(""); setNotice("You have unmatched. This conversation is now closed."); }
   }
 
-  async function submitReport(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!supabase || reportReason.trim().length < 3) return;
-    const { error } = await supabase.rpc("joyheart_report_member", { p_reported_id: otherMemberId, p_reason: reportReason.trim(), p_conversation_id: conversationId, p_message_id: reportMessageId });
-    setNotice(error ? "Your report could not be submitted. Please try again." : "Thank you. Your report has been sent privately to JoyHeart.");
-    if (!error) { setReportReason(""); setReportOpen(false); setReportMessageId(null); }
-  }
-
   async function blockMember() {
     if (!supabase || !window.confirm("Block this member? They will no longer be able to message you.")) return;
     const { error } = await supabase.rpc("joyheart_block_member", { p_target_id: otherMemberId });
@@ -122,7 +113,7 @@ export default function ConversationClient({ conversationId, matchId, currentUse
             {!conversationClosed && <button type="button" onClick={() => { setReplyTo(message); setEditing(null); }}>Reply</button>}
             {own && !conversationClosed && <button type="button" onClick={() => { setEditing(message); setBody(message.body); setReplyTo(null); }}>Edit</button>}
             {own && !conversationClosed && <button type="button" onClick={() => void deleteMessage(message)} disabled={busy}>Delete</button>}
-            {!own && !conversationClosed && <button type="button" onClick={() => { setReportMessageId(message.id); setReportOpen(true); }}>Report message</button>}
+            {!own && !conversationClosed && <button type="button" onClick={() => router.push(`/report?member=${encodeURIComponent(otherMemberId)}&conversation=${encodeURIComponent(conversationId)}&message=${encodeURIComponent(message.id)}`)}>Report message</button>}
           </div>}
         </article>;
       })}
@@ -133,8 +124,7 @@ export default function ConversationClient({ conversationId, matchId, currentUse
       <textarea aria-label={editing ? "Edit message" : "Your message"} maxLength={4000} placeholder="Write a thoughtful message…" value={body} onChange={(event) => setBody(event.target.value)} />
       <button className="member-action" type="submit" disabled={busy || !body.trim()}>{busy ? "Saving…" : editing ? "Save edit" : "Send message"}</button>
     </form>}
-    {!conversationClosed && <div style={{display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}><button type="button" className="member-action secondary" onClick={unmatchMember} disabled={busy}>Unmatch</button><button type="button" className="member-action secondary" onClick={blockMember} disabled={busy}>Block member</button><button type="button" className="member-action secondary" onClick={() => { setReportMessageId(null); setReportOpen((open) => !open); }}>Report member</button></div>}
-    {reportOpen && !conversationClosed && <form onSubmit={submitReport} style={{display:"grid",gap:10}}><label htmlFor="report-reason">{reportMessageId ? "Why are you reporting this message?" : "Why are you reporting this member?"}</label><textarea id="report-reason" value={reportReason} onChange={(event) => setReportReason(event.target.value)} minLength={3} maxLength={1000} required placeholder="Tell us what happened…" /><button className="member-action" type="submit" disabled={reportReason.trim().length < 3}>Send private report</button></form>}
+    {!conversationClosed && <div style={{display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}><button type="button" className="member-action secondary" onClick={unmatchMember} disabled={busy}>Unmatch</button><button type="button" className="member-action secondary" onClick={blockMember} disabled={busy}>Block member</button><button type="button" className="member-action secondary" onClick={() => router.push(`/report?member=${encodeURIComponent(otherMemberId)}&conversation=${encodeURIComponent(conversationId)}`)}>Report member</button></div>}
     <p style={{color:"var(--joy-muted)",fontSize:".85rem",margin:0}}>Deleted messages are retained securely for safety review. Blocking or unmatching closes this conversation. Reports are private.</p>
   </section>;
 }
