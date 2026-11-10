@@ -19,7 +19,7 @@ The service-role key is server-only. When deployment is explicitly approved, con
 ## Moderation lifecycle
 
 - Upload validation completes before the server writes a private WebP object.
-- A server-only RPC registers the object as pending, records source/output sizes, dimensions and a SHA-256 digest, and writes a submission audit event.
+- A server-only RPC registers the object as pending, records source/output sizes, dimensions and a SHA-256 digest, and writes a submission audit event. The five-active-photo limit is serialized with a per-member transaction advisory lock in the RPC and independently enforced by a database insert trigger, so future privileged insert paths cannot bypass the cap.
 - Active staff must be authenticated, email-verified, not deleted or banned, and assigned an active public.staff_roles row.
 - Staff can inspect only other members' pending photos. The migration explicitly removes the earlier permissive `profile_photos_owner_or_staff_read` policy before adding separate owner-only and pending-staff policies; PostgreSQL combines permissive policies with OR, so leaving the old policy would expose all photo metadata to staff. Members retain read access to their own photo rows. Staff cannot review their own photos. Rejections require a non-empty reason of at most 500 characters.
 - Review and removal actions are server-controlled. Members cannot change moderation status directly.

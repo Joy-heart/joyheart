@@ -412,6 +412,20 @@ begin
     raise exception 'Sixth active photo was accepted';
   exception when check_violation then null;
   end;
+
+  -- A future privileged server path that bypasses the registration RPC must
+  -- still be stopped by the table trigger at the database boundary.
+  begin
+    insert into public.profile_photos (
+      user_id, storage_path, mime_type, file_size_bytes, moderation_status
+    ) values (
+      '22222222-2222-4222-8222-222222222222',
+      '22222222-2222-4222-8222-222222222222/66666666-6666-4666-8666-666666666666.webp',
+      'image/webp', 200, 'pending'
+    );
+    raise exception 'Direct privileged insert bypassed the five-photo limit trigger';
+  exception when check_violation then null;
+  end;
 end $$;
 reset role;
 

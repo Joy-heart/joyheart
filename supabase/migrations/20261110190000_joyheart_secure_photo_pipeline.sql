@@ -74,6 +74,15 @@ $$;
 alter function public.joyheart_enforce_profile_photo_limit() owner to postgres;
 revoke all on function public.joyheart_enforce_profile_photo_limit() from public, anon, authenticated;
 
+-- Enforce the active-photo cap for every database insert, not only the current
+-- upload RPC. This is a second guard against future server paths bypassing it.
+drop trigger if exists profile_photos_enforce_active_limit on public.profile_photos;
+create trigger profile_photos_enforce_active_limit
+  before insert on public.profile_photos
+  for each row
+  when (new.moderation_status <> 'removed')
+  execute function public.joyheart_enforce_profile_photo_limit();
+
 -- The browser can no longer create photo metadata or upload/delete bucket objects.
 -- Only the server route, using the Cloudflare SUPABASE_SERVICE_ROLE_KEY secret,
 -- may upload the normalized image and register its metadata.
