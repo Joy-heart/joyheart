@@ -38,7 +38,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 
 do $$
-declare own_settings record; visible_count integer;
+declare own_settings record; visible_count integer; private_dob_count integer;
 begin
  select * into own_settings from public.joyheart_get_own_profile_private_settings();
  if own_settings.gender <> 'Man' or own_settings.seeking <> 'Women'
@@ -55,12 +55,10 @@ begin
  exception when insufficient_privilege then
    null;
  end;
- begin
-   execute 'select date_of_birth from public.profile_private limit 1';
-   raise exception 'Direct private DOB query unexpectedly succeeded';
- exception when insufficient_privilege then
-   null;
- end;
+ select count(*) into private_dob_count from public.profile_private;
+ if private_dob_count <> 0 then
+   raise exception 'Member A can read another member private date of birth';
+ end if;
 end $$;
 
 reset role;
