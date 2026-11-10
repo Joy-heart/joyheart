@@ -1,6 +1,8 @@
 name: JoyHeart production deployment
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       confirm_production_deployment:
@@ -19,7 +21,7 @@ concurrency:
 jobs:
   deploy:
     name: Deploy existing JoyHeart Worker
-    if: github.ref == 'refs/heads/main' && inputs.confirm_production_deployment == true
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.confirm_production_deployment == true)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
