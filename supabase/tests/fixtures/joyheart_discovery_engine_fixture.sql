@@ -14,6 +14,8 @@ create table public.profiles(
  user_id uuid primary key, display_name text not null, age smallint not null,
  country text not null, city text, bio text, interests text[] not null default '{}',
  relationship_intention text not null, seeking text not null, gender text not null,
+ explore_interests text[] not null default '{}', is_visible boolean not null default false,
+ created_at timestamptz not null default now(), updated_at timestamptz not null default now(),
  publication_status text not null
 );
 create table public.profile_private(user_id uuid primary key,date_of_birth date not null);
@@ -53,3 +55,23 @@ $fixture$;
 grant usage on schema public to anon,authenticated;
 grant select on public.profiles,public.member_discovery_preferences,public.member_personality_answers,
  public.profile_blocks,public.profile_interactions,public.profile_matches,public.profile_photos,public.profile_private to authenticated;
+
+
+alter table public.profiles enable row level security;
+create policy profiles_read_owner_or_published on public.profiles
+ for select to authenticated using (user_id=auth.uid() or publication_status='published');
+create policy profiles_insert_own_draft on public.profiles
+ for insert to authenticated with check (user_id=auth.uid() and publication_status='draft' and is_visible=false);
+create policy profiles_update_own on public.profiles
+ for update to authenticated using (user_id=auth.uid()) with check (user_id=auth.uid());
+
+alter table public.profile_private enable row level security;
+create policy profile_private_deny_all on public.profile_private
+ for all to authenticated using (false) with check (false);
+
+alter table public.member_discovery_preferences enable row level security;
+create policy member_preferences_owner_all on public.member_discovery_preferences
+ for all to authenticated using (user_id=auth.uid()) with check (user_id=auth.uid());
+alter table public.member_personality_answers enable row level security;
+create policy member_personality_owner_all on public.member_personality_answers
+ for all to authenticated using (user_id=auth.uid()) with check (user_id=auth.uid());
