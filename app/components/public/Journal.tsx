@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState } from "react";\nimport { journalCategorySlug } from "@/app/lib/additional-journal-articles";
 
 const articles = [
   {
@@ -208,7 +208,7 @@ export default function Journal() {
             </div> : null}
             <div className="jh-journal-card-content">
               <div className="jh-journal-card-top">
-                {"slug" in article && article.slug ? <a href={`/blog/category/${article.category.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}`}>{article.category}</a> : <span>{article.category}</span>}
+                {"slug" in article && article.slug ? <a href={`/blog/category/${journalCategorySlug(article.category)}`}>{article.category}</a> : <span>{article.category}</span>}
                 <small>{article.read}</small>
               </div>
               <h2>{article.title}</h2>
