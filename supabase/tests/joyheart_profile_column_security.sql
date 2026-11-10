@@ -66,9 +66,8 @@ begin
  update public.profiles set display_name='Synthetic A Updated', bio='Edited by owner'
   where user_id=auth.uid();
  if not found then raise exception 'Member A legitimate profile edit failed'; end if;
- if not has_column_privilege('authenticated','public.profiles','updated_at','UPDATE')
-    and has_function_privilege('authenticated','public.set_profile_updated_at()','EXECUTE') then
-   raise exception 'Timestamp trigger execute grant was unexpectedly restored';
+ if has_function_privilege('authenticated','public.set_profile_updated_at()','EXECUTE') then
+   raise exception 'Authenticated members retain direct timestamp-trigger EXECUTE';
  end if;
  if (select updated_at from public.profiles where user_id=auth.uid()) is null then
    raise exception 'Timestamp trigger failed after execute privilege revocation';
