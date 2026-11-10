@@ -14,14 +14,13 @@ export default function MemberReportForm({
   messageId: string | null;
 }) {
   const router = useRouter();
-  const [memberId, setMemberId] = useState(reportedMemberId);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const target = memberId.trim();
+    const target = reportedMemberId.trim();
     const detail = reason.trim();
     if (!supabase || !target || detail.length < 3 || busy) return;
     setBusy(true);
@@ -59,14 +58,23 @@ export default function MemberReportForm({
         <div><h2>We take your safety seriously</h2><p>Tell us what happened. Include useful details, but do not share passwords, payment details or other sensitive information.</p></div>
       </div>
       <form className="safety-report-form" onSubmit={submit}>
-        <label htmlFor="reported-member">Member reference</label>
-        <input id="reported-member" value={memberId} onChange={(event) => setMemberId(event.target.value)} required readOnly={Boolean(reportedMemberId)} placeholder="Member ID supplied from a JoyHeart conversation" />
+        {reportedMemberId ? (
+          <>
+            <label htmlFor="reported-member">Member being reported</label>
+            <input id="reported-member" value="Member from your JoyHeart conversation" readOnly aria-readonly="true" />
+          </>
+        ) : (
+          <div className="safety-report-hint">
+            To report a member, open your conversation with them and choose <strong>Report member</strong> or <strong>Report message</strong>. JoyHeart will attach the member details automatically.
+            <p><a href="/messages">Go to your conversations</a></p>
+          </div>
+        )}
         <label htmlFor="report-details">What would you like us to know?</label>
         <textarea id="report-details" value={reason} onChange={(event) => setReason(event.target.value)} minLength={3} maxLength={1000} required rows={7} placeholder="Describe the behaviour or concern. Please be as clear as you can." />
         <p className="safety-report-hint">Reports are reviewed privately. Submitting a report does not automatically notify the reported member.</p>
         {notice && <p className="member-alert" role="status">{notice}</p>}
         <div className="safety-report-actions">
-          <button className="member-action" type="submit" disabled={busy || !memberId.trim() || reason.trim().length < 3}>{busy ? "Sending…" : "Send private report"}</button>
+          <button className="member-action" type="submit" disabled={busy || !reportedMemberId.trim() || reason.trim().length < 3}>{busy ? "Sending…" : "Send private report"}</button>
           <button className="member-action secondary" type="button" onClick={() => router.back()}>Cancel</button>
         </div>
       </form>
