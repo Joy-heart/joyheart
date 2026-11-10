@@ -1,4 +1,4 @@
--- Minimal PostgreSQL fixture for the JoyHeart discovery-engine migration smoke test.
+-- Minimal PostgreSQL fixture for JoyHeart discovery and profile privacy tests.
 create role anon nologin;
 create role authenticated nologin;
 create schema auth;
@@ -53,9 +53,9 @@ language sql immutable security definer set search_path='' as $fixture$
   else false end
 $fixture$;
 grant usage on schema public to anon,authenticated;
-grant select on public.profiles,public.member_discovery_preferences,public.member_personality_answers,
+grant select,insert,update on public.profiles to authenticated;
+grant select on public.member_discovery_preferences,public.member_personality_answers,
  public.profile_blocks,public.profile_interactions,public.profile_matches,public.profile_photos,public.profile_private to authenticated;
-
 
 alter table public.profiles enable row level security;
 create policy profiles_read_owner_or_published on public.profiles
@@ -65,10 +65,37 @@ create policy profiles_insert_own_draft on public.profiles
 create policy profiles_update_own on public.profiles
  for update to authenticated using (user_id=auth.uid()) with check (user_id=auth.uid());
 
+-- Mirror the production guard trigger: owners cannot promote or publish profiles.
+create function public.joyheart_guard_profile_write() returns trigger
+language plpgsql set search_path='' as $guard$
+begin
+ if current_user='authenticated' then
+  if tg_op='INSERT' then
+   if new.user_id is distinct from auth.uid()
+      or new.publication_status <> 'draft'
+      or new.is_visible is distinct from false then
+    raise exception 'JOYHEART_PROFILE_MUST_START_AS_PRIVATE_DRAFT' using errcode='42501';
+   end if;
+  elsif tg_op='UPDATE' then
+   if new.user_id is distinct from old.user_id then
+    raise exception 'JOYHEART_PROFILE_OWNER_CANNOT_CHANGE' using errcode='42501';
+   end if;
+   if new.publication_status is distinct from old.publication_status
+      or new.is_visible is distinct from old.is_visible then
+    raise exception 'JOYHEART_PROFILE_PUBLICATION_STAFF_ONLY' using errcode='42501';
+   end if;
+  end if;
+ end if;
+ new.is_visible := (new.publication_status='published');
+ return new;
+end;
+$guard$;
+create trigger joyheart_profiles_guard_write before insert or update on public.profiles
+for each row execute function public.joyheart_guard_profile_write();
+
 alter table public.profile_private enable row level security;
 create policy profile_private_deny_all on public.profile_private
  for all to authenticated using (false) with check (false);
-
 alter table public.member_discovery_preferences enable row level security;
 create policy member_preferences_owner_all on public.member_discovery_preferences
  for all to authenticated using (user_id=auth.uid()) with check (user_id=auth.uid());
