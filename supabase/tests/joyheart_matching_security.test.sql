@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(56);
+select extensions.plan(61);
 
 select extensions.has_table('public', 'profile_interactions', 'private member likes and passes table exists');
 select extensions.has_table('public', 'profile_blocks', 'member blocks table exists');
@@ -69,6 +69,12 @@ select extensions.ok(private.joyheart_preference_accepts('Men', 'Man'), 'Men pre
 select extensions.ok(not private.joyheart_preference_accepts('Men', 'Non-binary'), 'Men preference does not silently include other identities');
 select extensions.ok(private.joyheart_preference_accepts('Women', 'Woman'), 'Women preference accepts Woman');
 select extensions.ok(not private.joyheart_preference_accepts('Women', 'Prefer not to say'), 'Women preference does not silently include other identities');
+
+select extensions.ok(to_regprocedure('private.joyheart_can_discover_pair(uuid,uuid)') is not null, 'private mutual discovery eligibility function exists');
+select extensions.ok(not has_function_privilege('authenticated', 'private.joyheart_can_discover_pair(uuid,uuid)', 'EXECUTE'), 'members cannot probe pair eligibility directly');
+select extensions.ok(to_regprocedure('private.joyheart_discover_candidates(integer)') is not null, 'private candidate ranking implementation exists');
+select extensions.ok(has_function_privilege('authenticated', 'private.joyheart_discover_candidates(integer)', 'EXECUTE'), 'authenticated members can invoke the protected candidate implementation');
+select extensions.ok(has_function_privilege('authenticated', 'public.joyheart_discover_candidates(integer)', 'EXECUTE') and not has_function_privilege('anon', 'public.joyheart_discover_candidates(integer)', 'EXECUTE'), 'candidate discovery RPC is authenticated-only');
 
 select * from extensions.finish();
 rollback;
