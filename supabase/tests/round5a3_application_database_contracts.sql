@@ -63,6 +63,33 @@ begin
 end
 $profile_edit$;
 
+-- Compatibility screen contract: persist private preference filters and validated answers atomically.
+select public.joyheart_save_member_compatibility_settings(
+ jsonb_build_object(
+  'preferred_age_min',24,'preferred_age_max',40,
+  'preferred_countries',jsonb_build_array('KE'),
+  'preferred_languages',jsonb_build_array('English'),
+  'relationship_intentions',jsonb_build_array('Long-term relationship'),
+  'discovery_enabled',false
+ ),
+ jsonb_build_object('values','Trust and honesty')
+);
+do $compatibility_contract$
+declare preference_row record; answer_row record;
+begin
+ select * into preference_row from public.member_discovery_preferences where user_id=auth.uid();
+ select * into answer_row from public.member_personality_answers where user_id=auth.uid();
+ if preference_row.preferred_age_min<>24 or preference_row.preferred_age_max<>40
+    or preference_row.preferred_countries<>array['KE']::text[]
+    or preference_row.discovery_enabled is not false then
+  raise exception 'COMPATIBILITY_PREFERENCES_CONTRACT_FAILED';
+ end if;
+ if answer_row.answers->>'values'<>'Trust and honesty' then
+  raise exception 'COMPATIBILITY_ANSWERS_CONTRACT_FAILED';
+ end if;
+end
+$compatibility_contract$;
+
 -- Discovery / matching RPC contract: globally closed discovery returns no candidate.
 do $discovery_contract$
 begin
