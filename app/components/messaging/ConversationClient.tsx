@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/app/lib/supabase/client";
+import { MemberShareButton } from "@/app/components/profile/MemberActions";
 
 export type ChatMessage = {
   id: string; sender_id: string; body: string; created_at: string;
@@ -124,7 +125,7 @@ export default function ConversationClient({ conversationId, matchId, currentUse
       <textarea aria-label={editing ? "Edit message" : "Your message"} maxLength={4000} placeholder="Write a thoughtful message…" value={body} onChange={(event) => setBody(event.target.value)} />
       <button className="member-action" type="submit" disabled={busy || !body.trim()}>{busy ? "Saving…" : editing ? "Save edit" : "Send message"}</button>
     </form>}
-    {!conversationClosed && <div style={{display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}><button type="button" className="member-action secondary" onClick={unmatchMember} disabled={busy}>Unmatch</button><button type="button" className="member-action secondary" onClick={blockMember} disabled={busy}>Block member</button><button type="button" className="member-action secondary" onClick={() => router.push(`/report?member=${encodeURIComponent(otherMemberId)}&conversation=${encodeURIComponent(conversationId)}`)}>Report member</button></div>}
+    {!conversationClosed && <div style={{display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}><button type="button" className="member-action secondary" onClick={unmatchMember} disabled={busy}>Unmatch</button><button type="button" className="member-action secondary" onClick={blockMember} disabled={busy}>Block member</button><button type="button" className="member-action secondary" onClick={() => router.push(`/report?member=${encodeURIComponent(otherMemberId)}&conversation=${encodeURIComponent(conversationId)}`)}>Report member</button><MemberShareButton memberId={otherMemberId} /></div>}
     <p style={{color:"var(--joy-muted)",fontSize:".85rem",margin:0}}>Deleted messages are retained securely for safety review. Blocking or unmatching closes this conversation. Reports are private.</p>
   </section>;
 }
