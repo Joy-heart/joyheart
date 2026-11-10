@@ -11,6 +11,10 @@ on:
       - "supabase/review/round-5a1-secure-profile-permission-recovery.sql"
       - "supabase/review/round-2-profile-security-rollback.sql"
       - "supabase/tests/joyheart_profile_legacy_acl_preflight.sql"
+      - "supabase/tests/round5a3_profile_security_evidence.sql"
+      - "supabase/tests/round5a3_capture_rollback_guard_state.sql"
+      - "supabase/tests/round5a3_verify_rollback_guard_state.sql"
+      - "supabase/tests/round5a3_application_database_contracts.sql"
       - ".github/workflows/discovery-engine-migration-validation.yml"
   push:
     branches:
@@ -25,6 +29,10 @@ on:
       - "supabase/review/round-5a1-secure-profile-permission-recovery.sql"
       - "supabase/review/round-2-profile-security-rollback.sql"
       - "supabase/tests/joyheart_profile_legacy_acl_preflight.sql"
+      - "supabase/tests/round5a3_profile_security_evidence.sql"
+      - "supabase/tests/round5a3_capture_rollback_guard_state.sql"
+      - "supabase/tests/round5a3_verify_rollback_guard_state.sql"
+      - "supabase/tests/round5a3_application_database_contracts.sql"
       - ".github/workflows/discovery-engine-migration-validation.yml"
 
 permissions:
@@ -86,3 +94,40 @@ jobs:
         run: |
           psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/review/round-5a1-secure-profile-permission-recovery.sql
           psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/tests/joyheart_profile_column_security.sql
+      - name: Verify synthetic application database contracts
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/tests/round5a3_application_database_contracts.sql
+      - name: Capture state before deprecated rollback guard
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/tests/round5a3_capture_rollback_guard_state.sql
+      - name: Verify deprecated rollback guard fails without changing database state
+        env:
+          PGPASSWORD: postgres
+        shell: bash
+        run: |
+          set -euo pipefail
+          if psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/review/round-2-profile-security-rollback.sql > rollback-guard.log 2>&1; then
+            echo "ERROR: deprecated rollback guard unexpectedly succeeded"
+            cat rollback-guard.log
+            exit 1
+          fi
+          grep -F "UNSAFE_LEGACY_ROLLBACK_DISABLED" rollback-guard.log
+          psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/tests/round5a3_verify_rollback_guard_state.sql
+          cat rollback-guard.log
+      - name: Export machine-readable profile security evidence
+        env:
+          PGPASSWORD: postgres
+        run: |
+          mkdir -p artifacts
+          psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -v commit_sha="$GITHUB_SHA" -At -f supabase/tests/round5a3_profile_security_evidence.sql > artifacts/joyheart-profile-security-evidence.json
+          python -m json.tool artifacts/joyheart-profile-security-evidence.json > /dev/null
+          cat artifacts/joyheart-profile-security-evidence.json
+      - name: Upload profile security evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: joyheart-profile-security-evidence
+          path: artifacts/joyheart-profile-security-evidence.json
+          if-no-files-found: error
+          retention-days: 30
