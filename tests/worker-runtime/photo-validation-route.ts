@@ -154,7 +154,7 @@ export async function GET() {
       expectRejected(new ArrayBuffer(PHOTO_MAX_BYTES + 1), "image/png", "5 MB byte limit"),
     ]);
     return NextResponse.json({
-      success: true, runtime: "Cloudflare Workers local runtime", simd: useSimd,
+      success: true, runtime: "Cloudflare Workers local runtime",
       results, rejectedCases, metadataStripped,
     });
   } catch (error) {
