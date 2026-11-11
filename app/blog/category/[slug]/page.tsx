@@ -26,6 +26,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: `${category.name} | JoyHeart Journal`,
       description: `Explore published JoyHeart articles about ${category.name.toLowerCase()}.`,
     },
+    robots: category.articles.length >= 2
+      ? { index: true, follow: true }
+      : { index: false, follow: true },
     twitter: {
       card: "summary",
       title: `${category.name} | JoyHeart Journal`,
