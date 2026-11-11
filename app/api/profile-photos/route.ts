@@ -86,8 +86,25 @@ export async function POST(request: NextRequest) {
   try {
     validated = await validateAndNormalizePhoto(await file.arrayBuffer(), file.type);
   } catch (error) {
-    const message = error instanceof PhotoValidationError ? error.message : "The image could not be processed safely.";
-    return NextResponse.json({ error: message }, { status: 400 });
+    // Log only a controlled processing stage and error class/message. Never log
+    // image bytes, filenames, user tokens, storage paths, or personal content.
+    const stage = error instanceof PhotoValidationError ? error.stage : "unexpected";
+    const errorName = error instanceof Error ? error.name : "UnknownError";
+    const diagnostic = error instanceof Error ? error.message.slice(0, 240) : "Unknown processing failure";
+    console.error("[joyheart-photo-processing]", {
+      stage,
+      errorName,
+      diagnostic,
+      sourceMimeType: file.type,
+      sourceFileSizeBytes: file.size,
+    });
+    const message = error instanceof PhotoValidationError
+      ? error.message
+      : "The image could not be processed safely. Please try a JPG, PNG or WebP image.";
+    return NextResponse.json({
+      error: message,
+      code: error instanceof PhotoValidationError ? `PHOTO_${error.stage.toUpperCase()}_FAILED` : "PHOTO_PROCESSING_FAILED",
+    }, { status: 400, headers: { "Cache-Control": "no-store" } });
   }
 
   let admin;
