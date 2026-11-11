@@ -3,11 +3,11 @@ import decodePng, { init as initPngDecoder } from "@jsquash/png/decode";
 import decodeWebp, { init as initWebpDecoder } from "@jsquash/webp/decode";
 import encodeWebp, { init as initWebpEncoder } from "@jsquash/webp/encode";
 import { simd } from "wasm-feature-detect";
-import jpegDecoderWasm from "@jsquash/jpeg/codec/dec/mozjpeg_dec.wasm";
-import pngDecoderWasm from "@jsquash/png/codec/pkg/squoosh_png_bg.wasm";
-import webpDecoderWasm from "@jsquash/webp/codec/dec/webp_dec.wasm";
-import webpEncoderWasm from "@jsquash/webp/codec/enc/webp_enc.wasm";
-import webpEncoderSimdWasm from "@jsquash/webp/codec/enc/webp_enc_simd.wasm";
+import jpegDecoderWasm from "@jsquash/jpeg/codec/dec/mozjpeg_dec.wasm?module";
+import pngDecoderWasm from "@jsquash/png/codec/pkg/squoosh_png_bg.wasm?module";
+import webpDecoderWasm from "@jsquash/webp/codec/dec/webp_dec.wasm?module";
+import webpEncoderWasm from "@jsquash/webp/codec/enc/webp_enc.wasm?module";
+import webpEncoderSimdWasm from "@jsquash/webp/codec/enc/webp_enc_simd.wasm?module";
 
 export const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
 export const PHOTO_MAX_WIDTH = 8192;
@@ -29,6 +29,28 @@ export class PhotoValidationError extends Error {
   }
 }
 
+function requireWasmModule(label: string, candidate: unknown): WebAssembly.Module {
+  try {
+    // Use the WebAssembly API's native brand check instead of trusting an
+    // asset URL/string returned by a bundler. jSquash's init() requires a
+    // compiled WebAssembly.Module, not a URL or byte array.
+    WebAssembly.Module.exports(candidate as WebAssembly.Module);
+    if (!(candidate instanceof WebAssembly.Module)) {
+      throw new TypeError("The imported module is not from this Worker realm.");
+    }
+    return candidate;
+  } catch (error) {
+    throw new TypeError(`${label} WASM import did not resolve to a usable WebAssembly.Module.`, { cause: error });
+  }
+}
+
+const JPEG_DECODER_WARMUP_BASE64 = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAACAAIDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAf/xAAbEAADAAMBAQAAAAAAAAAAAAABAgMABAUGIf/EABUBAQEAAAAAAAAAAAAAAAAAAAUH/8QAGxEAAQQDAAAAAAAAAAAAAAAAAAECM3EDBLH/2gAMAwEAAhEDEQA/AKb5Di8a3kuPa3J0KVpoQZ3fXQsxM1JJJH04xjJrtzvtehWeV1qf/9k=";
+
+function jpegWarmupBytes(): ArrayBuffer {
+  const binary = atob(JPEG_DECODER_WARMUP_BASE64);
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0)).buffer;
+}
+
 const imageDataGlobal = globalThis as typeof globalThis & { ImageData?: new (data: Uint8ClampedArray, width: number, height: number) => unknown };
 if (!imageDataGlobal.ImageData) {
   imageDataGlobal.ImageData = class {
@@ -39,26 +61,37 @@ if (!imageDataGlobal.ImageData) {
 const codecsReady = (async () => {
   // Initialize one codec at a time so a production Worker failure identifies
   // the exact WASM module instead of collapsing every failure into one code.
-  try { await initJpegDecoder(jpegDecoderWasm); }
-  catch (error) { throw new PhotoValidationError("JPEG decoding is temporarily unavailable.", "jpeg_decoder_init", { cause: error }); }
+  try {
+    const module = requireWasmModule("JPEG decoder", jpegDecoderWasm);
+    await initJpegDecoder(module);
+    // jSquash's init() schedules Emscripten module creation; it does not
+    // await that work. Decode a tiny known-good image here so startup is not
+    // considered ready until the WASM module has actually instantiated.
+    const warmup = await decodeJpeg(jpegWarmupBytes());
+    if (warmup.width !== 2 || warmup.height !== 2) {
+      throw new Error("JPEG decoder warm-up returned unexpected dimensions.");
+    }
+  } catch (error) {
+    throw new PhotoValidationError("JPEG decoding is temporarily unavailable.", "jpeg_decoder_init", { cause: error });
+  }
 
-  try { await initPngDecoder(pngDecoderWasm); }
+  try { await initPngDecoder(requireWasmModule("PNG decoder", pngDecoderWasm)); }
   catch (error) { throw new PhotoValidationError("PNG decoding is temporarily unavailable.", "png_decoder_init", { cause: error }); }
 
-  try { await initWebpDecoder(webpDecoderWasm); }
+  try { await initWebpDecoder(requireWasmModule("WebP decoder", webpDecoderWasm)); }
   catch (error) { throw new PhotoValidationError("WebP decoding is temporarily unavailable.", "webp_decoder_init", { cause: error }); }
 
   // SIMD is optional. If detection or SIMD initialization fails, use the
   // portable encoder, but preserve the real scalar initialization failure.
   try {
     if (await simd()) {
-      await initWebpEncoder(webpEncoderSimdWasm);
+      await initWebpEncoder(requireWasmModule("WebP SIMD encoder", webpEncoderSimdWasm));
       return;
     }
   } catch {
     // Fall through to the portable scalar encoder.
   }
-  try { await initWebpEncoder(webpEncoderWasm); }
+  try { await initWebpEncoder(requireWasmModule("WebP encoder", webpEncoderWasm)); }
   catch (error) { throw new PhotoValidationError("WebP encoding is temporarily unavailable.", "webp_encoder_init", { cause: error }); }
 })();
 
