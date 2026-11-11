@@ -78,12 +78,17 @@ if (!imageDataGlobal.ImageData) {
     constructor(data: Uint8ClampedArray, width: number, height: number) { this.data = data; this.width = width; this.height = height; }
   };
 }
+// The WASM modules are imported and instantiated explicitly below. Supplying locateFile
+// prevents Emscripten glue from evaluating new URL(wasmFile, import.meta.url), which
+// is not a reliable base URL in Cloudflare Workers.
+const workerWasmOptions = { locateFile: (path: string) => path };
+
 const codecsReady = (async () => {
   // Initialize one codec at a time so a production Worker failure identifies
   // the exact WASM module instead of collapsing every failure into one code.
   try {
     const module = requireWasmModule("JPEG decoder", jpegDecoderWasm);
-    await initJpegDecoder(module);
+    await initJpegDecoder(module, workerWasmOptions);
   } catch (error) {
     throw new PhotoValidationError("JPEG decoding is temporarily unavailable.", "jpeg_decoder_init", { cause: error });
   }
@@ -99,23 +104,23 @@ const codecsReady = (async () => {
     throw new PhotoValidationError("JPEG decoding is temporarily unavailable.", "jpeg_decoder_warmup", { cause: error });
   }
 
-  try { await initPngDecoder(requireWasmModule("PNG decoder", pngDecoderWasm)); }
+  try { await initPngDecoder(requireWasmModule("PNG decoder", pngDecoderWasm), workerWasmOptions); }
   catch (error) { throw new PhotoValidationError("PNG decoding is temporarily unavailable.", "png_decoder_init", { cause: error }); }
 
-  try { await initWebpDecoder(requireWasmModule("WebP decoder", webpDecoderWasm)); }
+  try { await initWebpDecoder(requireWasmModule("WebP decoder", webpDecoderWasm), workerWasmOptions); }
   catch (error) { throw new PhotoValidationError("WebP decoding is temporarily unavailable.", "webp_decoder_init", { cause: error }); }
 
   // SIMD is optional. If detection or SIMD initialization fails, use the
   // portable encoder, but preserve the real scalar initialization failure.
   try {
     if (await simd()) {
-      await initWebpEncoder(requireWasmModule("WebP SIMD encoder", webpEncoderSimdWasm));
+      await initWebpEncoder(requireWasmModule("WebP SIMD encoder", webpEncoderSimdWasm), workerWasmOptions);
       return;
     }
   } catch {
     // Fall through to the portable scalar encoder.
   }
-  try { await initWebpEncoder(requireWasmModule("WebP encoder", webpEncoderWasm)); }
+  try { await initWebpEncoder(requireWasmModule("WebP encoder", webpEncoderWasm), workerWasmOptions); }
   catch (error) { throw new PhotoValidationError("WebP encoding is temporarily unavailable.", "webp_encoder_init", { cause: error }); }
 })();
 
