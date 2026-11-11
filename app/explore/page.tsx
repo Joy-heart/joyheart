@@ -1,9 +1,9 @@
 "use client";
-export const metadata = { title: "Member area | JoyHeart", robots: { index: false, follow: false } };
 
 import { useEffect, useState } from "react";
 import ExploreExperiences from "@/app/components/explore/ExploreExperiences";
 import { supabase } from "@/app/lib/supabase/client";
+export const metadata = { title: "Member area | JoyHeart", robots: { index: false, follow: false } };
 
 type ExploreProfile = {
   explore_interests: string[];
