@@ -1,4 +1,5 @@
 "use client";
+export const metadata = { title: "Member area | JoyHeart", robots: { index: false, follow: false } };
 
 import { useEffect, useState } from "react";
 import ExploreExperiences from "@/app/components/explore/ExploreExperiences";
