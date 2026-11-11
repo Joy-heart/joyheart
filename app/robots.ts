@@ -7,26 +7,12 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/about/", "/how-it-works", "/safety", "/help", "/faq", "/contact", "/blog"],
-        disallow: [
-          "/account/",
-          "/discover",
-          "/explore",
-          "/matches",
-          "/messages",
-          "/members",
-          "/staff",
-          "/report",
-          "/login",
-          "/signup",
-          "/register",
-          "/reset-password",
-          "/auth",
-          "/api",
-        ],
+        // Public pages should remain crawlable. Private member routes are
+        // protected by authentication and carry noindex metadata; blocking
+        // them here would prevent crawlers from seeing those directives.
+        disallow: ["/api/", "/auth/callback", "/staff/", "/admin/"],
       },
     ],
-    sitemap: new URL("/sitemap.xml", siteUrl).toString(),
-    host: siteUrl,
+    sitemap: `${siteUrl}/sitemap.xml`,
   };
 }
