@@ -1,8 +1,4 @@
 import { NextResponse } from "next/server";
-import encodeWebp, { init as initWebpEncoder } from "@jsquash/webp/encode";
-import { simd } from "wasm-feature-detect";
-import webpEncoderWasm from "@jsquash/webp/codec/enc/webp_enc.wasm?module";
-import webpEncoderSimdWasm from "@jsquash/webp/codec/enc/webp_enc_simd.wasm?module";
 import { PHOTO_MAX_BYTES, PhotoValidationError, validateAndNormalizePhoto } from "@/app/lib/photos/image-validation";
 
 export const dynamic = "force-dynamic";
@@ -11,8 +7,13 @@ export const dynamic = "force-dynamic";
 // test route: production only needs the JPEG decoder, and the encoder's
 // Emscripten glue is incompatible with this Vite/Workers dev transform.
 const JPEG_FIXTURE_BASE64 = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/wAARCAACAAIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDyyiiivzo/ss//2Q==";
+const WEBP_FIXTURE_BASE64 = "UklGRjwAAABXRUJQVlA4IDAAAAAQAgCdASoCAAIAAQAcJaACdLoB+AH4AAPIAP7i4L/20MU+IP2Tf/vvhlvdv/MUAAA=";
 function syntheticJpeg() {
   const binary = atob(JPEG_FIXTURE_BASE64);
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0)).buffer;
+}
+function syntheticWebp() {
+  const binary = atob(WEBP_FIXTURE_BASE64);
   return Uint8Array.from(binary, (character) => character.charCodeAt(0)).buffer;
 }
 export const runtime = "nodejs";
@@ -81,18 +82,13 @@ function oversizedPngHeader(width: number, height: number) {
 export async function GET() {
   if (process.env.NODE_ENV === "production") return new Response(null, { status: 404 });
   try {
-    const useSimd = await simd();
-    await Promise.all([
-      initWebpEncoder(useSimd ? webpEncoderSimdWasm : webpEncoderWasm),
-    ]);
     const pixels = new Uint8ClampedArray([
       240,40,60,255, 20,160,100,255, 40,80,220,255, 245,210,30,255,
     ]);
-    const image = new globalThis.ImageData(pixels, 2, 2);
     const fixtures = await Promise.all([
       Promise.resolve(syntheticJpeg()),
       syntheticPng(new Uint8Array(pixels)),
-      encodeWebp(image, { quality: 85 }),
+      Promise.resolve(syntheticWebp()),
     ]);
     const results = [];
     for (const [mimeType, bytes] of [["image/jpeg", fixtures[0]], ["image/png", fixtures[1]], ["image/webp", fixtures[2]]]) {
