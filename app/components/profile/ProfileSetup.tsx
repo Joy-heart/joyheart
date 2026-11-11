@@ -111,21 +111,31 @@ export default function ProfileSetup({ initialProfile }: { initialProfile: Profi
         throw new Error("Please verify your email and sign in again.");
       }
 
-      const { error: saveError } = await supabase
-        .from("profiles")
-        .upsert({
-          user_id: user.id,
-          display_name: displayName.trim(),
-          country: countryCode,
-          city: city.trim() || null,
-          bio: aboutMe.trim(),
-          gender,
-          seeking,
-          relationship_intention: intention,
-          interests,
-        }, { onConflict: "user_id" });
+      const editableFields = {
+        display_name: displayName.trim(),
+        country: countryCode,
+        city: city.trim() || null,
+        bio: aboutMe.trim(),
+        gender,
+        seeking,
+        relationship_intention: intention,
+        interests,
+      };
 
-      if (saveError) throw saveError;
+      // Keep INSERT and UPDATE explicit so column-scoped UPDATE grants do not
+      // require members to update user_id or protected moderation fields.
+      const { data: existingProfile, error: lookupError } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (lookupError) throw lookupError;
+
+      const saveResult = existingProfile
+        ? await supabase.from("profiles").update(editableFields).eq("user_id", user.id)
+        : await supabase.from("profiles").insert({ user_id: user.id, ...editableFields });
+
+      if (saveResult.error) throw saveResult.error;
       setSavedStatus(initialProfile?.publication_status ?? "draft");
       setProfileSaved(true);
       setNotice("Your profile details have been saved as a private draft. You can review them before publishing.");

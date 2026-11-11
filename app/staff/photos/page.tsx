@@ -25,7 +25,7 @@ export default async function StaffPhotosPage() {
   const photos: ModerationPhoto[] = await Promise.all((data ?? []).map(async (photo) => {
     const { data: signed, error: signedError } = await supabase.storage
       .from("joyheart-profile-photos")
-      .createSignedUrl(photo.storage_path, 60 * 5);
+      .createSignedUrl(photo.storage_path, 30);
     return {
       id: photo.id,
       memberReference: photo.user_id.slice(0, 8),

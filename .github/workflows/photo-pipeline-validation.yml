@@ -1,0 +1,78 @@
+name: JoyHeart Photo Pipeline Security Validation
+
+on:
+  push:
+    branches:
+      - phase-2/review-fixes
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/tests/**"
+      - ".github/workflows/photo-pipeline-validation.yml"
+  pull_request:
+    branches:
+      - phase-2/review-fixes
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/tests/**"
+      - ".github/workflows/photo-pipeline-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-17-photo-security:
+    name: PostgreSQL 17 synthetic photo security tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: joyheart_photo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d joyheart_photo_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/joyheart_photo_test
+    steps:
+      - name: Check out review branch
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Create isolated synthetic Supabase schema fixture
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+            -f supabase/tests/fixtures/joyheart_photo_pipeline_fixture.sql
+
+      - name: Apply Round 5B migration to PostgreSQL 17 test database
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+            -f supabase/migrations/20261110190000_joyheart_secure_photo_pipeline.sql
+
+      - name: Run photo lifecycle, RLS, Storage and delivery security assertions
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+            -f supabase/tests/joyheart_photo_pipeline_security.sql \
+            > artifacts/photo-pipeline-postgres17-evidence.txt 2>&1
+          cat artifacts/photo-pipeline-postgres17-evidence.txt
+
+      - name: Preserve PostgreSQL 17 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: joyheart-photo-postgres17-security-evidence
+          path: artifacts/photo-pipeline-postgres17-evidence.txt
+          if-no-files-found: ignore
+          retention-days: 7

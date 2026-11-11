@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { getJournalCategories } from "@/app/lib/additional-journal-articles";
 
 const siteUrl = "https://joyheart.app";
 
@@ -34,7 +35,8 @@ const publicRoutes = [
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return publicRoutes.map((route) => ({
+  const categoryRoutes = getJournalCategories().map((category) => `/blog/category/${category.slug}`);
+  return [...publicRoutes, ...categoryRoutes].map((route) => ({
     url: new URL(route, siteUrl).toString(),
     changeFrequency: route === "/" ? "weekly" : "monthly",
     priority: route === "/" ? 1 : route === "/safety" || route === "/how-it-works" ? 0.9 : 0.6,

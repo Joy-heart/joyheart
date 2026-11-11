@@ -44,22 +44,30 @@ export default function ExplorePage() {
           return;
         }
 
-        const { data, error } = await supabase
+        // Private Explore interests are intentionally not directly selectable
+        // under the column-scoped profile grants. Reuse the owner-only RPC.
+        const { data: privateRows, error: privateError } = await supabase.rpc(
+          "joyheart_get_own_profile_private_settings",
+        );
+        if (privateError) throw privateError;
+
+        const privateSettings = Array.isArray(privateRows) ? privateRows[0] : privateRows;
+        // Relationship intention is a public presentation field; read it separately.
+        const { data: presentation, error: presentationError } = await supabase
           .from("profiles")
-          .select("explore_interests,relationship_intention")
+          .select("relationship_intention")
           .eq("user_id", user.id)
           .maybeSingle();
-
-        if (error) throw error;
+        if (presentationError) throw presentationError;
 
         if (active) {
-          setHasProfile(Boolean(data));
-          setProfile(data
+          setHasProfile(Boolean(privateSettings && presentation));
+          setProfile(privateSettings && presentation
             ? {
-                explore_interests: Array.isArray(data.explore_interests)
-                  ? data.explore_interests.filter((value): value is string => typeof value === "string")
+                explore_interests: Array.isArray(privateSettings.explore_interests)
+                  ? privateSettings.explore_interests.filter((value): value is string => typeof value === "string")
                   : [],
-                relationship_intention: data.relationship_intention ?? "",
+                relationship_intention: presentation.relationship_intention ?? "",
               }
             : null);
         }

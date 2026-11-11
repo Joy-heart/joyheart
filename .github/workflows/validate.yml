@@ -8,6 +8,7 @@ on:
     branches:
       - main
       - "feat/**"
+      - "phase-2/review-fixes"
   workflow_dispatch:
 
 permissions:
@@ -38,16 +39,36 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
+      - name: Test orphan cleanup selection
+        run: npm run test:photo-cleanup
+
+      - name: Test image decoders in the local Cloudflare Workers runtime
+        run: npm run test:photo-worker-runtime
+
+      - name: Preserve Worker runtime test evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: joyheart-photo-worker-runtime-evidence
+          path: artifacts/photo-worker-runtime-evidence.json
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Record dependency security audit
-        run: npm audit --json > npm-audit.json || true
+        run: npm audit --json > npm-audit.json
+        continue-on-error: true
 
       - name: Preserve dependency audit report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: joyheart-dependency-audit
           path: npm-audit.json
-          if-no-files-found: error
+          if-no-files-found: ignore
           retention-days: 7
+
+      - name: Enforce zero dependency vulnerabilities
+        run: |
+          node -e "const report = require('./npm-audit.json'); const total = report.metadata?.vulnerabilities?.total ?? 0; console.log(JSON.stringify(report.metadata?.vulnerabilities ?? {})); if (total !== 0) process.exit(1);"
 
       - name: Check vinext compatibility
         run: npm run check:compatibility
