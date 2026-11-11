@@ -92,9 +92,13 @@ async function normalizeWithPhotoProcessor(input: ArrayBuffer, declaredMimeType:
   }
   if (!response.ok) {
     // Do not forward internal processor details to a member or log request data.
-    throw new Error(response.status === 429
-      ? "Photo processing is busy. Please try again shortly."
-      : "The photo could not be processed safely. Please try again.");
+    const status = response.status;
+    throw Object.assign(
+      new Error(status === 429
+        ? "Photo processing is busy. Please try again shortly."
+        : "The photo could not be processed safely. Please try again."),
+      { processorStatus: status },
+    );
   }
   if (response.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "image/webp") {
     throw new Error("Photo processing service returned an invalid image.");
@@ -213,13 +217,21 @@ export async function POST(request: NextRequest) {
       sourceMimeType: file.type,
       sourceFileSizeBytes: file.size,
     });
-    const message = error instanceof Error && error.message.includes("busy")
-      ? error.message
-      : error instanceof Error && error.message.includes("not securely configured")
+    const processorStatus = error && typeof error === "object" && "processorStatus" in error
+      ? Number(error.processorStatus)
+      : 0;
+    const isInvalidImage = [400, 413, 415].includes(processorStatus);
+    const isBusy = processorStatus === 429;
+    const isUnconfigured = error instanceof Error && error.message.includes("not securely configured");
+    const message = isBusy
+      ? "Photo processing is busy. Please try again shortly."
+      : isUnconfigured
         ? "Photo uploads are temporarily unavailable while secure processing is configured."
-        : "The image could not be processed safely. Please try a JPG, PNG or WebP image.";
-    return NextResponse.json({ error: message, code: "PHOTO_PROCESSING_FAILED" }, {
-      status: 503,
+        : isInvalidImage
+          ? "Please choose a valid JPG, PNG or WebP image within the 5 MB limit."
+          : "Photo processing is temporarily unavailable. Please try again.";
+    return NextResponse.json({ error: message, code: isInvalidImage ? "PHOTO_INVALID_IMAGE" : "PHOTO_PROCESSING_UNAVAILABLE" }, {
+      status: isInvalidImage ? (processorStatus === 413 ? 413 : 400) : 503,
       headers: { "Cache-Control": "no-store" },
     });
   }
