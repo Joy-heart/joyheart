@@ -1,6 +1,5 @@
 import ServicesPage from "@/app/components/public/ServicesPage";
 import { createPublicPageMetadata } from "@/app/lib/public-page-metadata";
-import "@/app/components/public/services-page.css";
 
 export const metadata = createPublicPageMetadata(
   "Dating and Matching Services",
