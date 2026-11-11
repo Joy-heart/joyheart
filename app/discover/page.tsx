@@ -1,4 +1,5 @@
 import Link from "next/link";
+export const metadata = { title: "Member area | JoyHeart", robots: { index: false, follow: false } };
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/app/lib/supabase/server";
 import DiscoveryFeed from "@/app/components/discover/DiscoveryFeed";
