@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { createPublicPageMetadata } from "@/app/lib/public-page-metadata";
 import InteractiveFaq from "@/app/components/public/InteractiveFaq";
 import "@/app/components/public/resources.css";
