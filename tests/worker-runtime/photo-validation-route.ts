@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
-import encodeWebp, { init as initWebpEncoder } from "@jsquash/webp/encode";
-import { simd } from "wasm-feature-detect";
-import webpEncoderWasm from "@jsquash/webp/codec/enc/webp_enc.wasm";
-import webpEncoderSimdWasm from "@jsquash/webp/codec/enc/webp_enc_simd.wasm";
-import { PHOTO_MAX_BYTES, validateAndNormalizePhoto } from "@/app/lib/photos/image-validation";
+import { PHOTO_MAX_BYTES, PhotoValidationError, validateAndNormalizePhoto } from "@/app/lib/photos/image-validation";
 
 export const dynamic = "force-dynamic";
 
-// Fixed 2x2 JPEG fixture. Avoid importing jSquash's JPEG encoder in the
-// test route: production only needs the JPEG decoder, and the encoder's
-// Emscripten glue is incompatible with this Vite/Workers dev transform.
-const JPEG_FIXTURE_BASE64 = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAACAAIDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAf/xAAbEAADAAMBAQAAAAAAAAAAAAABAgMABAUGIf/EABUBAQEAAAAAAAAAAAAAAAAAAAUH/8QAGxEAAQQDAAAAAAAAAAAAAAAAAAECM3EDBLH/2gAMAwEAAhEDEQA/AKb5Di8a3kuPa3J0KVpoQZ3fXQsxM1JJJH04xjJrtzvtehWeV1qf/9k=";
+// Valid 2x2 JPEG fixture with correct headers, tables, and EOI marker.
+const JPEG_FIXTURE_BASE64 = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAFA3PEY8MlBGQUZaVVBfeMiCeG5uePWvuZHI////////////////////////////////////////////////////2wBDAVVaWnhpeOuCguv/////////////////////////////////////////////////////////////////////////wAARCAACAAIDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAT/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AIgAf//Z";
+const WEBP_FIXTURE_BASE64 = "UklGRjwAAABXRUJQVlA4IDAAAAAQAgCdASoCAAIAAQAcJaACdLoB+AH4AAPIAP7i4L/20MU+IP2Tf/vvhlvdv/MUAAA=";
 function syntheticJpeg() {
   const binary = atob(JPEG_FIXTURE_BASE64);
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0)).buffer;
+}
+function syntheticWebp() {
+  const binary = atob(WEBP_FIXTURE_BASE64);
   return Uint8Array.from(binary, (character) => character.charCodeAt(0)).buffer;
 }
 export const runtime = "nodejs";
@@ -81,18 +80,13 @@ function oversizedPngHeader(width: number, height: number) {
 export async function GET() {
   if (process.env.NODE_ENV === "production") return new Response(null, { status: 404 });
   try {
-    const useSimd = await simd();
-    await Promise.all([
-      initWebpEncoder(useSimd ? webpEncoderSimdWasm : webpEncoderWasm),
-    ]);
     const pixels = new Uint8ClampedArray([
       240,40,60,255, 20,160,100,255, 40,80,220,255, 245,210,30,255,
     ]);
-    const image = new globalThis.ImageData(pixels, 2, 2);
     const fixtures = await Promise.all([
       Promise.resolve(syntheticJpeg()),
       syntheticPng(new Uint8Array(pixels)),
-      encodeWebp(image, { quality: 85 }),
+      Promise.resolve(syntheticWebp()),
     ]);
     const results = [];
     for (const [mimeType, bytes] of [["image/jpeg", fixtures[0]], ["image/png", fixtures[1]], ["image/webp", fixtures[2]]]) {
@@ -158,10 +152,23 @@ export async function GET() {
       expectRejected(new ArrayBuffer(PHOTO_MAX_BYTES + 1), "image/png", "5 MB byte limit"),
     ]);
     return NextResponse.json({
-      success: true, runtime: "Cloudflare Workers local runtime", simd: useSimd,
+      success: true, runtime: "Cloudflare Workers local runtime",
       results, rejectedCases, metadataStripped,
     });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Unknown decoder error" }, { status: 500 });
+    const cause = error instanceof Error ? (error as Error & { cause?: unknown }).cause : undefined;
+    const causeRecord = cause && typeof cause === "object"
+      ? cause as { name?: unknown; message?: unknown }
+      : undefined;
+    const evidence = {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown decoder error",
+      stage: error instanceof PhotoValidationError ? error.stage : "test_route",
+      causeType: cause === null ? "null" : typeof cause,
+      causeName: typeof causeRecord?.name === "string" ? causeRecord.name : null,
+      causeMessage: typeof causeRecord?.message === "string" ? causeRecord.message.slice(0, 300) : String(cause ?? "").slice(0, 300) || null,
+    };
+    console.error("[joyheart-photo-worker-test]", evidence);
+    return NextResponse.json(evidence, { status: 500 });
   }
 }
