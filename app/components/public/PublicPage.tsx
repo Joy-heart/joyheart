@@ -2,7 +2,7 @@ import Link from "next/link";
 
 type PageKey = "about" | "mission" | "how" | "stories" | "membership" | "premium" | "safety" | "tips" | "help" | "faq" | "contact" | "blog" | "privacy" | "terms" | "cookies" | "guidelines" | "deletion";
 
-const pages: Record<PageKey, { eyebrow: string; title: string; intro: string; sections: { title: string; body: string; bullets?: string[] }[]; cta?: { label: string; href: string } }> = {
+const pages: Record<PageKey, { eyebrow: string; title: string; intro: string; sections: { title: string; body?: string; bullets?: string[] }[]; cta?: { label: string; href: string } }> = {
   about: { eyebrow: "About JoyHeart", title: "A thoughtful place for meaningful connection.", intro: "JoyHeart is an international dating and matchmaking platform designed to help adults meet with intention, respect and care.", sections: [
     { title: "Why JoyHeart exists", body: "Meeting someone meaningful should feel considered, comfortable and personal. JoyHeart brings profile creation, compatibility preferences and member connections together in one place." },
     { title: "Our mission", body: "To make it easier for adults to discover genuine connections while keeping member choice, privacy and respectful behaviour at the centre." },
@@ -160,11 +160,6 @@ const pages: Record<PageKey, { eyebrow: string; title: string; intro: string; se
     { title: "12. Appeals and urgent concerns", body: "If an account action is taken in error, use the appeal or support route presented with the decision where available. For immediate danger, contact local emergency services rather than waiting for a platform response. A verified emergency and support escalation process must be maintained by the operator." },
     { title: "13. Consequences for violations", body: "Depending on the circumstances, JoyHeart may issue a warning, remove content, limit visibility, restrict messaging or discovery, suspend an account or permanently terminate access. Serious suspected unlawful conduct may be referred to appropriate authorities where legally permitted or required." },
     { title: "14. Updates", body: "These Guidelines may be updated as the community and safety tools evolve. The latest version will be published on this page. Material changes will be communicated where appropriate." }
-  ], cta: { label: "Report a concern", href: "/report" } },    { title: "Be authentic", body: "Use your own identity and genuine photographs. Do not impersonate others or misrepresent important details." },
-    { title: "Respect boundaries", body: "No harassment, threats, coercion, unwanted sexual pressure or repeated unwanted contact." },
-    { title: "No scams or exploitation", body: "Do not request money through deception, promote fraudulent schemes or exploit another member." },
-    { title: "Keep content appropriate", body: "Do not share illegal, threatening, abusive or non-consensual content. Respect other people's privacy and consent." },
-    { title: "Reporting and moderation", body: "Use the reporting tools to flag concerns. Reports may be reviewed by authorised staff and may lead to content or account action under platform rules." }
   ], cta: { label: "Report a concern", href: "/report" } },
   deletion: { eyebrow: "Account deletion", title: "Your account choices matter.", intro: "If you no longer want to use JoyHeart, review these points before requesting account deletion.", sections: [
     { title: "Start with account settings", body: "Use the account deletion control if it is available in your signed-in account. If it is not available, use the in-product support or reporting route to ask for help." },
@@ -185,7 +180,7 @@ export default function PublicPage({ page }: { page: PageKey }) {
     <div className="public-page-content">
       {content.sections.map((section, index) => <section className="public-content-section" key={section.title}>
         <span className="public-section-index">{String(index + 1).padStart(2, "0")}</span>
-        <div><h2>{section.title}</h2><p>{section.body}</p>{section.bullets && <ul>{section.bullets.map(item => <li key={item}>{item}</li>)}</ul>}</div>
+        <div><h2>{section.title}</h2>{section.body && <p>{section.body}</p>}{section.bullets && <ul>{section.bullets.map(item => <li key={item}>{item}</li>)}</ul>}</div>
       </section>)}
       {(["privacy", "terms", "cookies", "guidelines"] as PageKey[]).includes(page) && <aside className="public-content-section" aria-label="Legal publication notice"><div><h2>Important publication note</h2><p>This page is a detailed draft. Before it is treated as legally final, JoyHeart's operator must verify the company identity and contact details, production data and cookie behaviour, service providers, retention periods, payment flows and applicable countries, then obtain qualified legal review.</p></div></aside>}
       {content.cta && <div className="public-page-cta"><h2>Take the next step with JoyHeart.</h2><Link className="button button-primary" href={content.cta.href}>{content.cta.label} <span aria-hidden="true">→</span></Link></div>}
