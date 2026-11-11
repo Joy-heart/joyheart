@@ -15,9 +15,11 @@ const jsquashWorkerImportMetaCompat = {
         || !normalizedId.includes("/codec/") || !/\.m?js$/.test(normalizedId)) return null;
 
     // jSquash's Emscripten glue derives a script directory from import.meta.url.
-    // In Worker mode Vite rewrites import.meta.url to a string literal, making
-    // the decoder's fallback assignment invalid JavaScript. WASM is imported
-    // explicitly and passed to init(), so runtime URL discovery is unnecessary.
+    // In Worker mode import.meta.url is unavailable. Keep Emscripten's script
+    // directory as an absolute, valid URL so its fallback URL resolution never
+    // receives an empty/relative base. The compiled WASM module is still passed
+    // explicitly to init(), so this URL is only a safe fallback, not a network
+    // location from which the decoder should load its WASM binary.
     const patched = code
       .replace(
         /if\s*\(\s*import\.meta\.url\s*===\s*undefined\s*\)\s*\{\s*import\.meta\.url\s*=\s*["'][^"']*["'];?\s*\}/g,
@@ -25,7 +27,7 @@ const jsquashWorkerImportMetaCompat = {
       )
       .replace(
         /(var\s+_scriptDir\s*=\s*)import\.meta\.url\s*;/g,
-        '$1"";',
+        '$1"https://localhost/";',
       );
     return patched === code ? null : { code: patched, map: null };
   },
