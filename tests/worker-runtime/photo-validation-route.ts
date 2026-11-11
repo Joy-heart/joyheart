@@ -162,13 +162,17 @@ export async function GET() {
       results, rejectedCases, metadataStripped,
     });
   } catch (error) {
-    const cause = error instanceof Error && error.cause instanceof Error ? error.cause : undefined;
+    const cause = error instanceof Error ? (error as Error & { cause?: unknown }).cause : undefined;
+    const causeRecord = cause && typeof cause === "object"
+      ? cause as { name?: unknown; message?: unknown }
+      : undefined;
     const evidence = {
       success: false,
       error: error instanceof Error ? error.message : "Unknown decoder error",
       stage: error instanceof PhotoValidationError ? error.stage : "test_route",
-      causeName: cause?.name ?? null,
-      causeMessage: cause?.message?.slice(0, 300) ?? null,
+      causeType: cause === null ? "null" : typeof cause,
+      causeName: typeof causeRecord?.name === "string" ? causeRecord.name : null,
+      causeMessage: typeof causeRecord?.message === "string" ? causeRecord.message.slice(0, 300) : String(cause ?? "").slice(0, 300) || null,
     };
     console.error("[joyheart-photo-worker-test]", evidence);
     return NextResponse.json(evidence, { status: 500 });
