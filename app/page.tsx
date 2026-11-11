@@ -1,4 +1,26 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Global Dating and Meaningful Connections",
+  description:
+    "Discover worldwide dating with JoyHeart. Meet singles, make meaningful connections and explore opportunities for love across countries and cultures.",
+  alternates: { canonical: "https://joyheart.app/" },
+  openGraph: {
+    type: "website",
+    url: "https://joyheart.app/",
+    siteName: "JoyHeart",
+    title: "JoyHeart | Global Dating and Meaningful Connections",
+    description:
+      "Meet people from different countries and backgrounds, start conversations and explore meaningful connections with JoyHeart.",
+  },
+  twitter: {
+    card: "summary",
+    title: "JoyHeart | Global Dating and Meaningful Connections",
+    description:
+      "Meet people from different countries and backgrounds, start conversations and explore meaningful connections with JoyHeart.",
+  },
+};
 
 const benefits = [
   { icon: "♡", title: "Meaningful connections", description: "Discover people who share your values, hopes and intention for a genuine relationship." },
