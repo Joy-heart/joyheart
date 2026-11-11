@@ -27,6 +27,10 @@ export default defineConfig({
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: bindings.text("sb_publishable_nE5yis-UPI-F-w_1ctfVpQ_uVQuAe_p"),
       SUPABASE_URL: bindings.text("https://quiyoobztyzebocqttoa.supabase.co"),
       SUPABASE_ANON_KEY: bindings.text("sb_publishable_nE5yis-UPI-F-w_1ctfVpQ_uVQuAe_p"),
+
+      // Required encrypted Worker secret. Configure its value in the
+      // Cloudflare dashboard; never place it in this source file.
+      SUPABASE_SERVICE_ROLE_KEY: bindings.secret(),
     },
     exports: {
       ...cache.exports,
