@@ -1,3 +1,3 @@
 ﻿import { LoginForm } from "@/app/components/auth/AuthForms";
-export const metadata={title:"Log in",description:"Log in to your JoyHeart account."};
+export const metadata = {title:"Log in",description:"Log in to your JoyHeart account.", robots: { index: false, follow: false } };
 export default function LoginPage(){return <main className="auth-page auth-page-login"><section className="auth-card" aria-labelledby="login-title"><div className="auth-brand-lockup"><img src="/joyheart-mark.svg" alt="JoyHeart" width="60" height="60"/><span>JoyHeart</span></div><p className="auth-eyebrow">Welcome back</p><h1 id="login-title">Good to see you again.</h1><p className="auth-intro">Sign in to continue your JoyHeart journey and the connections that matter.</p><LoginForm/><p className="auth-switch">New to JoyHeart? <a href="/signup">Create an account</a></p><p className="auth-footnote">Never share your password or verification codes with another person.</p></section></main>;}
