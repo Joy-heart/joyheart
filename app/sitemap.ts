@@ -30,7 +30,9 @@ const publicRoutes = [
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const categoryRoutes = getJournalCategories().map((category) => `/blog/category/${category.slug}`);
+  const categoryRoutes = getJournalCategories()
+    .filter((category) => category.articles.length >= 2)
+    .map((category) => `/blog/category/${category.slug}`);
   const articleRoutes = additionalJournalArticles.map((article) => `/blog/${article.slug}`);
   const uniqueRoutes = [...new Set([...publicRoutes, ...articleRoutes, ...categoryRoutes])];
   return uniqueRoutes.map((route) => ({
