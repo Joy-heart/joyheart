@@ -4,7 +4,7 @@ import { PHOTO_MAX_BYTES, PhotoValidationError, validateAndNormalizePhoto } from
 export const dynamic = "force-dynamic";
 
 // Valid 2x2 JPEG fixture with correct headers, tables, and EOI marker.
-const JPEG_FIXTURE_BASE64 = "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=";
+const JPEG_FIXTURE_BASE64 = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAFA3PEY8MlBGQUZaVVBfeMiCeG5uePWvuZHI////////////////////////////////////////////////////2wBDAVVaWnhpeOuCguv/////////////////////////////////////////////////////////////////////////wAARCAACAAIDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAT/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AIgAf//Z";
 const WEBP_FIXTURE_BASE64 = "UklGRjwAAABXRUJQVlA4IDAAAAAQAgCdASoCAAIAAQAcJaACdLoB+AH4AAPIAP7i4L/20MU+IP2Tf/vvhlvdv/MUAAA=";
 function syntheticJpeg() {
   const binary = atob(JPEG_FIXTURE_BASE64);
