@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { createPublicPageMetadata } from "@/app/lib/public-page-metadata";
 import Journal from "@/app/components/public/Journal";
 import "@/app/components/public/resources.css";
