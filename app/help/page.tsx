@@ -1,3 +1,4 @@
 import PublicPage from "@/app/components/public/PublicPage";
-export const metadata = { title: "Help Centre", description: "Find help with getting started, profiles, discovery, matches, privacy and safety on JoyHeart.", alternates: { canonical: "https://joyheart.app/help" } };
+import { createPublicPageMetadata } from "@/app/lib/public-page-metadata";
+export const metadata = createPublicPageMetadata("Help Centre", "Find help with getting started, profiles, discovery, matches, privacy and safety on JoyHeart.", "/help");
 export default function Page() { return <PublicPage page="help" />; }

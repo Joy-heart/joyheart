@@ -1,3 +1,4 @@
 import PublicPage from "@/app/components/public/PublicPage";
-export const metadata = { title: "Membership Plans", description: "Explore JoyHeart membership information and confirmed subscription details.", alternates: { canonical: "https://joyheart.app/membership" } };
+import { createPublicPageMetadata } from "@/app/lib/public-page-metadata";
+export const metadata = createPublicPageMetadata("Membership Plans", "Explore JoyHeart membership information and confirmed subscription details.", "/membership", false);
 export default function Page() { return <PublicPage page="membership" />; }

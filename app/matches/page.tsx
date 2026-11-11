@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/app/lib/supabase/server";
 import { MemberShareButton, UnlikeButton } from "@/app/components/profile/MemberActions";
+export const metadata = { title: "Member area | JoyHeart", robots: { index: false, follow: false } };
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

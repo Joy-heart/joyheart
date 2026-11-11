@@ -7,26 +7,12 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/about/", "/how-it-works", "/safety", "/help", "/faq", "/contact", "/blog"],
-        disallow: [
-          "/account",
-          "/discover",
-          "/explore",
-          "/matches",
-          "/messages",
-          "/members",
-          "/staff",
-          "/report",
-          "/login",
-          "/signup",
-          "/register",
-          "/reset-password",
-          "/auth",
-          "/api",
-        ],
+        // Keep pages crawlable so their noindex directives can be discovered.
+        // robots.txt is not an access-control mechanism; private routes must
+        // enforce authentication and authorization in the application.
+        disallow: ["/api/", "/auth/callback"],
       },
     ],
-    sitemap: new URL("/sitemap.xml", siteUrl).toString(),
-    host: siteUrl,
+    sitemap: `${siteUrl}/sitemap.xml`,
   };
 }

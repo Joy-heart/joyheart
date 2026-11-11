@@ -1,3 +1,4 @@
 import PublicPage from "@/app/components/public/PublicPage";
-export const metadata = { title: "Privacy Policy", description: "Learn how JoyHeart handles account, profile and member information. Review the current privacy notice.", alternates: { canonical: "https://joyheart.app/privacy-policy" } };
+import { createPublicPageMetadata } from "@/app/lib/public-page-metadata";
+export const metadata = createPublicPageMetadata("Privacy Policy", "Learn how JoyHeart handles account, profile and member information. Review the current privacy notice.", "/privacy-policy");
 export default function Page() { return <PublicPage page="privacy" />; }
