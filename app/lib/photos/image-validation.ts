@@ -18,12 +18,12 @@ export type ValidatedPhoto = {
   bytes: ArrayBuffer; mimeType: "image/webp"; sourceMimeType: SupportedPhotoMime;
   width: number; height: number; sourceFileSizeBytes: number; fileSizeBytes: number; sha256Hex: string;
 };
-export type PhotoProcessingStage = "input" | "header" | "codec_init" | "decode" | "encode" | "digest";
+export type PhotoProcessingStage = "input" | "header" | "jpeg_decoder_init" | "png_decoder_init" | "webp_decoder_init" | "webp_encoder_init" | "decode" | "encode" | "digest";
 
 export class PhotoValidationError extends Error {
   readonly stage: PhotoProcessingStage;
-  constructor(message: string, stage: PhotoProcessingStage = "input") {
-    super(message);
+  constructor(message: string, stage: PhotoProcessingStage = "input", options?: ErrorOptions) {
+    super(message, options);
     this.name = "PhotoValidationError";
     this.stage = stage;
   }
@@ -37,35 +37,29 @@ if (!imageDataGlobal.ImageData) {
   };
 }
 const codecsReady = (async () => {
-  // Decoder initialization is mandatory. Keep it separate from the optional
-  // SIMD encoder so a SIMD instantiation failure cannot disable every upload.
-  try {
-    await Promise.all([
-      initJpegDecoder(jpegDecoderWasm),
-      initPngDecoder(pngDecoderWasm),
-      initWebpDecoder(webpDecoderWasm),
-    ]);
-  } catch {
-    throw new PhotoValidationError("Image processing is temporarily unavailable.", "codec_init");
-  }
+  // Initialize one codec at a time so a production Worker failure identifies
+  // the exact WASM module instead of collapsing every failure into one code.
+  try { await initJpegDecoder(jpegDecoderWasm); }
+  catch (error) { throw new PhotoValidationError("JPEG decoding is temporarily unavailable.", "jpeg_decoder_init", { cause: error }); }
 
-  let initialized = false;
+  try { await initPngDecoder(pngDecoderWasm); }
+  catch (error) { throw new PhotoValidationError("PNG decoding is temporarily unavailable.", "png_decoder_init", { cause: error }); }
+
+  try { await initWebpDecoder(webpDecoderWasm); }
+  catch (error) { throw new PhotoValidationError("WebP decoding is temporarily unavailable.", "webp_decoder_init", { cause: error }); }
+
+  // SIMD is optional. If detection or SIMD initialization fails, use the
+  // portable encoder, but preserve the real scalar initialization failure.
   try {
     if (await simd()) {
       await initWebpEncoder(webpEncoderSimdWasm);
-      initialized = true;
+      return;
     }
   } catch {
-    // Fall through to the portable scalar encoder. Do not fail a valid upload
-    // merely because this Worker runtime cannot instantiate the SIMD variant.
+    // Fall through to the portable scalar encoder.
   }
-  if (!initialized) {
-    try {
-      await initWebpEncoder(webpEncoderWasm);
-    } catch {
-      throw new PhotoValidationError("Image processing is temporarily unavailable.", "codec_init");
-    }
-  }
+  try { await initWebpEncoder(webpEncoderWasm); }
+  catch (error) { throw new PhotoValidationError("WebP encoding is temporarily unavailable.", "webp_encoder_init", { cause: error }); }
 })();
 
 function fail(message: string, stage: PhotoProcessingStage = "header"): never {
@@ -182,7 +176,7 @@ export async function validateAndNormalizePhoto(input: ArrayBuffer, declaredMime
   try { await codecsReady; }
   catch (error) {
     if (error instanceof PhotoValidationError) throw error;
-    throw new PhotoValidationError("Image processing is temporarily unavailable.", "codec_init");
+    throw new PhotoValidationError("Image processing is temporarily unavailable.", "webp_encoder_init", { cause: error });
   }
   let decoded: ImageData;
   try {
