@@ -68,10 +68,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Each photo must be between 1 byte and 5 MB." }, { status: 413 });
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles").select("user_id,publication_status").eq("user_id", user.id).maybeSingle();
-  if (profileError) return NextResponse.json({ error: "We could not verify your profile." }, { status: 503 });
-  if (!profile || profile.publication_status === "restricted") {
+  // publication_status is intentionally not directly readable by authenticated
+  // members. Use the owner-scoped SECURITY DEFINER RPC instead of querying the
+  // protected profiles column, preserving the profile-column privilege boundary.
+  const { data: ownProfileRows, error: profileError } = await supabase.rpc(
+    "joyheart_get_own_profile_private_settings",
+  );
+  if (profileError) {
+    return NextResponse.json({ error: "We could not verify your profile." }, { status: 503 });
+  }
+  const ownProfile = Array.isArray(ownProfileRows) ? ownProfileRows[0] : ownProfileRows;
+  if (!ownProfile || ownProfile.publication_status === "restricted") {
     return NextResponse.json({ error: "Complete your profile before uploading photos." }, { status: 409 });
   }
 
