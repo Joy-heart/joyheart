@@ -38,6 +38,15 @@ export default function ExplorePage() {
           error: authError,
         } = await supabase.auth.getUser();
 
+        // A visitor without a session should be sent to login, not shown a
+        // profile-loading error. Supabase reports a missing session as an
+        // AuthSessionMissingError with user === null.
+        if (!user && (!authError || authError.name === "AuthSessionMissingError")) {
+          window.location.replace("/login?next=%2Fexplore");
+          return;
+        }
+
+        // Preserve genuine authentication/network failures for the error UI.
         if (authError) throw authError;
 
         if (!user) {
