@@ -48,7 +48,7 @@ function readBody(request) {
 
 function verifySignature(body, timestampHeader, nonceHeader, signatureHeader, secret, replayCache) {
   if (!timestampHeader || !nonceHeader || !signatureHeader
-      || !/^\\d{10,13}$/.test(timestampHeader)
+      || !/^\d{10,13}$/.test(timestampHeader)
       || !/^[a-f0-9]{32,128}$/i.test(nonceHeader)
       || !/^[a-f0-9]{64}$/i.test(signatureHeader)) return false;
 
