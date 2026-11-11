@@ -33,6 +33,11 @@ export default defineConfig({
       // Required encrypted Worker secret. Configure its value in the
       // Cloudflare dashboard; never place it in this source file.
       SUPABASE_SERVICE_ROLE_KEY: bindings.secret(),
+
+      // Internal photo processor: URL is not sensitive; shared key is a
+      // Cloudflare-encrypted secret and is never exposed to the browser.
+      PHOTO_PROCESSOR_URL: bindings.text("https://joyheart-photo-processor.onrender.com"),
+      PHOTO_PROCESSOR_SHARED_SECRET: bindings.secret(),
     },
     exports: {
       ...cache.exports,
