@@ -112,6 +112,8 @@ async function normalizePhoto(input) {
 }
 
 export function createServer({ secret = process.env.PHOTO_PROCESSOR_SHARED_SECRET } = {}) {
+  const replayCache = new Map();
+  let activeNormalizations = 0;
   return createHttpServer(async (request, response) => {
     if (request.method === "GET" && request.url === "/health") {
       return json(response, 200, { status: "ok", service: "joyheart-photo-processor" });
@@ -139,10 +141,21 @@ export function createServer({ secret = process.env.PHOTO_PROCESSOR_SHARED_SECRE
     if (input.length !== declaredLength) {
       return json(response, 400, { error: "Content length does not match the request body." });
     }
-    if (!verifySignature(input, request.headers["x-photo-timestamp"], request.headers["x-photo-signature"], secret)) {
-      return json(response, 401, { error: "Unauthorized photo-processing request." });
+    if (!verifySignature(
+      input,
+      request.headers["x-photo-timestamp"],
+      request.headers["x-photo-nonce"],
+      request.headers["x-photo-signature"],
+      secret,
+      replayCache,
+    )) {
+      return json(response, 401, { error: "Unauthorized or replayed photo-processing request." });
+    }
+    if (activeNormalizations >= 2) {
+      return json(response, 429, { error: "Photo processor is busy. Please retry shortly." });
     }
 
+    activeNormalizations += 1;
     try {
       const result = await normalizePhoto(input);
       response.writeHead(200, {
@@ -163,6 +176,8 @@ export function createServer({ secret = process.env.PHOTO_PROCESSOR_SHARED_SECRE
       return json(response, status, {
         error: status === 400 ? "The image is invalid, corrupt, or cannot be decoded." : error.message,
       });
+    } finally {
+      activeNormalizations -= 1;
     }
   });
 }
