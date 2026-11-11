@@ -18,7 +18,9 @@ export default defineConfig({
     env: {
       ...cache.env,
       ASSETS: bindings.assets(),
-      VINEXT_KV_CACHE: bindings.kv(),
+      // Preserve the existing production KV namespace. Omitting its ID
+      // makes strict deployment detect a remote/local configuration conflict.
+      VINEXT_KV_CACHE: bindings.kv({ id: "ed6eb7d66d2e45689abc73e710c107cc" }),
 
       // The application browser and server Supabase clients read these
       // NEXT_PUBLIC_* names. Keep the existing Worker aliases as well so
