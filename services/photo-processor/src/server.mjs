@@ -7,6 +7,9 @@ const MAX_OUTPUT_BYTES = 5 * 1024 * 1024;
 const MAX_WIDTH = 8192;
 const MAX_HEIGHT = 8192;
 const MAX_PIXELS = 6_000_000;
+const MAX_ACTIVE_NORMALIZATIONS = 2;
+const MAX_REPLAY_ENTRIES = 10_000;
+const REPLAY_WINDOW_MS = 5 * 60 * 1000;
 const ALLOWED_FORMATS = new Set(["jpeg", "png", "webp"]);
 
 function json(response, status, body) {
@@ -22,38 +25,54 @@ function readBody(request) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let size = 0;
+    let oversized = false;
     request.on("data", (chunk) => {
       size += chunk.length;
       if (size > MAX_INPUT_BYTES) {
-        reject(Object.assign(new Error("Image exceeds the 5 MB limit."), { statusCode: 413 }));
-        request.destroy();
-        return;
+        oversized = true;
+        chunks.length = 0;
+      } else if (!oversized) {
+        chunks.push(chunk);
       }
-      chunks.push(chunk);
     });
-    request.on("end", () => resolve(Buffer.concat(chunks, size)));
+    request.on("end", () => {
+      if (oversized) {
+        reject(Object.assign(new Error("Image exceeds the 5 MB limit."), { statusCode: 413 }));
+      } else {
+        resolve(Buffer.concat(chunks, size));
+      }
+    });
     request.on("error", reject);
   });
 }
 
-function verifySignature(body, timestampHeader, signatureHeader, secret) {
-  if (!timestampHeader || !signatureHeader || !/^\d{10,13}$/.test(timestampHeader)) return false;
+function verifySignature(body, timestampHeader, nonceHeader, signatureHeader, secret, replayCache) {
+  if (!timestampHeader || !nonceHeader || !signatureHeader
+      || !/^\\d{10,13}$/.test(timestampHeader)
+      || !/^[a-f0-9]{32,128}$/i.test(nonceHeader)
+      || !/^[a-f0-9]{64}$/i.test(signatureHeader)) return false;
+
   const timestamp = Number(timestampHeader);
   const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp;
-  if (!Number.isFinite(timestampMs) || Math.abs(Date.now() - timestampMs) > 5 * 60 * 1000) return false;
+  const now = Date.now();
+  if (!Number.isFinite(timestampMs) || Math.abs(now - timestampMs) > REPLAY_WINDOW_MS) return false;
 
   const expected = createHmac("sha256", secret)
     .update(timestampHeader)
     .update(".")
+    .update(nonceHeader)
+    .update(".")
     .update(body)
     .digest();
-  let supplied;
-  try {
-    supplied = Buffer.from(signatureHeader, "hex");
-  } catch {
-    return false;
+  const supplied = Buffer.from(signatureHeader, "hex");
+  if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) return false;
+
+  for (const [nonce, expiresAt] of replayCache) {
+    if (expiresAt <= now) replayCache.delete(nonce);
   }
-  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+  if (replayCache.has(nonceHeader) || replayCache.size >= MAX_REPLAY_ENTRIES) return false;
+  replayCache.set(nonceHeader, now + REPLAY_WINDOW_MS);
+  return true;
 }
 
 async function normalizePhoto(input) {
@@ -114,6 +133,7 @@ async function normalizePhoto(input) {
 export function createServer({ secret = process.env.PHOTO_PROCESSOR_SHARED_SECRET } = {}) {
   const replayCache = new Map();
   let activeNormalizations = 0;
+
   return createHttpServer(async (request, response) => {
     if (request.method === "GET" && request.url === "/health") {
       return json(response, 200, { status: "ok", service: "joyheart-photo-processor" });
@@ -127,6 +147,7 @@ export function createServer({ secret = process.env.PHOTO_PROCESSOR_SHARED_SECRE
     if (request.headers["content-type"] !== "application/octet-stream") {
       return json(response, 415, { error: "Expected application/octet-stream." });
     }
+
     const declaredLength = Number(request.headers["content-length"] ?? 0);
     if (!Number.isSafeInteger(declaredLength) || declaredLength < 16 || declaredLength > MAX_INPUT_BYTES) {
       return json(response, 413, { error: "Image must be between 16 bytes and 5 MB." });
@@ -136,7 +157,9 @@ export function createServer({ secret = process.env.PHOTO_PROCESSOR_SHARED_SECRE
     try {
       input = await readBody(request);
     } catch (error) {
-      return json(response, error.statusCode ?? 400, { error: error.statusCode === 413 ? error.message : "Invalid request body." });
+      return json(response, error.statusCode ?? 400, {
+        error: error.statusCode === 413 ? error.message : "Invalid request body.",
+      });
     }
     if (input.length !== declaredLength) {
       return json(response, 400, { error: "Content length does not match the request body." });
@@ -151,7 +174,7 @@ export function createServer({ secret = process.env.PHOTO_PROCESSOR_SHARED_SECRE
     )) {
       return json(response, 401, { error: "Unauthorized or replayed photo-processing request." });
     }
-    if (activeNormalizations >= 2) {
+    if (activeNormalizations >= MAX_ACTIVE_NORMALIZATIONS) {
       return json(response, 429, { error: "Photo processor is busy. Please retry shortly." });
     }
 
@@ -181,4 +204,3 @@ export function createServer({ secret = process.env.PHOTO_PROCESSOR_SHARED_SECRE
     }
   });
 }
-
