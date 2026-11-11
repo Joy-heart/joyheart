@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getJournalCategories } from "@/app/lib/additional-journal-articles";
+import { additionalJournalArticles, getJournalCategories } from "@/app/lib/additional-journal-articles";
 
 const siteUrl = "https://joyheart.app";
 
@@ -22,11 +22,6 @@ const publicRoutes = [
   "/faq",
   "/contact",
   "/blog",
-  "/blog/find-a-serious-relationship-online",
-  "/blog/dating-profile-tips-first-impression",
-  "/blog/know-if-someone-is-genuinely-interested",
-  "/blog/long-distance-relationship-trust-connection",
-  "/blog/online-dating-red-flags",
   "/privacy-policy",
   "/terms",
   "/cookies",
@@ -36,7 +31,9 @@ const publicRoutes = [
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const categoryRoutes = getJournalCategories().map((category) => `/blog/category/${category.slug}`);
-  return [...publicRoutes, ...categoryRoutes].map((route) => ({
+  const articleRoutes = additionalJournalArticles.map((article) => `/blog/${article.slug}`);
+  const uniqueRoutes = [...new Set([...publicRoutes, ...articleRoutes, ...categoryRoutes])];
+  return uniqueRoutes.map((route) => ({
     url: new URL(route, siteUrl).toString(),
     changeFrequency: route === "/" ? "weekly" : "monthly",
     priority: route === "/" ? 1 : route === "/safety" || route === "/how-it-works" ? 0.9 : 0.6,
