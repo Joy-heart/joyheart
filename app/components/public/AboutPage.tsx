@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const principles = [
@@ -28,17 +29,15 @@ export default function AboutPage() {
           </div>
           <p className="about-small-note">JoyHeart — Love Without Borders.</p>
         </div>
-        <div className="about-hero-art" aria-label="Illustration representing people connecting across the world">
-          <div className="about-orbit about-orbit-one" />
-          <div className="about-orbit about-orbit-two" />
-          <div className="about-world-card">
-            <span className="about-heart-mark">♡</span>
-            <span className="about-world-label">ONE WORLD, MANY STORIES</span>
-            <strong>Different paths.<br />Shared hope.</strong>
-            <p>There is more than one way to find a meaningful connection.</p>
-          </div>
-          <span className="about-float about-float-top">✧ Across the world</span>
-          <span className="about-float about-float-bottom">♡ With intention</span>
+        <div className="about-hero-art">
+          <Image
+            src="/images/joyheart-about-hero.webp"
+            alt="A happy couple embracing at golden hour, representing love and connection across cultures"
+            fill
+            priority
+            sizes="(max-width: 950px) 100vw, 42vw"
+            className="about-hero-image"
+          />
         </div>
       </section>
 
