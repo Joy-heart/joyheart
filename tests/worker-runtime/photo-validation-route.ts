@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
-import encodeJpeg, { init as initJpegEncoder } from "@jsquash/jpeg/encode";
 import encodeWebp, { init as initWebpEncoder } from "@jsquash/webp/encode";
 import { simd } from "wasm-feature-detect";
-import jpegEncoderWasm from "@jsquash/jpeg/codec/enc/mozjpeg_enc.wasm";
 import webpEncoderWasm from "@jsquash/webp/codec/enc/webp_enc.wasm";
 import webpEncoderSimdWasm from "@jsquash/webp/codec/enc/webp_enc_simd.wasm";
 import { PHOTO_MAX_BYTES, validateAndNormalizePhoto } from "@/app/lib/photos/image-validation";
 
 export const dynamic = "force-dynamic";
+
+// Fixed 2x2 JPEG fixture. Avoid importing jSquash's JPEG encoder in the
+// test route: production only needs the JPEG decoder, and the encoder's
+// Emscripten glue is incompatible with this Vite/Workers dev transform.
+const JPEG_FIXTURE_BASE64 = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAACAAIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD03whoujTeEtHmm0mwklksIGd3t0LMTGpJJI5NFFFfmuL/AI8/V/meVX/iy9Wf/9k=";
+function syntheticJpeg() {
+  const binary = atob(JPEG_FIXTURE_BASE64);
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0)).buffer;
+}
 export const runtime = "nodejs";
 
 function crc32(bytes: Uint8Array) {
@@ -76,7 +83,6 @@ export async function GET() {
   try {
     const useSimd = await simd();
     await Promise.all([
-      initJpegEncoder(jpegEncoderWasm),
       initWebpEncoder(useSimd ? webpEncoderSimdWasm : webpEncoderWasm),
     ]);
     const pixels = new Uint8ClampedArray([
@@ -84,7 +90,7 @@ export async function GET() {
     ]);
     const image = new globalThis.ImageData(pixels, 2, 2);
     const fixtures = await Promise.all([
-      encodeJpeg(image, { quality: 85 }),
+      Promise.resolve(syntheticJpeg()),
       syntheticPng(new Uint8Array(pixels)),
       encodeWebp(image, { quality: 85 }),
     ]);
