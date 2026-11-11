@@ -90,7 +90,11 @@ export async function POST(request: NextRequest) {
     // image bytes, filenames, user tokens, storage paths, or personal content.
     const stage = error instanceof PhotoValidationError ? error.stage : "unexpected";
     const errorName = error instanceof Error ? error.name : "UnknownError";
-    const diagnostic = error instanceof Error ? error.message.slice(0, 240) : "Unknown processing failure";
+    const cause = error instanceof Error && error.cause instanceof Error ? error.cause : undefined;
+    const diagnostic = [
+      error instanceof Error ? error.message : "Unknown processing failure",
+      cause ? `cause: ${cause.name}: ${cause.message}` : "",
+    ].filter(Boolean).join(" | ").slice(0, 400);
     console.error("[joyheart-photo-processing]", {
       stage,
       errorName,
