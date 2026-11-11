@@ -1,17 +1,138 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient } from "@/app/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/app/lib/supabase/admin";
-import { PHOTO_MAX_BYTES, PhotoValidationError, validateAndNormalizePhoto } from "@/app/lib/photos/image-validation";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const BUCKET = "joyheart-profile-photos";
+const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
+const PHOTO_MAX_WIDTH = 8192;
+const PHOTO_MAX_HEIGHT = 8192;
+const PHOTO_MAX_PIXELS = 6_000_000;
 const MAX_MULTIPART_BYTES = PHOTO_MAX_BYTES + 128 * 1024;
+const PROCESSOR_TIMEOUT_MS = 60_000;
+
+type NormalizedPhoto = {
+  bytes: ArrayBuffer;
+  sourceMimeType: "image/jpeg" | "image/png" | "image/webp";
+  width: number;
+  height: number;
+  sourceFileSizeBytes: number;
+  fileSizeBytes: number;
+  sha256Hex: string;
+};
 
 function sameOrigin(request: NextRequest) {
   const origin = request.headers.get("origin");
   return Boolean(origin && origin === request.nextUrl.origin && request.headers.get("sec-fetch-site") !== "cross-site");
+}
+
+function toHex(bytes: Uint8Array) {
+  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
+}
+
+async function hmacSha256(secret: string, message: Uint8Array) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  return new Uint8Array(await crypto.subtle.sign("HMAC", key, message));
+}
+
+async function sha256Hex(bytes: ArrayBuffer) {
+  return toHex(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)));
+}
+
+async function normalizeWithPhotoProcessor(input: ArrayBuffer, declaredMimeType: string): Promise<NormalizedPhoto> {
+  const processorUrl = process.env.PHOTO_PROCESSOR_URL;
+  const secret = process.env.PHOTO_PROCESSOR_SHARED_SECRET;
+  if (!processorUrl || !secret || new TextEncoder().encode(secret).byteLength < 32) {
+    throw new Error("Photo processing service is not securely configured.");
+  }
+  let endpoint: URL;
+  try {
+    endpoint = new URL("/v1/normalize", processorUrl);
+  } catch {
+    throw new Error("Photo processing service URL is invalid.");
+  }
+  if (endpoint.protocol !== "https:" || endpoint.username || endpoint.password) {
+    throw new Error("Photo processing service must use a secure HTTPS URL.");
+  }
+
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  const nonceBytes = crypto.getRandomValues(new Uint8Array(32));
+  const nonce = toHex(nonceBytes);
+  const prefix = new TextEncoder().encode(`${timestamp}.${nonce}.`);
+  const signedBody = new Uint8Array(prefix.byteLength + input.byteLength);
+  signedBody.set(prefix);
+  signedBody.set(new Uint8Array(input), prefix.byteLength);
+  const signature = toHex(await hmacSha256(secret, signedBody));
+
+  let response: Response;
+  try {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/octet-stream",
+        "X-Photo-Timestamp": timestamp,
+        "X-Photo-Nonce": nonce,
+        "X-Photo-Signature": signature,
+      },
+      body: input,
+      signal: AbortSignal.timeout(PROCESSOR_TIMEOUT_MS),
+      redirect: "error",
+    });
+  } catch {
+    throw new Error("Photo processing service is temporarily unavailable.");
+  }
+  if (!response.ok) {
+    // Do not forward internal processor details to a member or log request data.
+    throw new Error(response.status === 429
+      ? "Photo processing is busy. Please try again shortly."
+      : "The photo could not be processed safely. Please try again.");
+  }
+  if (response.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "image/webp") {
+    throw new Error("Photo processing service returned an invalid image.");
+  }
+
+  const bytes = await response.arrayBuffer();
+  const sourceMimeType = response.headers.get("x-photo-source-mime");
+  const width = Number(response.headers.get("x-photo-width"));
+  const height = Number(response.headers.get("x-photo-height"));
+  const sourceFileSizeBytes = Number(response.headers.get("x-photo-source-size"));
+  const fileSizeBytes = Number(response.headers.get("x-photo-output-size"));
+  const claimedSha256 = response.headers.get("x-photo-sha256")?.toLowerCase() ?? "";
+  const allowedSourceTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+  if (!allowedSourceTypes.has(sourceMimeType ?? "")
+      || (declaredMimeType && declaredMimeType !== sourceMimeType)
+      || !Number.isSafeInteger(width) || width < 1 || width > PHOTO_MAX_WIDTH
+      || !Number.isSafeInteger(height) || height < 1 || height > PHOTO_MAX_HEIGHT
+      || width * height > PHOTO_MAX_PIXELS
+      || sourceFileSizeBytes !== input.byteLength
+      || fileSizeBytes !== bytes.byteLength
+      || bytes.byteLength < 16 || bytes.byteLength > PHOTO_MAX_BYTES
+      || !/^[a-f0-9]{64}$/.test(claimedSha256)) {
+    throw new Error("Photo processing service returned invalid image metadata.");
+  }
+  const actualSha256 = await sha256Hex(bytes);
+  if (actualSha256 !== claimedSha256) {
+    throw new Error("Photo processing service image integrity check failed.");
+  }
+
+  return {
+    bytes,
+    sourceMimeType: sourceMimeType as NormalizedPhoto["sourceMimeType"],
+    width,
+    height,
+    sourceFileSizeBytes,
+    fileSizeBytes,
+    sha256Hex: actualSha256,
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -82,33 +203,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Complete your profile before uploading photos." }, { status: 409 });
   }
 
-  let validated;
+  let validated: NormalizedPhoto;
   try {
-    validated = await validateAndNormalizePhoto(await file.arrayBuffer(), file.type);
+    validated = await normalizeWithPhotoProcessor(await file.arrayBuffer(), file.type);
   } catch (error) {
-    // Log only a controlled processing stage and error class/message. Never log
-    // image bytes, filenames, user tokens, storage paths, or personal content.
-    const stage = error instanceof PhotoValidationError ? error.stage : "unexpected";
-    const errorName = error instanceof Error ? error.name : "UnknownError";
-    const cause = error instanceof Error && error.cause instanceof Error ? error.cause : undefined;
-    const diagnostic = [
-      error instanceof Error ? error.message : "Unknown processing failure",
-      cause ? `cause: ${cause.name}: ${cause.message}` : "",
-    ].filter(Boolean).join(" | ").slice(0, 400);
     console.error("[joyheart-photo-processing]", {
-      stage,
-      errorName,
-      diagnostic,
+      errorName: error instanceof Error ? error.name : "UnknownError",
+      diagnostic: error instanceof Error ? error.message.slice(0, 240) : "Unknown processing failure",
       sourceMimeType: file.type,
       sourceFileSizeBytes: file.size,
     });
-    const message = error instanceof PhotoValidationError
+    const message = error instanceof Error && error.message.includes("busy")
       ? error.message
-      : "The image could not be processed safely. Please try a JPG, PNG or WebP image.";
-    return NextResponse.json({
-      error: message,
-      code: error instanceof PhotoValidationError ? `PHOTO_${error.stage.toUpperCase()}_FAILED` : "PHOTO_PROCESSING_FAILED",
-    }, { status: 400, headers: { "Cache-Control": "no-store" } });
+      : error instanceof Error && error.message.includes("not securely configured")
+        ? "Photo uploads are temporarily unavailable while secure processing is configured."
+        : "The image could not be processed safely. Please try a JPG, PNG or WebP image.";
+    return NextResponse.json({ error: message, code: "PHOTO_PROCESSING_FAILED" }, {
+      status: 503,
+      headers: { "Cache-Control": "no-store" },
+    });
   }
 
   let admin;
