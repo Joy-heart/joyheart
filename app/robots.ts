@@ -7,10 +7,10 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        // Public pages should remain crawlable. Private member routes are
-        // protected by authentication and carry noindex metadata; blocking
-        // them here would prevent crawlers from seeing those directives.
-        disallow: ["/api/", "/auth/callback", "/staff/", "/admin/"],
+        // Keep pages crawlable so their noindex directives can be discovered.
+        // robots.txt is not an access-control mechanism; private routes must
+        // enforce authentication and authorization in the application.
+        disallow: ["/api/", "/auth/callback"],
       },
     ],
     sitemap: `${siteUrl}/sitemap.xml`,
