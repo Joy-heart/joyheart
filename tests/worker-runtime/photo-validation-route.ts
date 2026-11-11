@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import encodeWebp, { init as initWebpEncoder } from "@jsquash/webp/encode";
 import { simd } from "wasm-feature-detect";
-import webpEncoderWasm from "@jsquash/webp/codec/enc/webp_enc.wasm";
-import webpEncoderSimdWasm from "@jsquash/webp/codec/enc/webp_enc_simd.wasm";
+import webpEncoderWasm from "@jsquash/webp/codec/enc/webp_enc.wasm?module";
+import webpEncoderSimdWasm from "@jsquash/webp/codec/enc/webp_enc_simd.wasm?module";
 import { PHOTO_MAX_BYTES, validateAndNormalizePhoto } from "@/app/lib/photos/image-validation";
 
 export const dynamic = "force-dynamic";
