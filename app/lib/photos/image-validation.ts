@@ -57,6 +57,20 @@ function jpegWarmupBytes(): ArrayBuffer {
   return Uint8Array.from(binary, (character) => character.charCodeAt(0)).buffer;
 }
 
+async function withCodecTimeout<T>(operation: Promise<T>, label: string, timeoutMs = 15_000): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => reject(new Error(`${label} did not become ready within ${timeoutMs} ms.`)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeout !== undefined) clearTimeout(timeout);
+  }
+}
+
 const imageDataGlobal = globalThis as typeof globalThis & { ImageData?: new (data: Uint8ClampedArray, width: number, height: number) => unknown };
 if (!imageDataGlobal.ImageData) {
   imageDataGlobal.ImageData = class {
@@ -73,7 +87,7 @@ const codecsReady = (async () => {
     // jSquash's init() schedules Emscripten module creation; it does not
     // await that work. Decode a tiny known-good image here so startup is not
     // considered ready until the WASM module has actually instantiated.
-    const warmup = await decodeJpeg(jpegWarmupBytes());
+    const warmup = await withCodecTimeout(decodeJpeg(jpegWarmupBytes()), "JPEG decoder warm-up");
     if (warmup.width !== 2 || warmup.height !== 2) {
       throw new Error("JPEG decoder warm-up returned unexpected dimensions.");
     }
@@ -219,15 +233,15 @@ export async function validateAndNormalizePhoto(input: ArrayBuffer, declaredMime
   }
   let decoded: ImageData;
   try {
-    if (header.mime === "image/jpeg") decoded = await decodeJpeg(input);
-    else if (header.mime === "image/png") decoded = await decodePng(input);
-    else decoded = await decodeWebp(input);
+    if (header.mime === "image/jpeg") decoded = await withCodecTimeout(decodeJpeg(input), "JPEG decoding");
+    else if (header.mime === "image/png") decoded = await withCodecTimeout(decodePng(input), "PNG decoding");
+    else decoded = await withCodecTimeout(decodeWebp(input), "WebP decoding");
   } catch { fail("The image could not be decoded. It may be corrupt or incomplete.", "decode"); }
   if (!decoded.width || !decoded.height || decoded.width * decoded.height > PHOTO_MAX_PIXELS
       || decoded.width > PHOTO_MAX_WIDTH || decoded.height > PHOTO_MAX_HEIGHT
       || decoded.data.length !== decoded.width * decoded.height * 4) fail("The decoded image dimensions are invalid.");
   let normalized: ArrayBuffer;
-  try { normalized = await encodeWebp(decoded, { quality: 78, alpha_quality: 90, method: 4 }); }
+  try { normalized = await withCodecTimeout(encodeWebp(decoded, { quality: 78, alpha_quality: 90, method: 4 }), "WebP encoding"); }
   catch { fail("The image could not be safely re-encoded.", "encode"); }
   if (!(normalized instanceof ArrayBuffer) || normalized.byteLength < 16 || normalized.byteLength > PHOTO_MAX_BYTES) {
     fail("The processed photo is too large. Choose a smaller or simpler image.");
