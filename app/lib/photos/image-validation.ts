@@ -18,8 +18,15 @@ export type ValidatedPhoto = {
   bytes: ArrayBuffer; mimeType: "image/webp"; sourceMimeType: SupportedPhotoMime;
   width: number; height: number; sourceFileSizeBytes: number; fileSizeBytes: number; sha256Hex: string;
 };
+export type PhotoProcessingStage = "input" | "header" | "codec_init" | "decode" | "encode" | "digest";
+
 export class PhotoValidationError extends Error {
-  constructor(message: string) { super(message); this.name = "PhotoValidationError"; }
+  readonly stage: PhotoProcessingStage;
+  constructor(message: string, stage: PhotoProcessingStage = "input") {
+    super(message);
+    this.name = "PhotoValidationError";
+    this.stage = stage;
+  }
 }
 
 const imageDataGlobal = globalThis as typeof globalThis & { ImageData?: new (data: Uint8ClampedArray, width: number, height: number) => unknown };
@@ -30,14 +37,40 @@ if (!imageDataGlobal.ImageData) {
   };
 }
 const codecsReady = (async () => {
-  const supportsSimd = await simd();
-  await Promise.all([
-    initJpegDecoder(jpegDecoderWasm), initPngDecoder(pngDecoderWasm), initWebpDecoder(webpDecoderWasm),
-    initWebpEncoder(supportsSimd ? webpEncoderSimdWasm : webpEncoderWasm),
-  ]);
+  // Decoder initialization is mandatory. Keep it separate from the optional
+  // SIMD encoder so a SIMD instantiation failure cannot disable every upload.
+  try {
+    await Promise.all([
+      initJpegDecoder(jpegDecoderWasm),
+      initPngDecoder(pngDecoderWasm),
+      initWebpDecoder(webpDecoderWasm),
+    ]);
+  } catch {
+    throw new PhotoValidationError("Image processing is temporarily unavailable.", "codec_init");
+  }
+
+  let initialized = false;
+  try {
+    if (await simd()) {
+      await initWebpEncoder(webpEncoderSimdWasm);
+      initialized = true;
+    }
+  } catch {
+    // Fall through to the portable scalar encoder. Do not fail a valid upload
+    // merely because this Worker runtime cannot instantiate the SIMD variant.
+  }
+  if (!initialized) {
+    try {
+      await initWebpEncoder(webpEncoderWasm);
+    } catch {
+      throw new PhotoValidationError("Image processing is temporarily unavailable.", "codec_init");
+    }
+  }
 })();
 
-function fail(message: string): never { throw new PhotoValidationError(message); }
+function fail(message: string, stage: PhotoProcessingStage = "header"): never {
+  throw new PhotoValidationError(message, stage);
+}
 function u16be(b: Uint8Array, o: number) { return (b[o] << 8) | b[o + 1]; }
 function u24le(b: Uint8Array, o: number) { return b[o] | (b[o + 1] << 8) | (b[o + 2] << 16); }
 function u32le(b: Uint8Array, o: number) { return (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0; }
@@ -136,28 +169,39 @@ function inspectHeader(b: Uint8Array) {
 
 export async function validateAndNormalizePhoto(input: ArrayBuffer, declaredMimeType: string): Promise<ValidatedPhoto> {
   if (!(input instanceof ArrayBuffer) || input.byteLength < 16 || input.byteLength > PHOTO_MAX_BYTES) fail("Each photo must be between 1 byte and 5 MB.");
-  const header = inspectHeader(new Uint8Array(input));
+  let header: ReturnType<typeof inspectHeader>;
+  try { header = inspectHeader(new Uint8Array(input)); }
+  catch (error) {
+    if (error instanceof PhotoValidationError) throw error;
+    throw new PhotoValidationError("The image header could not be inspected.", "header");
+  }
   if (declaredMimeType && declaredMimeType !== header.mime) fail("The file type does not match its actual image format.");
   if (header.width > PHOTO_MAX_WIDTH || header.height > PHOTO_MAX_HEIGHT || header.width * header.height > PHOTO_MAX_PIXELS) {
     fail("This photo is too large. Use an image up to 8192 pixels per side and 6 megapixels.");
   }
-  await codecsReady;
+  try { await codecsReady; }
+  catch (error) {
+    if (error instanceof PhotoValidationError) throw error;
+    throw new PhotoValidationError("Image processing is temporarily unavailable.", "codec_init");
+  }
   let decoded: ImageData;
   try {
     if (header.mime === "image/jpeg") decoded = await decodeJpeg(input);
     else if (header.mime === "image/png") decoded = await decodePng(input);
     else decoded = await decodeWebp(input);
-  } catch { fail("The image could not be decoded. It may be corrupt or incomplete."); }
+  } catch { fail("The image could not be decoded. It may be corrupt or incomplete.", "decode"); }
   if (!decoded.width || !decoded.height || decoded.width * decoded.height > PHOTO_MAX_PIXELS
       || decoded.width > PHOTO_MAX_WIDTH || decoded.height > PHOTO_MAX_HEIGHT
       || decoded.data.length !== decoded.width * decoded.height * 4) fail("The decoded image dimensions are invalid.");
   let normalized: ArrayBuffer;
   try { normalized = await encodeWebp(decoded, { quality: 78, alpha_quality: 90, method: 4 }); }
-  catch { fail("The image could not be safely re-encoded."); }
+  catch { fail("The image could not be safely re-encoded.", "encode"); }
   if (!(normalized instanceof ArrayBuffer) || normalized.byteLength < 16 || normalized.byteLength > PHOTO_MAX_BYTES) {
     fail("The processed photo is too large. Choose a smaller or simpler image.");
   }
-  const digest = await crypto.subtle.digest("SHA-256", normalized);
+  let digest: ArrayBuffer;
+  try { digest = await crypto.subtle.digest("SHA-256", normalized); }
+  catch { fail("The processed image could not be securely fingerprinted.", "digest"); }
   const sha256Hex = Array.from(new Uint8Array(digest), v => v.toString(16).padStart(2,"0")).join("");
   return { bytes: normalized, mimeType: "image/webp", sourceMimeType: header.mime, width: decoded.width,
     height: decoded.height, sourceFileSizeBytes: input.byteLength, fileSizeBytes: normalized.byteLength, sha256Hex };
