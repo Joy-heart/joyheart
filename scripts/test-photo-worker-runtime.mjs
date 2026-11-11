@@ -14,8 +14,12 @@ let server;
 let serverLog = "";
 
 try {
-  try { await access(routeDir, constants.F_OK); throw new Error("Temporary Worker test route already exists; refusing to overwrite it."); }
-  catch (error) { if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error; }
+  try {
+    await access(routeDir, constants.F_OK);
+    throw new Error("Temporary Worker test route already exists; refusing to overwrite it.");
+  } catch (error) {
+    if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error;
+  }
   await mkdir(routeDir, { recursive: false });
   await copyFile(fixture, routeFile);
 
