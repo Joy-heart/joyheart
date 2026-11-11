@@ -1,6 +1,6 @@
 const footerGroups = [
   { title: "Company", links: [{ label: "About us", href: "/about" }, { label: "Our mission", href: "/about/mission" }, { label: "How it works", href: "/how-it-works" }, { label: "Success stories", href: "/success-stories" }] },
-  { title: "Explore", links: [{ label: "Discover", href: "/how-it-works#discovery" }, { label: "Membership", href: "/membership" }, { label: "Premium features", href: "/premium" }, { label: "Blog", href: "/blog" }] },
+  { title: "Explore", links: [{ label: "Our services", href: "/services" }, { label: "Smart matching", href: "/services/smart-matching" }, { label: "Discover", href: "/services/discover" }, { label: "Membership", href: "/membership" }, { label: "Premium features", href: "/premium" }, { label: "Blog", href: "/blog" }] },
   { title: "Support", links: [{ label: "Help centre", href: "/help" }, { label: "FAQ", href: "/faq" }, { label: "Contact", href: "/contact" }, { label: "Safety centre", href: "/safety" }, { label: "Report a concern", href: "/report" }] },
   { title: "Legal", links: [{ label: "Privacy policy", href: "/privacy-policy" }, { label: "Terms of service", href: "/terms" }, { label: "Cookie policy", href: "/cookies" }, { label: "Community guidelines", href: "/community-guidelines" }, { label: "Account deletion", href: "/account-deletion" }] },
 ];
