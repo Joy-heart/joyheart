@@ -4,6 +4,28 @@ import { workersCacheCdnAdapter } from "@vinext/cloudflare/cache/workers-cache-c
 import { defineConfig } from "vite";
 import vinext from "vinext";
 
+const jsquashWorkerImportMetaCompat = {
+  name: "joyheart-jsquash-worker-import-meta-compat",
+  enforce: "pre" as const,
+  transform(code: string, id: string) {
+    const normalizedId = id.replace(/\\\\/g, "/");
+    if (!normalizedId.includes("/node_modules/@jsquash/")
+        || !normalizedId.includes("/codec/") || !normalizedId.endsWith(".js")) return null;
+
+    // jSquash's Emscripten glue sets _scriptDir from import.meta.url.
+    // Vite's Worker SSR transform can rewrite that expression into an
+    // assignment to a string literal (invalid JavaScript). JoyHeart always
+    // passes the imported WASM module explicitly to each codec's init(),
+    // so runtime URL-based WASM discovery is not used and an empty base path
+    // is safe for these codec glue modules.
+    const patched = code.replace(
+      /(var\\s+_scriptDir\\s*=\\s*)import\\.meta\\.url\\s*;/g,
+      '$1"";',
+    );
+    return patched === code ? null : { code: patched, map: null };
+  },
+};
+
 export default defineConfig({
   // jSquash loads adjacent WebAssembly binaries relative to its ESM modules.
   // Vite dependency pre-bundling can rewrite those module URLs and break
@@ -13,6 +35,7 @@ export default defineConfig({
     exclude: ["@jsquash/jpeg", "@jsquash/png", "@jsquash/webp"],
   },
   plugins: [
+    jsquashWorkerImportMetaCompat,
     vinext({
       cache: {
         cdn: workersCacheCdnAdapter(),
