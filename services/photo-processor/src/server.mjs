@@ -64,8 +64,7 @@ async function normalizePhoto(input) {
   const image = sharp(input, {
     failOn: "error",
     limitInputPixels: MAX_PIXELS,
-    animated: false,
-    pages: 1,
+    animated: true,
   });
   const metadata = await image.metadata();
 
@@ -168,10 +167,3 @@ export function createServer({ secret = process.env.PHOTO_PROCESSOR_SHARED_SECRE
   });
 }
 
-if (process.env.NODE_ENV !== "test") {
-  const port = Number(process.env.PORT || 8080);
-  const server = createServer();
-  server.listen(port, "0.0.0.0", () => {
-    console.log(`JoyHeart photo processor listening on port ${port}`);
-  });
-}
