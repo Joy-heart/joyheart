@@ -34,14 +34,26 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
     headline: article.title,
     description: article.description,
     articleSection: article.category,
+    image: [article.image],
     mainEntityOfPage: canonical,
     author: { "@type": "Organization", name: "JoyHeart Editorial Team" },
     publisher: { "@type": "Organization", name: "JoyHeart", url: siteUrl },
     inLanguage: "en",
   };
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: "JoyHeart Journal", item: `${siteUrl}/blog` },
+      { "@type": "ListItem", position: 3, name: article.category, item: `${siteUrl}/blog/category/${journalCategorySlug(article.category)}` },
+      { "@type": "ListItem", position: 4, name: article.title, item: canonical },
+    ],
+  };
   return (
     <main className="jh-resource-page jh-article-page">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb).replace(/</g, "\\u003c") }} />
       <header className="jh-resource-hero">
         <p className="public-eyebrow">The JoyHeart journal · <a href={`/blog/category/${journalCategorySlug(article.category)}`}>{article.category}</a></p>
         <h1>{article.title}</h1>
