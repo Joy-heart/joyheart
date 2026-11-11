@@ -18,7 +18,7 @@ export type ValidatedPhoto = {
   bytes: ArrayBuffer; mimeType: "image/webp"; sourceMimeType: SupportedPhotoMime;
   width: number; height: number; sourceFileSizeBytes: number; fileSizeBytes: number; sha256Hex: string;
 };
-export type PhotoProcessingStage = "input" | "header" | "jpeg_decoder_init" | "png_decoder_init" | "webp_decoder_init" | "webp_encoder_init" | "decode" | "encode" | "digest";
+export type PhotoProcessingStage = "input" | "header" | "jpeg_decoder_init" | "jpeg_decoder_warmup" | "png_decoder_init" | "webp_decoder_init" | "webp_encoder_init" | "decode" | "encode" | "digest";
 
 export class PhotoValidationError extends Error {
   readonly stage: PhotoProcessingStage;
@@ -84,15 +84,19 @@ const codecsReady = (async () => {
   try {
     const module = requireWasmModule("JPEG decoder", jpegDecoderWasm);
     await initJpegDecoder(module);
-    // jSquash's init() schedules Emscripten module creation; it does not
-    // await that work. Decode a tiny known-good image here so startup is not
-    // considered ready until the WASM module has actually instantiated.
+  } catch (error) {
+    throw new PhotoValidationError("JPEG decoding is temporarily unavailable.", "jpeg_decoder_init", { cause: error });
+  }
+
+  // jSquash init() returns before Emscripten has finished instantiating.
+  // Keep that first decode distinct from module import/init diagnostics.
+  try {
     const warmup = await withCodecTimeout(decodeJpeg(jpegWarmupBytes()), "JPEG decoder warm-up");
     if (warmup.width !== 2 || warmup.height !== 2) {
       throw new Error("JPEG decoder warm-up returned unexpected dimensions.");
     }
   } catch (error) {
-    throw new PhotoValidationError("JPEG decoding is temporarily unavailable.", "jpeg_decoder_init", { cause: error });
+    throw new PhotoValidationError("JPEG decoding is temporarily unavailable.", "jpeg_decoder_warmup", { cause: error });
   }
 
   try { await initPngDecoder(requireWasmModule("PNG decoder", pngDecoderWasm)); }
