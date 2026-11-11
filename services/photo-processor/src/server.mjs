@@ -148,8 +148,10 @@ export function createServer({ secret = process.env.PHOTO_PROCESSOR_SHARED_SECRE
       return json(response, 415, { error: "Expected application/octet-stream." });
     }
 
-    const declaredLength = Number(request.headers["content-length"] ?? 0);
-    if (!Number.isSafeInteger(declaredLength) || declaredLength < 16 || declaredLength > MAX_INPUT_BYTES) {
+    const contentLengthHeader = request.headers["content-length"];
+    const declaredLength = contentLengthHeader === undefined ? null : Number(contentLengthHeader);
+    if (declaredLength !== null
+        && (!Number.isSafeInteger(declaredLength) || declaredLength < 16 || declaredLength > MAX_INPUT_BYTES)) {
       return json(response, 413, { error: "Image must be between 16 bytes and 5 MB." });
     }
 
@@ -161,7 +163,10 @@ export function createServer({ secret = process.env.PHOTO_PROCESSOR_SHARED_SECRE
         error: error.statusCode === 413 ? error.message : "Invalid request body.",
       });
     }
-    if (input.length !== declaredLength) {
+    if (input.length < 16) {
+      return json(response, 413, { error: "Image must be between 16 bytes and 5 MB." });
+    }
+    if (declaredLength !== null && input.length !== declaredLength) {
       return json(response, 400, { error: "Content length does not match the request body." });
     }
     if (!verifySignature(
