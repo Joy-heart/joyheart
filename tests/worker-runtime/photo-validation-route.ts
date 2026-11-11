@@ -3,7 +3,7 @@ import encodeWebp, { init as initWebpEncoder } from "@jsquash/webp/encode";
 import { simd } from "wasm-feature-detect";
 import webpEncoderWasm from "@jsquash/webp/codec/enc/webp_enc.wasm?module";
 import webpEncoderSimdWasm from "@jsquash/webp/codec/enc/webp_enc_simd.wasm?module";
-import { PHOTO_MAX_BYTES, validateAndNormalizePhoto } from "@/app/lib/photos/image-validation";
+import { PHOTO_MAX_BYTES, PhotoValidationError, validateAndNormalizePhoto } from "@/app/lib/photos/image-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -162,6 +162,15 @@ export async function GET() {
       results, rejectedCases, metadataStripped,
     });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Unknown decoder error" }, { status: 500 });
+    const cause = error instanceof Error && error.cause instanceof Error ? error.cause : undefined;
+    const evidence = {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown decoder error",
+      stage: error instanceof PhotoValidationError ? error.stage : "test_route",
+      causeName: cause?.name ?? null,
+      causeMessage: cause?.message?.slice(0, 300) ?? null,
+    };
+    console.error("[joyheart-photo-worker-test]", evidence);
+    return NextResponse.json(evidence, { status: 500 });
   }
 }
