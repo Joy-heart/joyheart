@@ -16,10 +16,20 @@ const jsquashWorkerImportMetaCompat = {
     // The Cloudflare/Vite SSR transform rewrites this expression incorrectly
     // in Worker mode. WASM is explicitly imported and passed to init(), so
     // runtime URL discovery is unnecessary for these codec modules.
-    const patched = code.replace(
-      /(var\s+_scriptDir\s*=\s*)import\.meta\.url\s*;/g,
-      '$1"";',
-    );
+    // The JPEG Emscripten glue also contains a Cloudflare/Node fallback
+    // that assigns to import.meta.url. Vite rewrites import.meta.url to a
+    // string literal before parsing the assignment, producing invalid JS.
+    // WASM is imported explicitly by image-validation.ts, so this fallback
+    // is unnecessary in the Worker bundle.
+    const patched = code
+      .replace(
+        /if\s*\(\s*import\.meta\.url\s*===\s*undefined\s*\)\s*\{\s*import\.meta\.url\s*=\s*["'][^"']*["'];?\s*\}/g,
+        "",
+      )
+      .replace(
+        /(var\s+_scriptDir\s*=\s*)import\.meta\.url\s*;/g,
+        '$1"";',
+      );
     return patched === code ? null : { code: patched, map: null };
   },
 };
