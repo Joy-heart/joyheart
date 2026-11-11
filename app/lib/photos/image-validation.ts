@@ -40,7 +40,13 @@ function requireWasmModule(label: string, candidate: unknown): WebAssembly.Modul
     }
     return candidate;
   } catch (error) {
-    throw new TypeError(`${label} WASM import did not resolve to a usable WebAssembly.Module.`, { cause: error });
+    const kind = candidate === null ? "null" : typeof candidate;
+    const tag = Object.prototype.toString.call(candidate);
+    const sameRealm = candidate instanceof WebAssembly.Module;
+    throw new TypeError(
+      `${label} WASM import is not a usable WebAssembly.Module (type=${kind}, tag=${tag}, sameRealm=${sameRealm}).`,
+      { cause: error },
+    );
   }
 }
 
