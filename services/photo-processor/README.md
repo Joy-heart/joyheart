@@ -18,9 +18,10 @@ Sharp requires a Node-API-compatible runtime and platform-specific binaries. Use
 The processing endpoint requires:
 - `PHOTO_PROCESSOR_SHARED_SECRET`: at least 32 random bytes, configured only as a server-side secret.
 - `X-Photo-Timestamp`: Unix timestamp in seconds or milliseconds.
-- `X-Photo-Signature`: lowercase or uppercase hex HMAC-SHA256 of `timestamp + "." + raw request bytes`, using the shared secret.
+- `X-Photo-Nonce`: a fresh cryptographically random value of 32–128 hexadecimal characters for every request.
+- `X-Photo-Signature`: lowercase or uppercase hex HMAC-SHA256 of `timestamp + "." + nonce + "." + raw request bytes`, using the shared secret.
 
-Requests older than five minutes are rejected. The response is a WebP binary with dimensions, source MIME type, sizes and SHA-256 in response headers. Never expose the shared secret in browser code or `NEXT_PUBLIC_*` variables.
+Requests older than five minutes are rejected. Nonces are tracked in a bounded in-memory replay cache for five minutes, and duplicate signed requests are rejected. The service limits simultaneous image conversions to two and returns HTTP 429 when busy. The response is a WebP binary with dimensions, source MIME type, sizes and SHA-256 in response headers. Never expose the shared secret in browser code or `NEXT_PUBLIC_*` variables.
 
 ## Image safety
 
