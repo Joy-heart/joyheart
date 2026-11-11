@@ -11,7 +11,7 @@ export function createPublicPageMetadata(
   const canonical = new URL(path, siteUrl).toString();
   const socialTitle = title.includes("JoyHeart") ? title : `${title} | JoyHeart`;
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical },
     openGraph: {
