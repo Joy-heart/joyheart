@@ -8,18 +8,16 @@ const jsquashWorkerImportMetaCompat = {
   name: "joyheart-jsquash-worker-import-meta-compat",
   enforce: "pre" as const,
   transform(code: string, id: string) {
-    const normalizedId = id.replace(/\\\\/g, "/");
+    const normalizedId = id.replace(/\\/g, "/");
     if (!normalizedId.includes("/node_modules/@jsquash/")
         || !normalizedId.includes("/codec/") || !normalizedId.endsWith(".js")) return null;
 
-    // jSquash's Emscripten glue sets _scriptDir from import.meta.url.
-    // Vite's Worker SSR transform can rewrite that expression into an
-    // assignment to a string literal (invalid JavaScript). JoyHeart always
-    // passes the imported WASM module explicitly to each codec's init(),
-    // so runtime URL-based WASM discovery is not used and an empty base path
-    // is safe for these codec glue modules.
+    // jSquash's Emscripten glue derives a script directory from import.meta.url.
+    // The Cloudflare/Vite SSR transform rewrites this expression incorrectly
+    // in Worker mode. WASM is explicitly imported and passed to init(), so
+    // runtime URL discovery is unnecessary for these codec modules.
     const patched = code.replace(
-      /(var\\s+_scriptDir\\s*=\\s*)import\\.meta\\.url\\s*;/g,
+      /(var\s+_scriptDir\s*=\s*)import\.meta\.url\s*;/g,
       '$1"";',
     );
     return patched === code ? null : { code: patched, map: null };
