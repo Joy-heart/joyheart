@@ -1,7 +1,7 @@
 # MLS Compatibility PoC Plan
 
-**Status:** BLOCKED — isolated workspace creation and toolchain setup not yet confirmed; protocol execution not started.  
-**Intended isolation location:** `C:\\Temp\\joyheart-mls-compatibility-poc` on authorized device EMPIRE. The remote file-management call has not returned confirmation, so do not assume this directory exists yet.  
+**Status:** IN PROGRESS — isolated workspace created; candidate source retrieval and toolchain setup remain unverified; protocol execution not started.  
+**Intended isolation location:** `C:\\Temp\\joyheart-mls-compatibility-poc` on authorized device EMPIRE. The directory was successfully created through the authorized Desktop Commander on EMPIRE.  
 **Git branch:** `experiment/mls-compatibility-poc`  
 **Repository baseline:** `main`; application package currently contains no MLS dependency and no `apps/mobile` workspace.  
 **Authorization:** synthetic test identities and isolated local experiments only.
