@@ -1,6 +1,6 @@
 # MLS Compatibility PoC Results
 
-**Status:** IN PROGRESS — no MLS protocol test has been executed or passed yet.  
+**Status:** BLOCKED — isolated directory exists, but no MLS protocol test has been executed or passed yet.  
 **Isolation:** `C:\\Temp\\joyheart-mls-compatibility-poc` on EMPIRE (Windows).  
 **Production impact:** none; no production files, dependencies, databases, secrets or services changed.
 
@@ -26,7 +26,10 @@
 - Git: 2.54.0.windows.1.
 - Node: v24.16.0.
 - npm: 11.13.0.
-- Initial `rustc --version` check returned “not recognized”; installation was attempted afterward, but success is not yet verified.
+- Initial `rustc --version` check returned “not recognized”; the Rustup installation attempt did not result in a verified toolchain, and a subsequent check still returned “not recognized”.
+- The isolated directory `C:\\Temp\\joyheart-mls-compatibility-poc` was successfully created on EMPIRE.
+- A shallow clone of mls-rs was started from that directory but did not complete within the available remote execution window; no source commit was pinned and no build was run.
+- An npm registry metadata lookup for ts-mls did not complete; no package was installed.
 - No ADB, Android emulator, iOS simulator, browser test or MLS runtime result has been captured.
 
 ## 3. Candidate observations (research, not test results)
