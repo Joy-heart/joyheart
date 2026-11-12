@@ -1,7 +1,7 @@
 # MLS Compatibility PoC Plan
 
-**Status:** IN PROGRESS — environment inspection started; protocol execution not yet passed  
-**Isolation location:** `C:\\Temp\\joyheart-mls-compatibility-poc` on authorized device EMPIRE; this is separate from the JoyHeart production worktree.  
+**Status:** BLOCKED — isolated workspace creation and toolchain setup not yet confirmed; protocol execution not started.  
+**Intended isolation location:** `C:\\Temp\\joyheart-mls-compatibility-poc` on authorized device EMPIRE. The remote file-management call has not returned confirmation, so do not assume this directory exists yet.  
 **Git branch:** `experiment/mls-compatibility-poc`  
 **Repository baseline:** `main`; application package currently contains no MLS dependency and no `apps/mobile` workspace.  
 **Authorization:** synthetic test identities and isolated local experiments only.
@@ -24,13 +24,16 @@ Observed on authorized Windows device EMPIRE:
 - Git 2.54.0.windows.1.
 - Node.js v24.16.0.
 - npm 11.13.0.
-- Rust compiler and Cargo were not on PATH at initial inspection. A Rust toolchain installation was attempted; final installation status must be verified before Rust tests.
+- Rust compiler and Cargo were not on PATH at initial inspection.
+- A Rustup installation attempt did not yield a verified installation; `rustc` remained unavailable on the subsequent check.
+- An npm registry metadata lookup did not complete and was stopped; no package was installed.
+- The intended PoC directory creation has not returned confirmation.
 - Android SDK/ADB, Xcode/iOS device and browser versions have not yet been verified.
 - No actual Android or iOS device test has been performed.
 
 ## 3. Isolation rules
 
-- Work only in `C:\\Temp\\joyheart-mls-compatibility-poc`.
+- Work only in `C:\\Temp\\joyheart-mls-compatibility-poc` after its creation is confirmed.
 - Never run npm/cargo install in the JoyHeart production repository.
 - Do not copy production `.env`, tokens, credentials, user data or private keys.
 - Use fixed synthetic identities Alice, Bob and Carol with generated throwaway keys.
@@ -67,16 +70,17 @@ Observed on authorized Windows device EMPIRE:
 
 ## 5. Test stages
 
-1. Pin candidate revisions, licenses, Rust toolchain and crypto providers.
-2. Run upstream unit/conformance tests at the pinned revision.
-3. Build isolated minimal clients and test group creation, KeyPackage, Welcome, Commit and epoch transitions.
-4. Cross-implementation interoperability: mls-rs ↔ OpenMLS where supported; do not mistake same-library client tests for independent interoperability.
-5. Build web/WASM and test in a real browser.
-6. Test Android only with a real Android runtime/device; iOS requires macOS/Xcode and a real simulator/device.
-7. Test multi-device, revocation, replay, offline/restart, recovery and persistence.
-8. Capture performance measurements with repeat counts and hardware/runtime details.
-9. Review logs/network/storage for plaintext and key leakage.
-10. Produce reproducible report; stop before production integration.
+1. Confirm isolated workspace and toolchain availability.
+2. Pin candidate revisions, licenses, Rust toolchain and crypto providers.
+3. Run upstream unit/conformance tests at the pinned revision.
+4. Build isolated minimal clients and test group creation, KeyPackage, Welcome, Commit and epoch transitions.
+5. Cross-implementation interoperability: mls-rs ↔ OpenMLS where supported; do not mistake same-library client tests for independent interoperability.
+6. Build web/WASM and test in a real browser.
+7. Test Android only with a real Android runtime/device; iOS requires macOS/Xcode and a real simulator/device.
+8. Test multi-device, revocation, replay, offline/restart, recovery and persistence.
+9. Capture performance measurements with repeat counts and hardware/runtime details.
+10. Review logs/network/storage for plaintext and key leakage.
+11. Produce reproducible report; stop before production integration.
 
 ## 6. Required synthetic topology
 
@@ -92,10 +96,12 @@ A candidate is not compatible merely because it compiles. It must pass protocol 
 
 ## 8. Current blockers
 
-- Rust/Cargo toolchain not yet verified after installation attempt.
+- Rust/Cargo installation is not verified; Rust compiler remained unavailable after the install attempt.
+- Remote workspace creation has not returned confirmation.
 - No confirmed Android SDK/emulator or physical device.
-- iOS testing requires macOS/Xcode, which is not available from the inspected Windows environment.
+- iOS testing requires macOS with Xcode, which is not available from the inspected Windows environment.
 - Repository does not currently contain a mobile app workspace, so the eventual React Native/Expo runtime and bridge are not yet defined.
 - No candidate commit SHAs have yet been pinned in the isolated environment.
+- npm registry lookup did not complete; ts-mls package metadata and install have not been verified.
 
-**Current result: plan and isolation established; protocol tests NOT STARTED.**
+**Current result: plan documented; isolated execution BLOCKED.**
