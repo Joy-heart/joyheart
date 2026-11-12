@@ -1,0 +1,35 @@
+name: JoyHeart photo processor validation
+
+on:
+  pull_request:
+    paths:
+      - "services/photo-processor/**"
+      - ".github/workflows/photo-processor-validation.yml"
+  push:
+    branches: [main]
+    paths:
+      - "services/photo-processor/**"
+      - ".github/workflows/photo-processor-validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test-node-service:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/photo-processor
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: services/photo-processor/package.json
+      - name: Install pinned dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run service tests
+        run: npm test
+      - name: Build deployment image
+        run: docker build -t joyheart-photo-processor:test .
