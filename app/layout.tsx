@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import SiteFooter from "./components/SiteFooter";
 import SiteHeader from "./components/SiteHeader";
 import ConsentManager from "./components/public/ConsentManager";
+import PWARegister from "./components/PWARegister";
 import "./globals.css";
 import "./components/public/resources.css";
 
@@ -82,6 +83,7 @@ export default function RootLayout({
         <SiteHeader />
         {children}
         <SiteFooter />
+        <PWARegister />
         <ConsentManager />
       </body>
     </html>
