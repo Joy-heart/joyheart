@@ -7,8 +7,15 @@ type InstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 };
 
+declare global {
+  interface Window {
+    __joyheartInstallPrompt?: InstallPromptEvent | null;
+  }
+}
+
 const REQUEST_EVENT = "joyheart:pwa-install-request";
 const STATUS_EVENT = "joyheart:pwa-install-status";
+const AVAILABLE_EVENT = "joyheart:pwa-install-available";
 
 export default function PWARegister() {
   const promptRef = useRef<InstallPromptEvent | null>(null);
@@ -24,6 +31,11 @@ export default function PWARegister() {
     const publish = (isInstalled: boolean) => window.dispatchEvent(
       new CustomEvent(STATUS_EVENT, { detail: { installed: isInstalled } })
     );
+
+    // The early bootstrap listener in the document head/body may have captured
+    // Chrome's one-shot event before React hydrated. Recover it before wiring UI.
+    promptRef.current = window.__joyheartInstallPrompt ?? null;
+
     const registerWorker = () => {
       if ("serviceWorker" in navigator) {
         void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((error) => {
@@ -31,30 +43,33 @@ export default function PWARegister() {
         });
       }
     };
-    if (document.readyState === "complete") registerWorker();
-    else window.addEventListener("load", registerWorker, { once: true });
+    // Register as soon as this component mounts rather than waiting for window.load.
+    registerWorker();
 
-    const onPrompt = (event: Event) => {
-      event.preventDefault();
-      promptRef.current = event as InstallPromptEvent;
+    const onAvailable = () => {
+      promptRef.current = window.__joyheartInstallPrompt ?? null;
     };
     const onInstalled = () => {
       setInstalled(true);
       promptRef.current = null;
+      window.__joyheartInstallPrompt = null;
       setShowHelp(false);
       publish(true);
     };
     const onRequest = () => {
       if (window.matchMedia("(display-mode: standalone)").matches) return;
-      if (promptRef.current) void runInstall(promptRef.current);
+      const prompt = promptRef.current ?? window.__joyheartInstallPrompt ?? null;
+      if (prompt) void runInstall(prompt);
       else setShowHelp(true);
     };
-    window.addEventListener("beforeinstallprompt", onPrompt);
+
+    window.addEventListener(AVAILABLE_EVENT, onAvailable);
     window.addEventListener("appinstalled", onInstalled);
     window.addEventListener(REQUEST_EVENT, onRequest);
     publish(standalone);
+
     return () => {
-      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener(AVAILABLE_EVENT, onAvailable);
       window.removeEventListener("appinstalled", onInstalled);
       window.removeEventListener(REQUEST_EVENT, onRequest);
     };
@@ -64,6 +79,7 @@ export default function PWARegister() {
   async function runInstall(event: InstallPromptEvent) {
     setBusy(true);
     try {
+      // prompt() is called immediately from the user's click event.
       await event.prompt();
       const choice = await event.userChoice;
       if (choice.outcome === "accepted") {
@@ -75,6 +91,7 @@ export default function PWARegister() {
       setShowHelp(true);
     } finally {
       promptRef.current = null;
+      window.__joyheartInstallPrompt = null;
       setBusy(false);
     }
   }
@@ -84,7 +101,8 @@ export default function PWARegister() {
   }
 
   async function handleInstall() {
-    if (promptRef.current) await runInstall(promptRef.current);
+    const prompt = promptRef.current ?? window.__joyheartInstallPrompt ?? null;
+    if (prompt) await runInstall(prompt);
     else setShowHelp(true);
   }
 
@@ -108,15 +126,14 @@ export default function PWARegister() {
             <button className="pwa-help-close" type="button" aria-label="Close" onClick={() => setShowHelp(false)}>×</button>
             <img src="/pwa-192.svg" alt="" width="54" height="54" />
             <h2 id="pwa-help-title">Install JoyHeart</h2>
-            <p>To add JoyHeart to this device:</p>
+            <p>Your browser has not made its direct install prompt available yet.</p>
             <ol>
-              <li>Open this page in your browser.</li>
-              <li>Tap the browser menu (three dots or Share).</li>
-              <li>Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
-              <li>Confirm the installation.</li>
+              <li>Make sure you are using Chrome and are not in Incognito mode.</li>
+              <li>Update Chrome, then reload JoyHeart.</li>
+              <li>If Chrome offers <strong>Install app</strong> in its browser menu, use that option.</li>
             </ol>
-            <p className="pwa-help-note">If JoyHeart is already installed, open it from your home screen. You can install it again after uninstalling it.</p>
-            <button type="button" className="pwa-install-button pwa-help-done" onClick={() => setShowHelp(false)}>Got it</button>
+            <p className="pwa-help-note">Some browsers do not expose a website-controlled install prompt. JoyHeart cannot force the browser to show one.</p>
+            <button type="button" className="pwa-install-button pwa-help-done" onClick={() => setShowHelp(false)}>Close</button>
           </section>
         </div>
       )}
