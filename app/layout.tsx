@@ -91,6 +91,15 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <script
+          dangerouslySetInnerHTML={{
+            __html: `window.addEventListener("beforeinstallprompt", function (event) {
+              event.preventDefault();
+              window.__joyheartInstallPrompt = event;
+              window.dispatchEvent(new Event("joyheart:pwa-install-available"));
+            });`,
+          }}
+        />
+        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
