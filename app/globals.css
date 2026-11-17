@@ -1892,3 +1892,65 @@ a:focus-visible {
   .pwa-install-copy span { font-size: 0.7rem; }
   .pwa-install-button { padding: 0 12px; }
 }
+
+
+/* Persistent PWA installation controls */
+.pwa-header-install {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border: 1px solid rgba(100,29,59,.2);
+  border-radius: 999px;
+  color: #fff;
+  background: var(--joy-burgundy);
+  font: inherit;
+  font-size: .82rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.pwa-header-install:hover { background: #4f1730; }
+.mobile-nav-panel .pwa-header-install { width: 100%; min-height: 44px; margin-bottom: 5px; }
+.pwa-install-button:disabled { opacity: .65; cursor: wait; }
+.pwa-help-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(35,20,28,.55);
+}
+.pwa-help-dialog {
+  position: relative;
+  width: min(100%, 430px);
+  padding: 30px;
+  border: 1px solid var(--joy-border);
+  border-radius: 24px;
+  background: #fffdfb;
+  box-shadow: 0 24px 80px rgba(0,0,0,.25);
+  color: var(--joy-charcoal);
+}
+.pwa-help-dialog > img { display: block; margin-bottom: 14px; border-radius: 15px; }
+.pwa-help-dialog h2 { margin: 0 0 10px; color: var(--joy-burgundy); font: 500 1.8rem Georgia,serif; }
+.pwa-help-dialog p,.pwa-help-dialog li { color: var(--joy-muted); font-size: .92rem; line-height: 1.7; }
+.pwa-help-dialog ol { display: grid; gap: 7px; padding-left: 22px; }
+.pwa-help-dialog strong { color: var(--joy-burgundy); }
+.pwa-help-dialog .pwa-help-note { padding: 12px; border-radius: 12px; background: #fff1ed; font-size: .8rem; }
+.pwa-help-close { position: absolute; top: 10px; right: 14px; width: 36px; height: 36px; border: 0; background: transparent; color: var(--joy-burgundy); font-size: 1.7rem; cursor: pointer; }
+.pwa-help-done { width: 100%; min-height: 44px; margin-top: 8px; }
+@media (max-width: 600px) {
+  .mobile-nav-panel .pwa-header-install { justify-content: center; }
+}
+
+.mobile-header-install { display: none; }
+@media (max-width: 900px) {
+  .mobile-header-install { display: inline-flex; margin-left: auto; }
+  .site-header { gap: 10px; }
+  .mobile-nav { flex: 0 0 auto; }
+}
+@media (max-width: 420px) {
+  .mobile-header-install { min-height: 38px; padding: 0 10px; font-size: .74rem; }
+}

@@ -15,21 +15,39 @@ const navigation = [
   { label: "Contact", href: "/contact" },
 ];
 
+const INSTALL_REQUEST_EVENT = "joyheart:pwa-install-request";
+const INSTALL_STATUS_EVENT = "joyheart:pwa-install-status";
+
 export default function SiteHeader() {
   const [signedIn, setSignedIn] = useState(false);
   const [ready, setReady] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
-    if (!supabase) { setReady(true); return; }
-    let active = true;
-    void supabase.auth.getUser().then(({ data, error }) => {
-      if (active) { setSignedIn(Boolean(data.user && !error)); setReady(true); }
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (active) { setSignedIn(Boolean(session)); setReady(true); }
-    });
-    return () => { active = false; subscription.unsubscribe(); };
+    const onInstallStatus = (event: Event) => {
+      const detail = (event as CustomEvent<{ installed: boolean }>).detail;
+      setIsInstalled(Boolean(detail?.installed));
+    };
+    setIsInstalled(window.matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true);
+    window.addEventListener(INSTALL_STATUS_EVENT, onInstallStatus);
+    if (!supabase) {
+      setReady(true);
+    } else {
+      let active = true;
+      void supabase.auth.getUser().then(({ data, error }) => {
+        if (active) { setSignedIn(Boolean(data.user && !error)); setReady(true); }
+      });
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (active) { setSignedIn(Boolean(session)); setReady(true); }
+      });
+      return () => {
+        active = false;
+        subscription.unsubscribe();
+        window.removeEventListener(INSTALL_STATUS_EVENT, onInstallStatus);
+      };
+    }
+    return () => window.removeEventListener(INSTALL_STATUS_EVENT, onInstallStatus);
   }, []);
 
   async function logout() {
@@ -39,6 +57,14 @@ export default function SiteHeader() {
     if (error) { setLogoutError("We could not sign you out. Please try again."); return; }
     window.location.assign("/");
   }
+
+  function requestInstall() {
+    window.dispatchEvent(new Event(INSTALL_REQUEST_EVENT));
+  }
+
+  const installAction = !isInstalled
+    ? <button className="pwa-header-install" type="button" onClick={requestInstall}>＋ Install app</button>
+    : null;
 
   const memberLinks = signedIn
     ? <><a href="/explore">Explore</a><a href="/account">My account</a><button className="nav-logout" type="button" onClick={logout}>Log out</button></>
@@ -54,11 +80,14 @@ export default function SiteHeader() {
         {navigation.map((item) => <a href={item.href} key={item.label}>{item.label}</a>)}
       </nav>
       <div className="nav-actions" aria-live="polite">
+        {installAction}
         {!ready ? <span className="auth-muted"> </span> : memberLinks}
       </div>
+      {!isInstalled && <button className="pwa-header-install mobile-header-install" type="button" onClick={requestInstall}>＋ Install</button>}
       <details className="mobile-nav">
         <summary aria-label="Open navigation menu"><span aria-hidden="true">☰</span></summary>
         <nav className="mobile-nav-panel" aria-label="Mobile navigation">
+          {installAction}
           {navigation.map((item) => <a href={item.href} key={item.label}>{item.label}</a>)}
           {!ready ? null : memberLinks}
         </nav>
