@@ -82,6 +82,7 @@ export default function SiteHeader() {
         {installAction}
         {!ready ? <span className="auth-muted"> </span> : memberLinks}
       </div>
+      {!isInstalled && <button className="pwa-header-install mobile-header-install" type="button" onClick={requestInstall}>＋ Install</button>}
       <details className="mobile-nav">
         <summary aria-label="Open navigation menu"><span aria-hidden="true">☰</span></summary>
         <nav className="mobile-nav-panel" aria-label="Mobile navigation">
