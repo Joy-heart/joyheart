@@ -29,6 +29,7 @@ export default function SiteHeader() {
       const detail = (event as CustomEvent<{ installed: boolean }>).detail;
       setIsInstalled(Boolean(detail?.installed));
     };
+    setIsInstalled(window.matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true);
     window.addEventListener(INSTALL_STATUS_EVENT, onInstallStatus);
     if (!supabase) {
       setReady(true);
