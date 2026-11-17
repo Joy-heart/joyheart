@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import SiteFooter from "./components/SiteFooter";
 import SiteHeader from "./components/SiteHeader";
 import ConsentManager from "./components/public/ConsentManager";
@@ -7,6 +7,13 @@ import "./globals.css";
 import "./components/public/resources.css";
 
 const siteUrl = "https://joyheart.app";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#641d3b",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -17,7 +24,16 @@ export const metadata: Metadata = {
   description:
     "Discover worldwide dating with JoyHeart. Meet singles, make meaningful connections and explore opportunities for love across countries and cultures.",
   applicationName: "JoyHeart",
-  icons: { icon: "/joyheart-mark.svg", shortcut: "/joyheart-mark.svg" },
+  appleWebApp: {
+    capable: true,
+    title: "JoyHeart",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: "/joyheart-mark.svg",
+    shortcut: "/joyheart-mark.svg",
+    apple: "/pwa-192.svg",
+  },
   keywords: [
     "JoyHeart",
     "global dating",
