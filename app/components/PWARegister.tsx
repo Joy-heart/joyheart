@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type InstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -12,6 +12,7 @@ const STATUS_EVENT = "joyheart:pwa-install-status";
 
 export default function PWARegister() {
   const [promptEvent, setPromptEvent] = useState<InstallPromptEvent | null>(null);
+  const promptRef = useRef<InstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -36,17 +37,19 @@ export default function PWARegister() {
 
     const onPrompt = (event: Event) => {
       event.preventDefault();
+      promptRef.current = event as InstallPromptEvent;
       setPromptEvent(event as InstallPromptEvent);
     };
     const onInstalled = () => {
       setInstalled(true);
+      promptRef.current = null;
       setPromptEvent(null);
       setShowHelp(false);
       publish(true);
     };
     const onRequest = () => {
       if (window.matchMedia("(display-mode: standalone)").matches) return;
-      if (promptEvent) void runInstall(promptEvent);
+      if (promptRef.current) void runInstall(promptRef.current);
       else setShowHelp(true);
     };
     window.addEventListener("beforeinstallprompt", onPrompt);
@@ -74,6 +77,7 @@ export default function PWARegister() {
       console.error("JoyHeart install prompt failed", error);
       setShowHelp(true);
     } finally {
+      promptRef.current = null;
       setPromptEvent(null);
       setBusy(false);
     }
@@ -84,7 +88,7 @@ export default function PWARegister() {
   }
 
   async function handleInstall() {
-    if (promptEvent) await runInstall(promptEvent);
+    if (promptRef.current) await runInstall(promptRef.current);
     else setShowHelp(true);
   }
 
