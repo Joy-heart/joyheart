@@ -11,7 +11,6 @@ const REQUEST_EVENT = "joyheart:pwa-install-request";
 const STATUS_EVENT = "joyheart:pwa-install-status";
 
 export default function PWARegister() {
-  const [promptEvent, setPromptEvent] = useState<InstallPromptEvent | null>(null);
   const promptRef = useRef<InstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -38,12 +37,10 @@ export default function PWARegister() {
     const onPrompt = (event: Event) => {
       event.preventDefault();
       promptRef.current = event as InstallPromptEvent;
-      setPromptEvent(event as InstallPromptEvent);
     };
     const onInstalled = () => {
       setInstalled(true);
       promptRef.current = null;
-      setPromptEvent(null);
       setShowHelp(false);
       publish(true);
     };
@@ -78,7 +75,6 @@ export default function PWARegister() {
       setShowHelp(true);
     } finally {
       promptRef.current = null;
-      setPromptEvent(null);
       setBusy(false);
     }
   }
