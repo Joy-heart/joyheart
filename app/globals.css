@@ -1792,3 +1792,103 @@ a:focus-visible {
   .photo-slide-one { opacity: 1; }
   .photo-slide-two { display: none; }
 }
+
+
+/* JoyHeart PWA install and offline screens */
+.pwa-install-banner {
+  position: fixed;
+  z-index: 100;
+  right: 18px;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: 18px;
+  width: min(520px, calc(100% - 36px));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 auto;
+  padding: 12px 14px;
+  border: 1px solid rgba(100, 29, 59, 0.16);
+  border-radius: 18px;
+  background: #fffdfb;
+  box-shadow: 0 18px 55px rgba(41, 35, 42, 0.2);
+}
+.pwa-install-banner > img {
+  flex: 0 0 auto;
+  border-radius: 12px;
+}
+.pwa-install-copy {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 3px;
+}
+.pwa-install-copy strong {
+  color: var(--joy-burgundy);
+  font-size: 0.9rem;
+}
+.pwa-install-copy span {
+  color: var(--joy-muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+.pwa-install-button {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  color: white;
+  background: var(--joy-burgundy);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.pwa-dismiss-button {
+  width: 28px;
+  height: 32px;
+  border: 0;
+  color: #6b5a62;
+  background: transparent;
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+.pwa-offline-page {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 24px;
+  text-align: center;
+}
+.pwa-offline-page > img {
+  margin-bottom: 20px;
+  border-radius: 22px;
+}
+.pwa-offline-page .eyebrow {
+  margin-bottom: 12px;
+}
+.pwa-offline-page h1 {
+  margin: 0;
+  color: var(--joy-charcoal);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-weight: 500;
+}
+.pwa-offline-page > p:not(.eyebrow) {
+  max-width: 430px;
+  color: var(--joy-muted);
+  line-height: 1.7;
+}
+.pwa-offline-page .button {
+  margin-top: 12px;
+}
+.pwa-offline-page .pwa-offline-note {
+  margin-top: 34px;
+  font-size: 0.8rem;
+}
+@media (max-width: 420px) {
+  .pwa-install-banner { right: 10px; left: 10px; width: calc(100% - 20px); gap: 9px; padding: 10px; }
+  .pwa-install-copy span { font-size: 0.7rem; }
+  .pwa-install-button { padding: 0 12px; }
+}
