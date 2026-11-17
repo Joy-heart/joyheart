@@ -1944,3 +1944,13 @@ a:focus-visible {
 @media (max-width: 600px) {
   .mobile-nav-panel .pwa-header-install { justify-content: center; }
 }
+
+.mobile-header-install { display: none; }
+@media (max-width: 900px) {
+  .mobile-header-install { display: inline-flex; margin-left: auto; }
+  .site-header { gap: 10px; }
+  .mobile-nav { flex: 0 0 auto; }
+}
+@media (max-width: 420px) {
+  .mobile-header-install { min-height: 38px; padding: 0 10px; font-size: .74rem; }
+}
